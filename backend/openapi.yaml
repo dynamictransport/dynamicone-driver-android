@@ -1,0 +1,436 @@
+openapi: 3.1.0
+info:
+  title: DynamicONE Driver API
+  version: 0.1.0
+  description: Initial contract for the DynamicONE Android driver application.
+servers:
+  - url: https://api.example.com/api/driver/v1
+    description: Placeholder - replace with DynamicONE endpoint
+tags:
+  - name: Auth
+  - name: Shift
+  - name: Trips
+  - name: Documents
+  - name: Earnings
+  - name: Incidents
+
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      operationId: refreshToken
+      responses:
+        '200':
+          description: Refreshed
+
+  /me:
+    get:
+      tags: [Auth]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Driver profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverProfile'
+
+  /shift/current:
+    get:
+      tags: [Shift]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Current shift
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shift'
+
+  /shift/start:
+    post:
+      tags: [Shift]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DriverActionRequest'
+      responses:
+        '200':
+          description: Shift started
+
+  /shift/end:
+    post:
+      tags: [Shift]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DriverActionRequest'
+      responses:
+        '200':
+          description: Shift ended
+
+  /trips:
+    get:
+      tags: [Trips]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Driver trips
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TripSummary'
+
+  /trips/{tripId}:
+    get:
+      tags: [Trips]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/TripId'
+      responses:
+        '200':
+          description: Trip detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TripDetail'
+
+  /trips/{tripId}/actions:
+    post:
+      tags: [Trips]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/TripId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TripActionRequest'
+      responses:
+        '200':
+          description: Transition accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TripDetail'
+        '409':
+          description: Illegal transition / state conflict
+
+  /trips/{tripId}/documents:
+    get:
+      tags: [Documents]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/TripId'
+      responses:
+        '200':
+          description: Documents for trip
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TripDocument'
+
+  /trips/{tripId}/documents/upload-session:
+    post:
+      tags: [Documents]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/TripId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUploadRequest'
+      responses:
+        '200':
+          description: Signed upload session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadSession'
+
+  /documents/{documentId}/finalize:
+    post:
+      tags: [Documents]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: documentId
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Upload finalized
+
+  /earnings:
+    get:
+      tags: [Earnings]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: query
+          name: month
+          schema:
+            type: string
+            example: '2026-09'
+      responses:
+        '200':
+          description: Earnings summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EarningsSummary'
+
+  /incidents:
+    post:
+      tags: [Incidents]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IncidentRequest'
+      responses:
+        '201':
+          description: Incident created
+
+components:
+  parameters:
+    TripId:
+      in: path
+      name: tripId
+      required: true
+      schema: { type: string }
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username: { type: string }
+        password: { type: string, format: password }
+
+    AuthResponse:
+      type: object
+      required: [accessToken, refreshToken, expiresInSeconds]
+      properties:
+        accessToken: { type: string }
+        refreshToken: { type: string }
+        expiresInSeconds: { type: integer }
+
+    DriverProfile:
+      type: object
+      required: [id, displayName, personnelNo]
+      properties:
+        id: { type: string }
+        displayName: { type: string }
+        personnelNo: { type: string }
+        preferredLanguage: { type: string, example: tr }
+
+    DriverActionRequest:
+      type: object
+      required: [clientActionId, clientTimestamp]
+      properties:
+        clientActionId: { type: string, format: uuid }
+        clientTimestamp: { type: string, format: date-time }
+        latitude: { type: number, nullable: true }
+        longitude: { type: number, nullable: true }
+
+    Shift:
+      type: object
+      properties:
+        id: { type: string }
+        status: { type: string, enum: [NOT_STARTED, ACTIVE, FINISHED] }
+        startedAt: { type: string, format: date-time, nullable: true }
+        endedAt: { type: string, format: date-time, nullable: true }
+        vehiclePlate: { type: string, nullable: true }
+        trailerPlate: { type: string, nullable: true }
+
+    TripSummary:
+      type: object
+      required: [id, tripNo, state, pickupName, deliveryName]
+      properties:
+        id: { type: string }
+        tripNo: { type: string }
+        state: { $ref: '#/components/schemas/TripState' }
+        pickupName: { type: string }
+        deliveryName: { type: string }
+        plannedStartAt: { type: string, format: date-time, nullable: true }
+        containerNo: { type: string, nullable: true }
+
+    TripDetail:
+      allOf:
+        - $ref: '#/components/schemas/TripSummary'
+        - type: object
+          properties:
+            pickupAddress: { type: string, nullable: true }
+            deliveryAddress: { type: string, nullable: true }
+            vehiclePlate: { type: string, nullable: true }
+            trailerPlate: { type: string, nullable: true }
+            sealNo: { type: string, nullable: true }
+            instructions: { type: string, nullable: true }
+            breakState:
+              type: string
+              enum: [NONE, ON_BREAK]
+            nextAllowedActions:
+              type: array
+              items:
+                $ref: '#/components/schemas/TripActionType'
+
+    TripState:
+      type: string
+      enum:
+        - ASSIGNED
+        - ACCEPTED
+        - STARTED
+        - AT_PICKUP
+        - PICKUP_COMPLETED
+        - EN_ROUTE_DELIVERY
+        - AT_DELIVERY
+        - DELIVERY_COMPLETED
+        - FINISHED
+        - CANCELLED
+
+    TripActionType:
+      type: string
+      enum:
+        - ACCEPT_TRIP
+        - REJECT_TRIP
+        - START_TRIP
+        - ARRIVE_PICKUP
+        - COMPLETE_PICKUP
+        - START_DELIVERY_LEG
+        - ARRIVE_DELIVERY
+        - COMPLETE_DELIVERY
+        - FINISH_TRIP
+        - START_BREAK
+        - END_BREAK
+
+    TripActionRequest:
+      type: object
+      required: [clientActionId, clientTimestamp, action]
+      properties:
+        clientActionId: { type: string, format: uuid }
+        clientTimestamp: { type: string, format: date-time }
+        action: { $ref: '#/components/schemas/TripActionType' }
+        reasonCode: { type: string, nullable: true }
+        note: { type: string, nullable: true }
+        latitude: { type: number, nullable: true }
+        longitude: { type: number, nullable: true }
+
+    DocumentType:
+      type: string
+      enum:
+        - CMR
+        - INTERCHANGE_EIR
+        - A1
+        - POD
+        - CONTAINER_PHOTO
+        - SEAL_PHOTO
+        - OTHER
+
+    TripDocument:
+      type: object
+      properties:
+        id: { type: string }
+        type: { $ref: '#/components/schemas/DocumentType' }
+        status:
+          type: string
+          enum: [PENDING, UPLOADED, REJECTED, VERIFIED]
+        capturedAt: { type: string, format: date-time, nullable: true }
+        thumbnailUrl: { type: string, nullable: true }
+
+    CreateUploadRequest:
+      type: object
+      required: [clientActionId, type, fileName, contentType]
+      properties:
+        clientActionId: { type: string, format: uuid }
+        type: { $ref: '#/components/schemas/DocumentType' }
+        fileName: { type: string }
+        contentType: { type: string }
+        capturedAt: { type: string, format: date-time }
+        containerNo: { type: string, nullable: true }
+        sealNo: { type: string, nullable: true }
+
+    UploadSession:
+      type: object
+      required: [documentId, uploadUrl, expiresAt]
+      properties:
+        documentId: { type: string }
+        uploadUrl: { type: string }
+        expiresAt: { type: string, format: date-time }
+
+    EarningsSummary:
+      type: object
+      properties:
+        month: { type: string }
+        currency: { type: string, example: EUR }
+        baseAmount: { type: number }
+        bonuses: { type: number }
+        deductions: { type: number }
+        total: { type: number }
+        workDays: { type: integer }
+
+    IncidentRequest:
+      type: object
+      required: [clientActionId, category, clientTimestamp]
+      properties:
+        clientActionId: { type: string, format: uuid }
+        tripId: { type: string, nullable: true }
+        category:
+          type: string
+          enum:
+            - DELAY
+            - TRAFFIC
+            - TERMINAL_QUEUE
+            - VEHICLE_BREAKDOWN
+            - ACCIDENT
+            - DOCUMENT
+            - CONTAINER_SEAL
+            - CUSTOMER
+            - OTHER
+        note: { type: string, nullable: true }
+        clientTimestamp: { type: string, format: date-time }

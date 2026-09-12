@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>DynamicONE Driver Mockup</title>
+<style>
+:root{
+  --bg:#eef2f5;--surface:#fff;--text:#14202b;--muted:#65727e;--brand:#102b46;
+  --brand2:#0f5f8a;--good:#157b4f;--warn:#b36b00;--bad:#aa2f35;--line:#dde4e9;
+}
+*{box-sizing:border-box} body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text)}
+.shell{max-width:1180px;margin:0 auto;padding:22px}.head{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:18px}
+.head h1{margin:0;font-size:25px}.head p{margin:4px 0 0;color:var(--muted)}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}.tabs button{border:1px solid var(--line);background:#fff;padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:700}
+.tabs button.active{background:var(--brand);color:#fff}
+.stage{display:grid;grid-template-columns:minmax(320px,390px) 1fr;gap:28px;align-items:start}
+.phone{background:#101820;border-radius:34px;padding:10px;box-shadow:0 18px 60px #20304038;position:sticky;top:18px}
+.screen{background:#f7f9fa;min-height:760px;border-radius:26px;overflow:hidden;display:none}.screen.active{display:block}
+.status{height:28px;background:#fff;padding:8px 18px 0;font-size:11px;display:flex;justify-content:space-between}
+.topbar{background:#fff;padding:14px 18px 15px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+.brand{font-weight:900;letter-spacing:.2px;color:var(--brand)}.online{font-size:12px;color:var(--good);font-weight:800}
+.content{padding:18px}.hello{font-size:22px;font-weight:900;margin-bottom:3px}.sub{color:var(--muted);font-size:13px}
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:14px;box-shadow:0 2px 8px #1f30400c}
+.card h3{margin:0 0 10px;font-size:15px}.row{display:flex;justify-content:space-between;gap:14px;align-items:center}
+.badge{font-size:11px;font-weight:900;border-radius:20px;padding:6px 9px;background:#e6f4ed;color:var(--good)}
+.badge.warn{background:#fff3d8;color:#8a5800}.badge.gray{background:#edf1f4;color:#59636c}
+.route{font-size:18px;font-weight:900;margin:9px 0}.meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;color:var(--muted)}
+.primary{width:100%;border:0;border-radius:16px;padding:18px 12px;margin-top:16px;font-size:16px;font-weight:1000;color:#fff;background:var(--good);cursor:pointer}
+.secondary{width:100%;border:1px solid var(--line);background:#fff;border-radius:14px;padding:14px;margin-top:10px;font-weight:850;color:var(--brand);cursor:pointer}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:14px}.tile{min-height:105px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;font-weight:850;display:flex;flex-direction:column;justify-content:space-between}.ico{font-size:27px}
+.bottom{display:grid;grid-template-columns:repeat(4,1fr);background:#fff;border-top:1px solid var(--line);padding:10px 5px;position:absolute;bottom:10px;left:10px;right:10px;border-radius:0 0 25px 25px}
+.nav{text-align:center;font-size:10px;color:var(--muted);font-weight:800}.nav strong{display:block;font-size:19px;margin-bottom:3px}.nav.active{color:var(--brand)}
+.tripstep{display:flex;gap:10px;margin:10px 0}.dot{width:24px;height:24px;border-radius:50%;background:#d7dee4;display:flex;align-items:center;justify-content:center;font-size:12px;flex:0 0 auto}.dot.done{background:var(--good);color:#fff}.steptext b{display:block;font-size:13px}.steptext span{font-size:11px;color:var(--muted)}
+.doc{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}.doc:last-child{border-bottom:0}.docico{width:44px;height:44px;border-radius:12px;background:#edf3f7;display:grid;place-items:center;font-size:21px}.docmain{flex:1}.docmain b{display:block}.docmain span{font-size:11px;color:var(--muted)}
+.login{padding:78px 24px}.logoMark{width:64px;height:64px;background:var(--brand);color:#fff;border-radius:17px;display:grid;place-items:center;font-weight:1000;font-size:20px}.login h2{font-size:28px;margin:22px 0 6px}.field{margin-top:14px}.field label{display:block;font-size:12px;color:var(--muted);font-weight:700;margin-bottom:6px}.input{background:#fff;border:1px solid var(--line);padding:15px;border-radius:13px;color:#45515b}
+.notes{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px}.notes h2{margin-top:0}.notes li{margin:8px 0;line-height:1.45}.callout{padding:13px;border-left:4px solid var(--good);background:#f2faf6;border-radius:8px;margin:14px 0}
+.alert{background:#fff8e8;border:1px solid #f2dba4;color:#795200;border-radius:14px;padding:12px;margin-top:12px;font-size:12px;font-weight:700}
+@media(max-width:820px){.stage{grid-template-columns:1fr}.phone{position:relative;max-width:390px;margin:auto}.notes{max-width:600px;margin:auto}.head{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="head">
+    <div><h1>DynamicONE Driver — UX Mockup</h1><p>Şoför için tek görev, büyük aksiyon, minimum metin.</p></div>
+    <div class="tabs">
+      <button onclick="show('login',this)">Login</button>
+      <button class="active" onclick="show('home',this)">Ana Sayfa</button>
+      <button onclick="show('trip',this)">Sefer</button>
+      <button onclick="show('docs',this)">Evraklar</button>
+      <button onclick="show('earn',this)">Ücretler</button>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="phone">
+      <div id="login" class="screen">
+        <div class="status"><span>09:41</span><span>● ● ◉</span></div>
+        <div class="login">
+          <div class="logoMark">D1</div>
+          <h2>Hoş geldiniz</h2>
+          <div class="sub">DynamicONE Driver</div>
+          <div class="field"><label>KULLANICI ADI</label><div class="input">driver.1027</div></div>
+          <div class="field"><label>ŞİFRE</label><div class="input">••••••••••</div></div>
+          <button class="primary">GİRİŞ YAP</button>
+          <button class="secondary">Dil / Language</button>
+        </div>
+      </div>
+
+      <div id="home" class="screen active">
+        <div class="status"><span>09:41</span><span>● ● ◉</span></div>
+        <div class="topbar"><div class="brand">DynamicONE <small>DRIVER</small></div><div class="online">● ONLINE</div></div>
+        <div class="content">
+          <div class="hello">Merhaba, Mehmet</div>
+          <div class="sub">Mesai 06:04'te başladı · 3s 37dk</div>
+
+          <div class="alert">⚠ Yeni sefer atandı. Planlanan başlangıç: 10:15</div>
+
+          <div class="card">
+            <div class="row"><b>#TRP-261245</b><span class="badge warn">YENİ</span></div>
+            <div class="route">Rotterdam → Düsseldorf</div>
+            <div class="meta"><span>🕘 10:15</span><span>📦 MSKU 458921-7</span><span>🚛 WX 9234K</span><span>📍 224 km</span></div>
+          </div>
+
+          <button class="primary" onclick="showById('trip')">✓ SEFERİ GÖR VE KABUL ET</button>
+
+          <div class="grid">
+            <div class="tile"><span class="ico">🚚</span><span>Seferler</span></div>
+            <div class="tile"><span class="ico">📄</span><span>Evraklar</span></div>
+            <div class="tile"><span class="ico">€</span><span>Ücretler</span></div>
+            <div class="tile"><span class="ico">⚠</span><span>Sorun Bildir</span></div>
+          </div>
+        </div>
+        <div class="bottom">
+          <div class="nav active"><strong>⌂</strong>Ana Sayfa</div><div class="nav"><strong>🚚</strong>Seferler</div><div class="nav"><strong>▤</strong>Evraklar</div><div class="nav"><strong>●</strong>Profil</div>
+        </div>
+      </div>
+
+      <div id="trip" class="screen">
+        <div class="status"><span>09:41</span><span>● ● ◉</span></div>
+        <div class="topbar"><div class="brand">‹ Sefer #TRP-261245</div><span class="badge">KABUL EDİLDİ</span></div>
+        <div class="content">
+          <div class="card">
+            <div class="route">Rotterdam → Düsseldorf</div>
+            <div class="meta"><span>Pickup 10:15</span><span>ETA 14:05</span><span>MSKU 458921-7</span><span>Seal: 781392</span></div>
+          </div>
+
+          <div class="card">
+            <h3>Sefer ilerlemesi</h3>
+            <div class="tripstep"><div class="dot done">✓</div><div class="steptext"><b>Sefer atandı</b><span>09:18</span></div></div>
+            <div class="tripstep"><div class="dot done">✓</div><div class="steptext"><b>Kabul edildi</b><span>09:25</span></div></div>
+            <div class="tripstep"><div class="dot">3</div><div class="steptext"><b>Seferi başlat</b><span>Sıradaki adım</span></div></div>
+            <div class="tripstep"><div class="dot">4</div><div class="steptext"><b>Pickup / Terminal</b><span>Bekliyor</span></div></div>
+            <div class="tripstep"><div class="dot">5</div><div class="steptext"><b>Teslimat</b><span>Bekliyor</span></div></div>
+          </div>
+
+          <button class="primary">▶ SEFERİ BAŞLAT</button>
+          <button class="secondary">☕ MOLA</button>
+
+          <div class="grid">
+            <div class="tile" onclick="showById('docs')"><span class="ico">📷</span><span>Evraklar</span></div>
+            <div class="tile"><span class="ico">🧭</span><span>Navigasyon</span></div>
+            <div class="tile"><span class="ico">☎</span><span>Planlamacıyı Ara</span></div>
+            <div class="tile"><span class="ico">⚠</span><span>Sorun Bildir</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="docs" class="screen">
+        <div class="status"><span>09:41</span><span>● ● ◉</span></div>
+        <div class="topbar"><div class="brand">‹ Sefer Evrakları</div><span class="badge gray">3 / 6</span></div>
+        <div class="content">
+          <div class="sub">#TRP-261245 · MSKU 458921-7</div>
+          <div class="card">
+            <div class="doc"><div class="docico">📄</div><div class="docmain"><b>CMR</b><span>Eksik</span></div><span class="badge warn">EKLE</span></div>
+            <div class="doc"><div class="docico">🔁</div><div class="docmain"><b>Interchange / EIR</b><span>Yüklendi · 09:52</span></div><span class="badge">✓</span></div>
+            <div class="doc"><div class="docico">🪪</div><div class="docmain"><b>A1</b><span>Mevcut</span></div><span class="badge">✓</span></div>
+            <div class="doc"><div class="docico">📦</div><div class="docmain"><b>Konteyner Fotoğrafı</b><span>Eksik</span></div><span class="badge warn">EKLE</span></div>
+            <div class="doc"><div class="docico">🔒</div><div class="docmain"><b>Mühür Fotoğrafı</b><span>Gönderilmeyi bekliyor</span></div><span class="badge gray">↻</span></div>
+            <div class="doc"><div class="docico">✅</div><div class="docmain"><b>POD</b><span>Teslimatta gerekli</span></div><span class="badge gray">—</span></div>
+          </div>
+          <button class="primary">📷 FOTOĞRAF ÇEK</button>
+          <button class="secondary">GALERİDEN SEÇ</button>
+        </div>
+      </div>
+
+      <div id="earn" class="screen">
+        <div class="status"><span>09:41</span><span>● ● ◉</span></div>
+        <div class="topbar"><div class="brand">Ücretlerim</div><span class="badge gray">EYLÜL</span></div>
+        <div class="content">
+          <div class="card" style="padding:22px">
+            <div class="sub">TAHMİNİ BU AY</div>
+            <div style="font-size:38px;font-weight:1000;margin:7px 0">€1,200</div>
+            <div class="sub">12 çalışma günü kaydedildi</div>
+          </div>
+          <div class="card">
+            <div class="row"><span>Günlük hakediş</span><b>€1,200</b></div>
+            <hr style="border:0;border-top:1px solid var(--line);margin:14px 0">
+            <div class="row"><span>ADR bonusu</span><b>€0</b></div>
+            <hr style="border:0;border-top:1px solid var(--line);margin:14px 0">
+            <div class="row"><span>Diğer bonuslar</span><b>€0</b></div>
+          </div>
+          <div class="alert">Bu ekran bilgi amaçlıdır. Kesin bordro/ödeme Dynamic Transport kayıtlarına göre oluşur.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes">
+      <h2>Mockup kararları</h2>
+      <div class="callout"><b>Ana fikir:</b> Şoföre menü ağacı değil, sıradaki doğru işi gösteriyoruz.</div>
+      <ul>
+        <li><b>Primary action</b> her zaman çok büyük ve tek.</li>
+        <li>Sefer kartında operasyon için gerekli bilgiler var; muhasebe/arka ofis detayları yok.</li>
+        <li>Evrak ekranında her dosyanın <b>Eksik / Pending / Yüklendi</b> durumu açık.</li>
+        <li>Mola, navigasyon, planner call ve sorun bildirimi aktif seferden ulaşılabilir.</li>
+        <li>Offline durumunda kullanıcı aksiyonu kaybolmaz; pending olarak görünür.</li>
+        <li>Ücret ekranı sade tutulur; şoförü finans detayına boğmaz.</li>
+      </ul>
+      <h3>Önerilen sonraki ekranlar</h3>
+      <ul>
+        <li>Mesai başlangıcı + 30–60 sn checklist</li>
+        <li>Sefer kabul modalı / özel talimatlar</li>
+        <li>Mola aktif ekranı</li>
+        <li>Sorun bildir akışı</li>
+        <li>Belge fotoğraf önizleme / tekrar çek</li>
+        <li>Offline sync merkezi</li>
+        <li>Profil ve personel belgeleri</li>
+      </ul>
+    </div>
+  </div>
+</div>
+<script>
+function show(id,btn){
+ document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));
+ document.getElementById(id).classList.add('active');
+ document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));
+ if(btn) btn.classList.add('active');
+}
+function showById(id){
+ show(id,null);
+ document.querySelectorAll('.tabs button').forEach(b=>{
+   if(b.textContent.toLowerCase().includes(id==='trip'?'sefer':id==='docs'?'evrak':'ana')) b.classList.add('active')
+ });
+}
+</script>
+</body>
+</html>

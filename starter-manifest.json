@@ -1,0 +1,16 @@
+{
+  "name": "DynamicONE Driver Starter",
+  "created_for": "Dynamic Transport",
+  "platform": "Android",
+  "recommended_stack": [
+    "Kotlin",
+    "Jetpack Compose",
+    "Room",
+    "WorkManager",
+    "Retrofit/OkHttp",
+    "DataStore"
+  ],
+  "entry_prompt": "PROMPT_START_HERE.md",
+  "ai_rules": "CLAUDE.md",
+  "interactive_mockup": "mockups/driver-app.html"
+}
