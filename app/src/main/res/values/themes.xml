@@ -5,11 +5,10 @@
         <item name="android:windowBackground">@color/window_background</item>
     </style>
 
-    <!-- The brand mark (branding/dynamicone-mark.png) is designed for white, so it sits on a white circle in light and dark mode. -->
+    <!-- The brand mark (branding/dynamicone-mark.png) on a transparent background, like on the sign-in screen. -->
     <style name="Theme.DynamicOne.Splash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/window_background</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon</item>
-        <item name="windowSplashScreenIconBackgroundColor">@color/brand_logo_background</item>
         <item name="postSplashScreenTheme">@style/Theme.DynamicOne</item>
     </style>
 

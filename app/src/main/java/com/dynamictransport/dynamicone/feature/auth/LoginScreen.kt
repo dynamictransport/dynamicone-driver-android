@@ -1,13 +1,12 @@
 package com.dynamictransport.dynamicone.feature.auth
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -16,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -41,9 +39,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -97,22 +93,15 @@ fun LoginScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp, vertical = 32.dp),
         ) {
-            // The DynamicONE brand mark is designed for white, so it keeps a white tile in dark mode too. The mark is wide
-            // (3:2), and so is the tile.
-            Box(
-                contentAlignment = Alignment.Center,
+            // The brand mark on the screen background, at the size its per-density images are made for (96 dp wide).
+            Image(
+                painter = painterResource(R.drawable.dynamicone_logo),
+                contentDescription = null,
                 modifier = Modifier
-                    .size(width = 104.dp, height = 72.dp)
-                    .background(Color.White, RoundedCornerShape(18.dp))
-                    .padding(12.dp)
+                    .width(96.dp)
+                    .aspectRatio(LOGO_ASPECT_RATIO)
                     .testTag("app_logo"),
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.dynamicone_logo),
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                )
-            }
+            )
             Column {
                 Text(stringResource(R.string.login_welcome), style = MaterialTheme.typography.headlineSmall)
                 Text(
@@ -240,3 +229,6 @@ fun LoginScreen(
         )
     }
 }
+
+/** Width to height of branding/dynamicone-mark.png. */
+private const val LOGO_ASPECT_RATIO = 572f / 384f

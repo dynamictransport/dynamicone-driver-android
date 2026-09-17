@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="window_background">#FFEEF2F5</color>
-    <!-- The DynamicONE brand mark is designed for a white background. -->
-    <color name="brand_logo_background">#FFFFFFFF</color>
     <color name="ic_launcher_background">#FFFFFFFF</color>
 </resources>
