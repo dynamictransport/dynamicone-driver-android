@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="notification_channel_messages">Wiadomości</string>
+    <string name="notification_new_message">Nowa wiadomość</string>
+    <string name="notifications_blocked">Powiadomienia są wyłączone. Włącz je, aby wiedzieć o nowych wiadomościach.</string>
+    <string name="notifications_enable">Włącz</string>
+    <string name="push_message_title_trip" tools:ignore="UnusedResources">Kurs %1$s: nowa wiadomość</string>
+    <string name="push_message_title_general" tools:ignore="UnusedResources">Nowa wiadomość z biura</string>
+    <string name="push_message_body" tools:ignore="UnusedResources">Dotknij, aby otworzyć.</string>
+</resources>

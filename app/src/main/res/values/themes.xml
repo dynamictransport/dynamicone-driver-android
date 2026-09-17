@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.DynamicOneDriver" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/window_background</item>
+    </style>
+
+    <!-- The brand mark is designed for white, so it sits on a white circle in light and dark mode. -->
+    <style name="Theme.DynamicOneDriver.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/window_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="windowSplashScreenIconBackgroundColor">@color/brand_logo_background</item>
+        <item name="postSplashScreenTheme">@style/Theme.DynamicOneDriver</item>
+    </style>
+
+</resources>

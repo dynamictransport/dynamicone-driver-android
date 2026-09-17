@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="notification_channel_messages">Messages</string>
+    <string name="notification_new_message">New message</string>
+    <string name="notifications_blocked">Notifications are off. Turn them on to hear about new messages.</string>
+    <string name="notifications_enable">Turn on</string>
+    <!-- Titles and text of notifications the system shows from a push (FCM title_loc_key / body_loc_key, docs/13). -->
+    <string name="push_message_title_trip" tools:ignore="UnusedResources">Trip %1$s: new message</string>
+    <string name="push_message_title_general" tools:ignore="UnusedResources">New message from the office</string>
+    <string name="push_message_body" tools:ignore="UnusedResources">Tap to open.</string>
+</resources>

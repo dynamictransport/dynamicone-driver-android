@@ -1,0 +1,498 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">DynamicONE Driver</string>
+    <string name="demo_badge" translatable="false">DEMO</string>
+    <string name="trip_route" translatable="false">%1$s → %2$s</string>
+    <string name="counter_of" translatable="false">%1$d / %2$d</string>
+    <string name="value_separator" translatable="false">%1$s · %2$s</string>
+    <string name="value_unknown" translatable="false">—</string>
+    <string name="login_language" translatable="false">Language / Dil / Język</string>
+    <string name="language_en" translatable="false">English</string>
+    <string name="language_pl" translatable="false">Polski</string>
+    <string name="language_tr" translatable="false">Türkçe</string>
+
+    <!-- Common -->
+    <string name="common_back">Back</string>
+    <string name="common_retry">Retry</string>
+    <string name="common_ok">OK</string>
+    <string name="common_cancel">Cancel</string>
+    <string name="common_refresh">Refresh</string>
+    <string name="common_hold_to_confirm">Press and hold to confirm</string>
+    <string name="status_online">Online</string>
+    <string name="status_offline">Offline</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_trips">Trips</string>
+    <string name="nav_documents">Documents</string>
+    <string name="nav_profile">Profile</string>
+    <string name="quick_earnings">My pay</string>
+    <string name="quick_report_problem">Report problem</string>
+
+    <!-- Sync -->
+    <string name="sync_offline">You are offline — actions are being saved</string>
+    <plurals name="sync_pending_count">
+        <item quantity="one">%d action waiting to be sent</item>
+        <item quantity="other">%d actions waiting to be sent</item>
+    </plurals>
+    <plurals name="sync_failed_count">
+        <item quantity="one">%d action could not be sent</item>
+        <item quantity="other">%d actions could not be sent</item>
+    </plurals>
+    <string name="sync_last">Last sync: %1$s</string>
+    <string name="sync_never">Not synced yet</string>
+    <string name="sync_state_synced">Sent</string>
+    <string name="sync_state_pending">Waiting to send</string>
+    <string name="sync_state_failed">Not sent</string>
+    <string name="sync_error_offline">Waiting for internet</string>
+    <string name="sync_error_server">Server not reachable, will retry</string>
+    <string name="sync_error_conflict">Not accepted: the trip status has changed</string>
+    <string name="sync_error_rejected">Rejected by the server</string>
+    <string name="sync_error_session">Sign in to send</string>
+    <string name="sync_error_preceding">Not sent because an earlier action failed</string>
+    <string name="sync_error_not_supported">Upload will be available in the next version</string>
+    <string name="sync_error_unknown">Could not be sent</string>
+    <string name="pending_type_trip">Trip action</string>
+    <string name="pending_type_shift_start">Start shift</string>
+    <string name="pending_type_shift_end">End shift</string>
+    <string name="pending_type_incident">Problem report</string>
+    <string name="pending_type_document">Document upload</string>
+
+    <!-- Home -->
+    <string name="home_greeting">Hello, %1$s</string>
+    <string name="home_greeting_no_name">Hello</string>
+    <string name="shift_line_not_started">Shift not started</string>
+    <string name="shift_line_active">Shift started %1$s · %2$s</string>
+    <string name="shift_line_finished">Shift ended %1$s</string>
+    <string name="home_new_trip_alert">New trip assigned. Planned start: %1$s</string>
+    <string name="home_new_trip_alert_no_time">New trip assigned</string>
+    <string name="home_view">View</string>
+    <string name="home_no_trip_title">You have no assigned trip right now.</string>
+    <string name="home_no_trip_body">New trips appear here automatically.</string>
+    <string name="home_no_action">Waiting for the planner</string>
+    <string name="action_blocked">This step is not possible right now. Contact your planner.</string>
+
+    <!-- Actions -->
+    <string name="action_start_shift">START SHIFT</string>
+    <string name="action_end_shift">END SHIFT</string>
+    <string name="action_review_new_trip">VIEW AND ACCEPT TRIP</string>
+    <string name="action_accept_trip">ACCEPT TRIP</string>
+    <string name="action_reject_trip">REJECT</string>
+    <string name="action_start_trip">START TRIP</string>
+    <string name="action_arrive_pickup">ARRIVED AT PICKUP</string>
+    <string name="action_complete_pickup">LOADING COMPLETED</string>
+    <string name="action_start_delivery_leg">DEPARTED FOR DELIVERY</string>
+    <string name="action_arrive_delivery">ARRIVED AT DELIVERY</string>
+    <string name="action_complete_delivery">DELIVERY COMPLETED</string>
+    <string name="action_finish_trip">FINISH TRIP</string>
+    <string name="action_start_break">START BREAK</string>
+    <string name="action_end_break">END BREAK</string>
+    <string name="action_unknown">UNAVAILABLE</string>
+
+    <!-- Trip states -->
+    <string name="trip_state_assigned">New</string>
+    <string name="trip_state_accepted">Accepted</string>
+    <string name="trip_state_started">Started</string>
+    <string name="trip_state_at_pickup">At pickup</string>
+    <string name="trip_state_pickup_completed">Loaded</string>
+    <string name="trip_state_en_route_delivery">To delivery</string>
+    <string name="trip_state_at_delivery">At delivery</string>
+    <string name="trip_state_delivery_completed">Delivered</string>
+    <string name="trip_state_finished">Finished</string>
+    <string name="trip_state_cancelled">Cancelled</string>
+    <string name="trip_state_unknown">Other</string>
+    <string name="trip_state_on_break">On break</string>
+
+    <!-- Trips -->
+    <string name="trips_tab_active">Active (%1$d)</string>
+    <string name="trips_tab_upcoming">Upcoming (%1$d)</string>
+    <string name="trips_tab_completed">Completed (%1$d)</string>
+    <string name="trips_empty_active">No active trip.</string>
+    <string name="trips_empty_upcoming">No upcoming trips.</string>
+    <string name="trips_empty_completed">No completed trips yet.</string>
+    <string name="refresh_offline">No internet. Showing saved data.</string>
+    <string name="refresh_failed">Could not refresh. Try again later.</string>
+
+    <!-- Trip detail -->
+    <string name="trip_title">Trip %1$s</string>
+    <string name="trip_pickup">Pickup</string>
+    <string name="trip_delivery">Delivery</string>
+    <string name="trip_planned_start">Planned start</string>
+    <string name="trip_container">Container</string>
+    <string name="trip_seal">Seal</string>
+    <string name="trip_vehicle">Truck / trailer</string>
+    <string name="trip_instructions">Instructions</string>
+    <string name="trip_progress">Trip progress</string>
+    <string name="trip_navigation">Navigation</string>
+    <string name="trip_on_break_title">You are on a break</string>
+    <string name="trip_on_break_since">Since %1$s</string>
+    <string name="trip_failed_notice">The server did not accept an action on this trip. The current status is shown.</string>
+    <string name="trip_not_found">Trip not found.</string>
+    <string name="trip_closed">This trip is closed.</string>
+    <string name="navigation_unavailable">No navigation app found.</string>
+    <string name="timeline_assigned">Trip assigned</string>
+    <string name="timeline_accepted">Accepted</string>
+    <string name="timeline_started">Trip started</string>
+    <string name="timeline_pickup">Pickup / terminal</string>
+    <string name="timeline_delivery">Delivery</string>
+    <string name="timeline_completed">Completed</string>
+    <string name="timeline_next">Next step</string>
+    <string name="timeline_waiting">Waiting</string>
+    <string name="timeline_done">Done</string>
+
+    <!-- Action errors -->
+    <string name="error_not_allowed">This step is no longer possible.</string>
+    <string name="error_shift_not_active">Start your shift first.</string>
+    <string name="error_trip_in_progress">A trip is still in progress.</string>
+    <string name="error_reason_required">Choose a reason.</string>
+    <string name="error_note_required">Write a short explanation.</string>
+    <string name="error_note_too_long">The note is too long.</string>
+    <string name="error_not_found">Not found. Refresh and try again.</string>
+    <string name="error_not_logged_in">Please sign in again.</string>
+    <string name="error_low_storage">Phone storage is almost full. Free up space to take photos.</string>
+    <string name="error_file">The photo could not be saved. Try again.</string>
+    <string name="error_camera_unavailable">The camera could not be started.</string>
+
+    <!-- Reject -->
+    <string name="reject_title">Reject trip</string>
+    <string name="reject_question">Why are you rejecting this trip?</string>
+    <string name="reject_reason_vehicle_problem">Vehicle problem</string>
+    <string name="reject_reason_legal_driving_time">Legal driving time</string>
+    <string name="reject_reason_health">Health</string>
+    <string name="reject_reason_wrong_assignment">Wrong assignment</string>
+    <string name="reject_reason_other">Other</string>
+    <string name="reject_note_required">Short explanation (required)</string>
+    <string name="reject_note_optional">Note (optional)</string>
+    <string name="reject_confirm">REJECT TRIP</string>
+
+    <!-- Shift -->
+    <string name="shift_title">Shift</string>
+    <string name="shift_status_active">Active</string>
+    <string name="shift_status_not_started">Not started</string>
+    <string name="shift_status_finished">Finished</string>
+    <string name="shift_started_at">Started</string>
+    <string name="shift_ended_at">Ended</string>
+    <string name="shift_duration">Duration</string>
+    <string name="shift_vehicle">Truck</string>
+    <string name="shift_trailer">Trailer</string>
+    <string name="shift_summary">Shift summary</string>
+    <string name="shift_completed_trips">Completed trips</string>
+    <string name="shift_pending_actions">Actions waiting to be sent</string>
+    <string name="shift_pending_warning">Unsent actions stay on this phone and are sent automatically when internet is back.</string>
+    <string name="shift_end_blocked">You cannot end the shift while a trip is in progress.</string>
+    <string name="shift_not_assigned">Not assigned</string>
+    <string name="duration_hours_minutes">%1$d h %2$d min</string>
+
+    <!-- Documents -->
+    <string name="documents_title">Trip documents</string>
+    <string name="documents_no_trip_title">No active trip</string>
+    <string name="documents_no_trip_body">Documents are added to an accepted, running or completed trip. Completed trips are opened from Trips.</string>
+    <string name="documents_take_photo">TAKE PHOTO · %1$s</string>
+    <string name="documents_pick_gallery">Choose from gallery</string>
+    <string name="documents_selected">Selected</string>
+    <string name="documents_saved">Photo saved. It will be sent automatically.</string>
+    <string name="document_type_cmr">CMR</string>
+    <string name="document_type_container_photo">Container photo</string>
+    <string name="document_type_seal_photo">Seal photo</string>
+    <string name="document_type_other">Other document</string>
+
+    <!-- Earnings -->
+
+    <!-- Profile -->
+    <string name="profile_personnel_no">Personnel no.</string>
+    <string name="profile_sync_title">Sending status</string>
+    <string name="profile_sync_all_sent">All actions have been sent.</string>
+    <string name="profile_retry_all">Retry all</string>
+    <string name="profile_dismiss">Understood</string>
+    <string name="profile_language">Language</string>
+    <string name="language_system">Phone language</string>
+    <string name="profile_demo_title">Demo settings</string>
+    <string name="profile_demo_offline">Simulate no internet</string>
+    <string name="profile_demo_reset">Reset demo data</string>
+    <string name="profile_version">Version %1$s</string>
+    <string name="profile_logout">Sign out</string>
+    <string name="profile_logout_pending_title">Unsent actions</string>
+    <plurals name="profile_logout_pending_body">
+        <item quantity="one">%d action has not been sent yet. It stays on this phone and is sent when you sign in again.</item>
+        <item quantity="other">%d actions have not been sent yet. They stay on this phone and are sent when you sign in again.</item>
+    </plurals>
+
+    <!-- Incident -->
+    <string name="incident_title">Report a problem</string>
+    <string name="incident_question">What happened?</string>
+    <string name="incident_trip">Trip: %1$s</string>
+    <string name="incident_category_delay">Delay</string>
+    <string name="incident_category_traffic">Traffic</string>
+    <string name="incident_category_terminal_queue">Terminal queue</string>
+    <string name="incident_category_vehicle_breakdown">Vehicle breakdown</string>
+    <string name="incident_category_accident">Accident</string>
+    <string name="incident_category_document">Document problem</string>
+    <string name="incident_category_container_seal">Container / seal problem</string>
+    <string name="incident_category_customer">Customer problem</string>
+    <string name="incident_category_other">Other</string>
+    <string name="incident_note">Note (optional)</string>
+    <string name="incident_submit">SEND REPORT</string>
+    <string name="incident_done_title">Report saved</string>
+    <string name="incident_done_body">It is sent now, or automatically as soon as internet is back.</string>
+    <string name="incident_back_home">BACK TO HOME</string>
+
+    <!-- Login -->
+    <string name="login_welcome">Welcome</string>
+    <string name="login_username">Username</string>
+    <string name="login_password">Password</string>
+    <string name="login_show_password">Show password</string>
+    <string name="login_hide_password">Hide password</string>
+    <string name="login_submit">SIGN IN</string>
+    <string name="login_support">Support</string>
+    <string name="login_support_body">Problems signing in? Contact your planner or the Dynamic Transport office.</string>
+    <string name="login_error_empty">Enter username and password.</string>
+    <string name="login_error_invalid">Username or password is incorrect.</string>
+    <string name="login_error_offline">No internet connection. Signing in needs internet.</string>
+    <string name="login_error_failed">Sign-in is not possible right now. Try again shortly.</string>
+    <string name="login_session_expired">Your session has ended. Saved actions are kept — sign in to send them.</string>
+    <string name="login_demo_hint">Demo mode: any username, password \"demo\".</string>
+    <string name="login_two_factor_code">Verification code</string>
+    <string name="login_two_factor_hint">Enter the 6-digit code from your authenticator app.</string>
+    <string name="login_error_two_factor_format">The code must have 6 digits.</string>
+    <string name="login_error_two_factor_invalid">The verification code is not correct.</string>
+    <string name="login_error_driver_access">This account has no access to the driver app. Contact the office.</string>
+    <string name="login_error_rate_limited">Too many sign-in attempts. Wait a minute and try again.</string>
+    <string name="login_session_expired_real">Your session has ended. Please sign in again.</string>
+
+    <!-- Password change -->
+    <string name="password_change_title">Change password</string>
+    <string name="password_change_required_body">Set a new password before using the app.</string>
+    <string name="password_current">Current password</string>
+    <string name="password_new">New password</string>
+    <string name="password_confirm">Repeat new password</string>
+    <string name="password_change_submit">CHANGE PASSWORD</string>
+    <string name="password_error_empty">Fill in all fields.</string>
+    <string name="password_error_mismatch">The new passwords do not match.</string>
+    <string name="password_error_rejected">The password was not accepted. Check the current password and the password rules.</string>
+
+    <!-- Driver API (real backend) -->
+    <string name="feature_not_connected">This feature is not connected to the server yet.</string>
+    <string name="shift_line_unavailable">Shift tracking is not connected yet</string>
+    <string name="shift_status_unavailable">Not connected</string>
+    <string name="sync_offline_real">No connection. Actions cannot be sent until you are back online.</string>
+    <string name="refresh_service_unavailable">The server is not available right now. Try again later.</string>
+    <string name="refresh_rate_limited">Too many requests. Wait a moment and try again.</string>
+    <string name="refresh_session_expired">Your session has ended. Sign in again.</string>
+    <string name="trips_load_more">Load more trips</string>
+    <string name="trip_order">Order</string>
+    <string name="trip_stops">Stops</string>
+    <string name="trip_break_reported">Break reported.</string>
+    <string name="stop_activity_pickup">Pickup</string>
+    <string name="stop_activity_load">Loading</string>
+    <string name="stop_activity_unload">Unloading</string>
+    <string name="stop_activity_deliver">Delivery</string>
+    <string name="stop_activity_empty_return">Empty return</string>
+    <string name="stop_activity_fuel">Fuel</string>
+    <string name="stop_activity_rest">Rest</string>
+    <string name="stop_activity_other">Other</string>
+    <string name="stop_status_planned">Planned</string>
+    <string name="stop_status_en_route">On the way</string>
+    <string name="stop_status_arrived">Arrived</string>
+    <string name="stop_status_completed">Completed</string>
+    <string name="stop_status_skipped">Skipped</string>
+    <string name="stop_planned_arrival">Planned arrival: %1$s</string>
+    <string name="stop_actual_arrival">Arrived: %1$s</string>
+    <string name="stop_actual_departure">Departed: %1$s</string>
+    <string name="stop_reference">Reference: %1$s</string>
+    <string name="error_trip_required">Accept or start a trip first.</string>
+    <string name="error_file_too_large">The file is larger than 10 MB.</string>
+    <string name="error_unsupported_file">Only PDF, JPEG or PNG files can be uploaded.</string>
+    <string name="error_conflict">The trip status has changed. The current status is shown.</string>
+    <string name="error_offline">No connection. The action was not resent automatically — check the status and try again.</string>
+    <string name="error_forbidden">You are not allowed to do this. Contact your planner.</string>
+    <string name="error_failed">The action could not be completed. Try again.</string>
+    <string name="documents_uploaded">Document uploaded. It is waiting for the check.</string>
+    <string name="documents_open">Open document</string>
+    <string name="documents_open_unavailable">No app found to open this document.</string>
+    <!-- Document scanner -->
+    <string name="scan_close">Close</string>
+    <string name="scan_capture">TAKE PHOTO</string>
+    <string name="scan_auto_hint">The photo is taken automatically when the frame turns green.</string>
+    <string name="scan_camera_starting">Starting the camera…</string>
+    <string name="scan_capturing">Hold still — taking the photo…</string>
+    <string name="scan_ready_auto">Good — hold still, the photo is taken automatically.</string>
+    <string name="scan_ready_photo">Good — take the photo.</string>
+    <string name="scan_torch_on">Turn on the light</string>
+    <string name="scan_torch_off">Turn off the light</string>
+    <string name="scan_processing">Checking the photo…</string>
+    <string name="scan_review_accepted">Readable. Check that all text is sharp before you use it.</string>
+    <string name="scan_review_rejected">Photo not accepted</string>
+    <string name="scan_use">USE THIS PHOTO</string>
+    <string name="scan_retake">TAKE AGAIN</string>
+    <string name="scan_retake_secondary">Take again</string>
+    <string name="scan_permission_title">Camera access needed</string>
+    <string name="scan_permission_body">Documents are photographed in the app so their readability can be checked.</string>
+    <string name="scan_permission_allow">ALLOW CAMERA</string>
+    <string name="scan_permission_settings">OPEN SETTINGS</string>
+    <string name="scan_issue_no_document">Place the whole document on a dark surface inside the frame.</string>
+    <string name="scan_issue_cut_off">Move back a little — all four corners must be visible.</string>
+    <string name="scan_issue_too_far">Move closer to the document.</string>
+    <string name="scan_issue_tilted">Hold the phone flat above the document.</string>
+    <string name="scan_issue_too_dark">Too dark — turn on the light.</string>
+    <string name="scan_issue_glare">Glare on the document — change the angle or turn off the light.</string>
+    <string name="scan_issue_blurry">Blurry — hold the phone still.</string>
+    <string name="scan_issue_low_resolution">Too small to read — take the photo from closer.</string>
+    <string name="incident_done_title_sent">Report sent</string>
+    <string name="incident_done_body_sent">The report was saved on the trip.</string>
+
+    <!-- Driver App operations (TH-2026-0439) -->
+    <string name="stop_sequence_label" translatable="false">%1$d. %2$s · %3$s</string>
+    <string name="action_continue_trip">CONTINUE TRIP</string>
+    <string name="exec_start">I STARTED THE TRIP</string>
+    <string name="exec_pickup_full">I PICKED UP THE FULL CONTAINER</string>
+    <string name="exec_pickup_empty">I PICKED UP THE EMPTY CONTAINER</string>
+    <string name="exec_pickup">I PICKED UP THE CONTAINER</string>
+    <string name="exec_load_done">CONTAINER LOADING COMPLETED</string>
+    <string name="exec_unload_done">CONTAINER UNLOADING COMPLETED</string>
+    <string name="exec_empty_return">I RETURNED THE EMPTY CONTAINER</string>
+    <string name="exec_deliver_full">I DELIVERED THE FULL CONTAINER</string>
+    <string name="exec_deliver_empty">I DELIVERED THE EMPTY CONTAINER</string>
+    <string name="exec_deliver">I DELIVERED THE CONTAINER</string>
+    <string name="exec_stop_done">STOP COMPLETED</string>
+    <string name="exec_rest">REPORT A BREAK</string>
+    <string name="exec_problem">REPORT A PROBLEM</string>
+    <string name="exec_recorded">Recorded by the server.</string>
+    <string name="exec_context_container">Container %1$s</string>
+    <string name="exec_plan_loading">Loading the next steps…</string>
+    <string name="exec_plan_error">The next steps could not be loaded.</string>
+    <string name="exec_no_action">No step is possible right now. Contact your planner if this is unexpected.</string>
+    <string name="exec_legacy_notice">This trip was started before step-by-step actions and continues with the earlier status steps.</string>
+    <string name="pending_action_title">Last action: %1$s</string>
+    <string name="pending_state_sending">Sending…</string>
+    <string name="pending_state_unknown">Connection lost — it is not known whether the server recorded it.</string>
+    <string name="pending_state_not_sent">Not sent.</string>
+    <string name="pending_state_recorded">Sent</string>
+    <string name="pending_resend">SEND THE SAME ACTION AGAIN</string>
+    <string name="pending_discard">Discard and reload the plan</string>
+    <string name="receipts_title">Recorded actions</string>
+    <string name="receipt_received">Server record: %1$s</string>
+    <string name="receipt_observed">Device time: %1$s</string>
+    <string name="receipt_start">Trip started</string>
+    <string name="receipt_complete_stop">Stop / container completed</string>
+    <string name="receipt_rest">Break reported</string>
+    <string name="receipt_problem">Problem reported</string>
+    <string name="receipt_unknown">Other action</string>
+    <string name="location_missing">Location missing</string>
+    <string name="trip_next_stop">Next stop</string>
+    <string name="trip_next_stop_value">Next: %1$s</string>
+    <string name="stop_navigate">Navigate to this stop</string>
+    <string name="trip_messages">Trip messages</string>
+    <string name="slot_stop_unknown">Stop not in the plan</string>
+    <string name="document_type_customs">Customs document (A1)</string>
+    <string name="document_type_interchange">Interchange</string>
+    <string name="document_type_unknown">Document</string>
+    <string name="slot_state_missing">Missing</string>
+    <string name="slot_state_not_required">Not required</string>
+    <string name="slot_state_pending_review">Waiting for check</string>
+    <string name="slot_state_approved">Approved</string>
+    <string name="slot_state_rejected">Rejected — upload again</string>
+    <string name="slot_state_unknown">Status unknown</string>
+    <string name="slot_required">Required</string>
+    <string name="slot_optional">Not mandatory</string>
+    <string name="slot_trip_level">Whole trip</string>
+    <string name="slot_review_note">Reason: %1$s</string>
+    <string name="slot_review_comment">Note: %1$s</string>
+    <string name="documents_pick_pdf">Choose PDF</string>
+    <string name="documents_select_slot">Select the document to add from the list.</string>
+    <string name="documents_upload_not_possible">Accept the trip before adding documents.</string>
+    <string name="documents_files_title">Uploaded files</string>
+    <string name="documents_active_file">Active file: %1$s</string>
+    <string name="documents_none_open">Nothing missing</string>
+    <string name="data_stale">Could not refresh. Showing the last loaded data.</string>
+    <string name="error_photo_required">This document needs a JPEG or PNG photo.</string>
+    <string name="error_plan_changed">The plan or next step has changed. Check the current step and choose again.</string>
+    <string name="error_outcome_unknown">Connection lost. It is not known whether it was recorded — send the same action again.</string>
+    <string name="error_pending_action">First send again or discard the previous action of this trip.</string>
+    <string name="feature_demo_unavailable">Not available in demo mode.</string>
+    <string name="payroll_title">My pay</string>
+    <string name="payroll_previous_month">Previous month</string>
+    <string name="payroll_next_month">Next month</string>
+    <string name="payroll_unpublished">Pay information for this month has not been published yet.</string>
+    <string name="payroll_published_at">Published: %1$s</string>
+    <string name="payroll_no_currency">This published snapshot contains no pay lines.</string>
+    <string name="payroll_currency">Amounts in %1$s</string>
+    <string name="payroll_base_gross">Base gross pay</string>
+    <string name="payroll_additions">Additional payments</string>
+    <string name="payroll_deductions">Deductions</string>
+    <string name="payroll_none">None</string>
+    <string name="payroll_gross_earnings">Gross earnings</string>
+    <string name="payroll_total_deductions">Total deductions</string>
+    <string name="payroll_balance">Balance before statutory deductions</string>
+    <string name="payroll_earnings">Earnings</string>
+    <string name="payroll_balance_note">This is not net pay and not the amount paid to your bank account.</string>
+    <string name="payroll_effective_from">From %1$s</string>
+    <string name="payroll_finalized_title">Finalized monthly amounts (recorded separately)</string>
+    <string name="payroll_finalized_base">Base gross</string>
+    <string name="payroll_finalized_overtime">Overtime gross</string>
+    <string name="payroll_finalized_hours">Overtime hours</string>
+    <string name="payroll_disclaimer">Snapshot published by HR. Later changes appear only after HR publishes again.</string>
+    <string name="payroll_type_salary">Salary</string>
+    <string name="payroll_type_additional_payment">Additional payment</string>
+    <string name="payroll_type_bonus">Bonus</string>
+    <string name="payroll_type_exam_bonus">Exam bonus</string>
+    <string name="payroll_type_traffic_fine">Traffic fine</string>
+    <string name="payroll_type_overtime">Overtime</string>
+    <string name="payroll_type_damage_cost">Damage cost</string>
+    <string name="payroll_type_legal_document_fee">Legal document fee</string>
+    <string name="payroll_type_port_card_fee">Port card fee</string>
+    <string name="payroll_type_visa_travel_expense">Visa / travel expense</string>
+    <string name="payroll_type_salary_advance">Salary advance</string>
+    <string name="payroll_type_loyalty_bonus">Loyalty bonus</string>
+    <string name="payroll_type_cash_payment">Cash payment</string>
+    <string name="payroll_type_adr_monthly_bonus">ADR monthly bonus</string>
+    <string name="payroll_type_combi_chassis_monthly_bonus">Combi chassis monthly bonus</string>
+    <string name="payroll_type_purchase_request_deduction">Purchase request deduction</string>
+    <string name="signed_documents_title">Signed documents</string>
+    <string name="signed_type_compensation">Pay / payment document</string>
+    <string name="signed_type_leave">Leave document</string>
+    <string name="signed_type_unknown">Signed document</string>
+    <string name="signed_at">Signed: %1$s</string>
+    <string name="signed_empty">No signed documents.</string>
+    <string name="signed_note">The PDF stored when the document was signed is opened.</string>
+    <string name="signed_open">Open PDF</string>
+    <string name="common_load_more">Load more</string>
+    <string name="nav_messages">Messages</string>
+    <string name="messages_trip_title">Trip %1$s messages</string>
+    <string name="messages_general_title">General messages</string>
+    <string name="messages_trip_label">Trip %1$s</string>
+    <string name="messages_preview_you">You: %1$s</string>
+    <string name="messages_preview_office">Office: %1$s</string>
+    <string name="messages_preview_sender">%1$s: %2$s</string>
+    <plurals name="messages_unread">
+        <item quantity="one">%d unread</item>
+        <item quantity="other">%d unread</item>
+    </plurals>
+    <string name="messages_empty">No messages yet.</string>
+    <string name="messages_input">Message</string>
+    <string name="messages_send">Send</string>
+    <string name="messages_load_older">Load older messages</string>
+    <string name="messages_read">Read %1$s</string>
+    <string name="messages_retry">Send again</string>
+    <string name="messages_discard">Delete</string>
+    <string name="messages_you">You</string>
+    <string name="messages_office">Office</string>
+    <string name="profile_account">Account</string>
+    <string name="profile_change_password">Change password</string>
+    <string name="password_change_voluntary_body">After the change, sign in again with the new password.</string>
+    <string name="password_rules">12–128 characters. The server also checks its password rules.</string>
+    <string name="password_error_length">The new password must be 12–128 characters long.</string>
+    <string name="password_error_wrong_current">The current password is not correct.</string>
+    <string name="password_error_weak">The new password does not meet the password rules (upper and lower case letters, digit, symbol).</string>
+    <plurals name="trip_documents_missing">
+        <item quantity="one">%d required document missing</item>
+        <item quantity="other">%d required documents missing</item>
+    </plurals>
+    <plurals name="documents_open_count">
+        <item quantity="one">%d to upload</item>
+        <item quantity="other">%d to upload</item>
+    </plurals>
+    <plurals name="profile_logout_pending_body_real">
+        <item quantity="one">%d action or message is not confirmed. Signing out removes it from this phone.</item>
+        <item quantity="other">%d actions or messages are not confirmed. Signing out removes them from this phone.</item>
+    </plurals>
+</resources>

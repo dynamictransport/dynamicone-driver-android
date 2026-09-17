@@ -1,0 +1,486 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Common -->
+    <string name="common_back">Geri</string>
+    <string name="common_retry">Tekrar dene</string>
+    <string name="common_ok">Tamam</string>
+    <string name="common_cancel">Vazgeç</string>
+    <string name="common_refresh">Yenile</string>
+    <string name="common_hold_to_confirm">Onaylamak için basılı tutun</string>
+    <string name="status_online">Çevrimiçi</string>
+    <string name="status_offline">Çevrimdışı</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Ana Sayfa</string>
+    <string name="nav_trips">Seferler</string>
+    <string name="nav_documents">Evraklar</string>
+    <string name="nav_profile">Profil</string>
+    <string name="quick_earnings">Ücretlerim</string>
+    <string name="quick_report_problem">Sorun Bildir</string>
+
+    <!-- Sync -->
+    <string name="sync_offline">Çevrimdışısınız — işlemler kaydediliyor</string>
+    <plurals name="sync_pending_count">
+        <item quantity="one">%d işlem gönderilmeyi bekliyor</item>
+        <item quantity="other">%d işlem gönderilmeyi bekliyor</item>
+    </plurals>
+    <plurals name="sync_failed_count">
+        <item quantity="one">%d işlem gönderilemedi</item>
+        <item quantity="other">%d işlem gönderilemedi</item>
+    </plurals>
+    <string name="sync_last">Son senkronizasyon: %1$s</string>
+    <string name="sync_never">Henüz senkronize edilmedi</string>
+    <string name="sync_state_synced">Gönderildi</string>
+    <string name="sync_state_pending">Gönderilmeyi bekliyor</string>
+    <string name="sync_state_failed">Gönderilemedi</string>
+    <string name="sync_error_offline">İnternet bekleniyor</string>
+    <string name="sync_error_server">Sunucuya ulaşılamadı, tekrar denenecek</string>
+    <string name="sync_error_conflict">Kabul edilmedi: sefer durumu değişmiş</string>
+    <string name="sync_error_rejected">Sunucu reddetti</string>
+    <string name="sync_error_session">Göndermek için giriş yapın</string>
+    <string name="sync_error_preceding">Önceki işlem gönderilemediği için gönderilmedi</string>
+    <string name="sync_error_not_supported">Yükleme sonraki sürümde etkinleşecek</string>
+    <string name="sync_error_unknown">Gönderilemedi</string>
+    <string name="pending_type_trip">Sefer işlemi</string>
+    <string name="pending_type_shift_start">Mesai başlatma</string>
+    <string name="pending_type_shift_end">Mesai bitirme</string>
+    <string name="pending_type_incident">Sorun bildirimi</string>
+    <string name="pending_type_document">Evrak yükleme</string>
+
+    <!-- Home -->
+    <string name="home_greeting">Merhaba, %1$s</string>
+    <string name="home_greeting_no_name">Merhaba</string>
+    <string name="shift_line_not_started">Mesai başlamadı</string>
+    <string name="shift_line_active">Mesai başladı: %1$s · %2$s</string>
+    <string name="shift_line_finished">Mesai bitti: %1$s</string>
+    <string name="home_new_trip_alert">Yeni sefer atandı. Planlanan başlangıç: %1$s</string>
+    <string name="home_new_trip_alert_no_time">Yeni sefer atandı</string>
+    <string name="home_view">Gör</string>
+    <string name="home_no_trip_title">Şu anda atanmış seferiniz yok.</string>
+    <string name="home_no_trip_body">Yeni seferler burada otomatik olarak görünür.</string>
+    <string name="home_no_action">Planlamacıdan bekleniyor</string>
+    <string name="action_blocked">Bu adım şu anda yapılamıyor. Planlamacınızla görüşün.</string>
+
+    <!-- Actions -->
+    <string name="action_start_shift">MESAİYİ BAŞLAT</string>
+    <string name="action_end_shift">MESAİYİ BİTİR</string>
+    <string name="action_review_new_trip">SEFERİ GÖR VE KABUL ET</string>
+    <string name="action_accept_trip">SEFERİ KABUL ET</string>
+    <string name="action_reject_trip">REDDET</string>
+    <string name="action_start_trip">SEFERİ BAŞLAT</string>
+    <string name="action_arrive_pickup">TESİSE VARDIM</string>
+    <string name="action_complete_pickup">YÜKLEME TAMAMLANDI</string>
+    <string name="action_start_delivery_leg">TESLİMATA YOLA ÇIKTIM</string>
+    <string name="action_arrive_delivery">TESLİMATA VARDIM</string>
+    <string name="action_complete_delivery">TESLİMAT TAMAMLANDI</string>
+    <string name="action_finish_trip">SEFERİ BİTİR</string>
+    <string name="action_start_break">MOLAYA ÇIK</string>
+    <string name="action_end_break">MOLAYI BİTİR</string>
+    <string name="action_unknown">KULLANILAMIYOR</string>
+
+    <!-- Trip states -->
+    <string name="trip_state_assigned">Yeni</string>
+    <string name="trip_state_accepted">Kabul edildi</string>
+    <string name="trip_state_started">Başladı</string>
+    <string name="trip_state_at_pickup">Yükleme noktasında</string>
+    <string name="trip_state_pickup_completed">Yüklendi</string>
+    <string name="trip_state_en_route_delivery">Teslimata gidiyor</string>
+    <string name="trip_state_at_delivery">Teslimat noktasında</string>
+    <string name="trip_state_delivery_completed">Teslim edildi</string>
+    <string name="trip_state_finished">Tamamlandı</string>
+    <string name="trip_state_cancelled">İptal</string>
+    <string name="trip_state_unknown">Diğer</string>
+    <string name="trip_state_on_break">Molada</string>
+
+    <!-- Trips -->
+    <string name="trips_tab_active">Aktif (%1$d)</string>
+    <string name="trips_tab_upcoming">Yaklaşan (%1$d)</string>
+    <string name="trips_tab_completed">Tamamlanan (%1$d)</string>
+    <string name="trips_empty_active">Aktif sefer yok.</string>
+    <string name="trips_empty_upcoming">Yaklaşan sefer yok.</string>
+    <string name="trips_empty_completed">Henüz tamamlanan sefer yok.</string>
+    <string name="refresh_offline">İnternet yok. Kayıtlı veriler gösteriliyor.</string>
+    <string name="refresh_failed">Yenilenemedi. Daha sonra tekrar deneyin.</string>
+
+    <!-- Trip detail -->
+    <string name="trip_title">Sefer %1$s</string>
+    <string name="trip_pickup">Yükleme</string>
+    <string name="trip_delivery">Teslimat</string>
+    <string name="trip_planned_start">Planlanan başlangıç</string>
+    <string name="trip_container">Konteyner</string>
+    <string name="trip_seal">Mühür</string>
+    <string name="trip_vehicle">Araç / dorse</string>
+    <string name="trip_instructions">Talimat</string>
+    <string name="trip_progress">Sefer ilerlemesi</string>
+    <string name="trip_navigation">Navigasyon</string>
+    <string name="trip_on_break_title">Moladasınız</string>
+    <string name="trip_on_break_since">Başlangıç: %1$s</string>
+    <string name="trip_failed_notice">Sunucu bu seferdeki bir işlemi kabul etmedi. Güncel durum gösteriliyor.</string>
+    <string name="trip_not_found">Sefer bulunamadı.</string>
+    <string name="trip_closed">Bu sefer kapandı.</string>
+    <string name="navigation_unavailable">Navigasyon uygulaması bulunamadı.</string>
+    <string name="timeline_assigned">Sefer atandı</string>
+    <string name="timeline_accepted">Kabul edildi</string>
+    <string name="timeline_started">Sefer başladı</string>
+    <string name="timeline_pickup">Yükleme / terminal</string>
+    <string name="timeline_delivery">Teslimat</string>
+    <string name="timeline_completed">Tamamlandı</string>
+    <string name="timeline_next">Sıradaki adım</string>
+    <string name="timeline_waiting">Bekliyor</string>
+    <string name="timeline_done">Tamam</string>
+
+    <!-- Action errors -->
+    <string name="error_not_allowed">Bu adım artık yapılamaz.</string>
+    <string name="error_shift_not_active">Önce mesaiyi başlatın.</string>
+    <string name="error_trip_in_progress">Devam eden bir sefer var.</string>
+    <string name="error_reason_required">Bir sebep seçin.</string>
+    <string name="error_note_required">Kısa bir açıklama yazın.</string>
+    <string name="error_note_too_long">Not çok uzun.</string>
+    <string name="error_not_found">Bulunamadı. Yenileyip tekrar deneyin.</string>
+    <string name="error_not_logged_in">Lütfen tekrar giriş yapın.</string>
+    <string name="error_low_storage">Telefon hafızası neredeyse dolu. Fotoğraf çekmek için yer açın.</string>
+    <string name="error_file">Fotoğraf kaydedilemedi. Tekrar deneyin.</string>
+    <string name="error_camera_unavailable">Kamera başlatılamadı.</string>
+
+    <!-- Reject -->
+    <string name="reject_title">Seferi reddet</string>
+    <string name="reject_question">Bu seferi neden reddediyorsunuz?</string>
+    <string name="reject_reason_vehicle_problem">Araç problemi</string>
+    <string name="reject_reason_legal_driving_time">Yasal sürüş süresi</string>
+    <string name="reject_reason_health">Sağlık</string>
+    <string name="reject_reason_wrong_assignment">Yanlış atama</string>
+    <string name="reject_reason_other">Diğer</string>
+    <string name="reject_note_required">Kısa açıklama (zorunlu)</string>
+    <string name="reject_note_optional">Not (isteğe bağlı)</string>
+    <string name="reject_confirm">SEFERİ REDDET</string>
+
+    <!-- Shift -->
+    <string name="shift_title">Mesai</string>
+    <string name="shift_status_active">Aktif</string>
+    <string name="shift_status_not_started">Başlamadı</string>
+    <string name="shift_status_finished">Bitti</string>
+    <string name="shift_started_at">Başlangıç</string>
+    <string name="shift_ended_at">Bitiş</string>
+    <string name="shift_duration">Süre</string>
+    <string name="shift_vehicle">Araç</string>
+    <string name="shift_trailer">Dorse</string>
+    <string name="shift_summary">Mesai özeti</string>
+    <string name="shift_completed_trips">Tamamlanan sefer</string>
+    <string name="shift_pending_actions">Gönderilmeyi bekleyen işlem</string>
+    <string name="shift_pending_warning">Gönderilmemiş işlemler telefonda kalır ve internet gelince otomatik gönderilir.</string>
+    <string name="shift_end_blocked">Devam eden sefer varken mesai bitirilemez.</string>
+    <string name="shift_not_assigned">Atanmadı</string>
+    <string name="duration_hours_minutes">%1$d sa %2$d dk</string>
+
+    <!-- Documents -->
+    <string name="documents_title">Sefer evrakları</string>
+    <string name="documents_no_trip_title">Aktif sefer yok</string>
+    <string name="documents_no_trip_body">Evraklar kabul edilmiş, devam eden veya tamamlanmış sefere eklenir. Tamamlanan seferler Seferler ekranından açılır.</string>
+    <string name="documents_take_photo">FOTOĞRAF ÇEK · %1$s</string>
+    <string name="documents_pick_gallery">Galeriden seç</string>
+    <string name="documents_selected">Seçili</string>
+    <string name="documents_saved">Fotoğraf kaydedildi. Otomatik gönderilecek.</string>
+    <string name="document_type_cmr">CMR</string>
+    <string name="document_type_container_photo">Konteyner fotoğrafı</string>
+    <string name="document_type_seal_photo">Mühür fotoğrafı</string>
+    <string name="document_type_other">Diğer evrak</string>
+
+    <!-- Earnings -->
+
+    <!-- Profile -->
+    <string name="profile_personnel_no">Personel no</string>
+    <string name="profile_sync_title">Gönderim durumu</string>
+    <string name="profile_sync_all_sent">Tüm işlemler gönderildi.</string>
+    <string name="profile_retry_all">Tümünü tekrar dene</string>
+    <string name="profile_dismiss">Anladım</string>
+    <string name="profile_language">Dil</string>
+    <string name="language_system">Telefon dili</string>
+    <string name="profile_demo_title">Demo ayarları</string>
+    <string name="profile_demo_offline">İnternet yokmuş gibi davran</string>
+    <string name="profile_demo_reset">Demo verilerini sıfırla</string>
+    <string name="profile_version">Sürüm %1$s</string>
+    <string name="profile_logout">Çıkış yap</string>
+    <string name="profile_logout_pending_title">Gönderilmemiş işlemler</string>
+    <plurals name="profile_logout_pending_body">
+        <item quantity="one">%d işlem henüz gönderilmedi. Telefonda kalır ve tekrar giriş yaptığınızda gönderilir.</item>
+        <item quantity="other">%d işlem henüz gönderilmedi. Telefonda kalır ve tekrar giriş yaptığınızda gönderilir.</item>
+    </plurals>
+
+    <!-- Incident -->
+    <string name="incident_title">Sorun bildir</string>
+    <string name="incident_question">Ne oldu?</string>
+    <string name="incident_trip">Sefer: %1$s</string>
+    <string name="incident_category_delay">Gecikme</string>
+    <string name="incident_category_traffic">Trafik</string>
+    <string name="incident_category_terminal_queue">Terminal kuyruğu</string>
+    <string name="incident_category_vehicle_breakdown">Araç arızası</string>
+    <string name="incident_category_accident">Kaza</string>
+    <string name="incident_category_document">Evrak sorunu</string>
+    <string name="incident_category_container_seal">Konteyner / mühür sorunu</string>
+    <string name="incident_category_customer">Müşteri sorunu</string>
+    <string name="incident_category_other">Diğer</string>
+    <string name="incident_note">Not (isteğe bağlı)</string>
+    <string name="incident_submit">BİLDİR</string>
+    <string name="incident_done_title">Bildiriminiz kaydedildi</string>
+    <string name="incident_done_body">İnternet varsa hemen, yoksa bağlantı gelince otomatik gönderilir.</string>
+    <string name="incident_back_home">ANA SAYFAYA DÖN</string>
+
+    <!-- Login -->
+    <string name="login_welcome">Hoş geldiniz</string>
+    <string name="login_username">Kullanıcı adı</string>
+    <string name="login_password">Şifre</string>
+    <string name="login_show_password">Şifreyi göster</string>
+    <string name="login_hide_password">Şifreyi gizle</string>
+    <string name="login_submit">GİRİŞ YAP</string>
+    <string name="login_support">Destek</string>
+    <string name="login_support_body">Giriş sorunu mu yaşıyorsunuz? Planlamacınızla veya Dynamic Transport ofisiyle iletişime geçin.</string>
+    <string name="login_error_empty">Kullanıcı adı ve şifre girin.</string>
+    <string name="login_error_invalid">Kullanıcı adı veya şifre hatalı.</string>
+    <string name="login_error_offline">İnternet bağlantısı yok. Giriş için internet gerekli.</string>
+    <string name="login_error_failed">Giriş şu anda yapılamıyor. Biraz sonra tekrar deneyin.</string>
+    <string name="login_session_expired">Oturumunuz sona erdi. Kayıtlı işlemleriniz korunuyor — göndermek için giriş yapın.</string>
+    <string name="login_demo_hint">Demo modu: herhangi bir kullanıcı adı, şifre \"demo\".</string>
+    <string name="login_two_factor_code">Doğrulama kodu</string>
+    <string name="login_two_factor_hint">Doğrulama uygulamanızdaki 6 haneli kodu girin.</string>
+    <string name="login_error_two_factor_format">Kod 6 haneli olmalıdır.</string>
+    <string name="login_error_two_factor_invalid">Doğrulama kodu hatalı.</string>
+    <string name="login_error_driver_access">Bu hesabın şoför uygulamasına erişimi yok. Ofisle iletişime geçin.</string>
+    <string name="login_error_rate_limited">Çok fazla giriş denemesi. Bir dakika bekleyip tekrar deneyin.</string>
+    <string name="login_session_expired_real">Oturumunuz sona erdi. Lütfen tekrar giriş yapın.</string>
+
+    <!-- Password change -->
+    <string name="password_change_title">Şifre değiştir</string>
+    <string name="password_change_required_body">Uygulamayı kullanmadan önce yeni bir şifre belirleyin.</string>
+    <string name="password_current">Mevcut şifre</string>
+    <string name="password_new">Yeni şifre</string>
+    <string name="password_confirm">Yeni şifreyi tekrar girin</string>
+    <string name="password_change_submit">ŞİFREYİ DEĞİŞTİR</string>
+    <string name="password_error_empty">Tüm alanları doldurun.</string>
+    <string name="password_error_mismatch">Yeni şifreler aynı değil.</string>
+    <string name="password_error_rejected">Şifre kabul edilmedi. Mevcut şifreyi ve şifre kurallarını kontrol edin.</string>
+
+    <!-- Driver API (gerçek sunucu) -->
+    <string name="feature_not_connected">Bu özellik henüz sunucuya bağlanmadı.</string>
+    <string name="shift_line_unavailable">Mesai takibi henüz bağlı değil</string>
+    <string name="shift_status_unavailable">Bağlı değil</string>
+    <string name="sync_offline_real">Bağlantı yok. İnternet gelene kadar işlem gönderilemez.</string>
+    <string name="refresh_service_unavailable">Sunucu şu anda kullanılamıyor. Daha sonra tekrar deneyin.</string>
+    <string name="refresh_rate_limited">Çok fazla istek. Biraz bekleyip tekrar deneyin.</string>
+    <string name="refresh_session_expired">Oturumunuz sona erdi. Tekrar giriş yapın.</string>
+    <string name="trips_load_more">Daha fazla sefer yükle</string>
+    <string name="trip_order">Sipariş</string>
+    <string name="trip_stops">Duraklar</string>
+    <string name="trip_break_reported">Mola bildirildi.</string>
+    <string name="stop_activity_pickup">Alım</string>
+    <string name="stop_activity_load">Yükleme</string>
+    <string name="stop_activity_unload">Boşaltma</string>
+    <string name="stop_activity_deliver">Teslimat</string>
+    <string name="stop_activity_empty_return">Boş iade</string>
+    <string name="stop_activity_fuel">Yakıt</string>
+    <string name="stop_activity_rest">Mola</string>
+    <string name="stop_activity_other">Diğer</string>
+    <string name="stop_status_planned">Planlandı</string>
+    <string name="stop_status_en_route">Yolda</string>
+    <string name="stop_status_arrived">Varıldı</string>
+    <string name="stop_status_completed">Tamamlandı</string>
+    <string name="stop_status_skipped">Atlandı</string>
+    <string name="stop_planned_arrival">Planlanan varış: %1$s</string>
+    <string name="stop_actual_arrival">Varış: %1$s</string>
+    <string name="stop_actual_departure">Ayrılış: %1$s</string>
+    <string name="stop_reference">Referans: %1$s</string>
+    <string name="error_trip_required">Önce bir seferi kabul edin veya başlatın.</string>
+    <string name="error_file_too_large">Dosya 10 MB\'tan büyük.</string>
+    <string name="error_unsupported_file">Yalnızca PDF, JPEG veya PNG dosyası yüklenebilir.</string>
+    <string name="error_conflict">Sefer durumu değişmiş. Güncel durum gösteriliyor.</string>
+    <string name="error_offline">Bağlantı yok. İşlem otomatik olarak tekrar gönderilmedi — durumu kontrol edip tekrar deneyin.</string>
+    <string name="error_forbidden">Bu işlem için yetkiniz yok. Planlamacınızla görüşün.</string>
+    <string name="error_failed">İşlem tamamlanamadı. Tekrar deneyin.</string>
+    <string name="documents_uploaded">Evrak yüklendi, kontrol bekliyor.</string>
+    <string name="documents_open">Evrakı aç</string>
+    <string name="documents_open_unavailable">Bu evrakı açacak uygulama bulunamadı.</string>
+    <!-- Belge tarayıcı -->
+    <string name="scan_close">Kapat</string>
+    <string name="scan_capture">FOTOĞRAFI ÇEK</string>
+    <string name="scan_auto_hint">Çerçeve yeşil olunca fotoğraf otomatik çekilir.</string>
+    <string name="scan_camera_starting">Kamera açılıyor…</string>
+    <string name="scan_capturing">Kıpırdamayın — fotoğraf çekiliyor…</string>
+    <string name="scan_ready_auto">Tamam — sabit tutun, fotoğraf otomatik çekilecek.</string>
+    <string name="scan_ready_photo">Tamam — fotoğrafı çekin.</string>
+    <string name="scan_torch_on">Işığı aç</string>
+    <string name="scan_torch_off">Işığı kapat</string>
+    <string name="scan_processing">Fotoğraf kontrol ediliyor…</string>
+    <string name="scan_review_accepted">Okunaklı. Kullanmadan önce yazıların net olduğunu kontrol edin.</string>
+    <string name="scan_review_rejected">Fotoğraf kabul edilmedi</string>
+    <string name="scan_use">BU FOTOĞRAFI KULLAN</string>
+    <string name="scan_retake">TEKRAR ÇEK</string>
+    <string name="scan_retake_secondary">Tekrar çek</string>
+    <string name="scan_permission_title">Kamera izni gerekli</string>
+    <string name="scan_permission_body">Evraklar, okunaklı olup olmadıkları kontrol edilebilsin diye uygulama içinde çekilir.</string>
+    <string name="scan_permission_allow">KAMERAYA İZİN VER</string>
+    <string name="scan_permission_settings">AYARLARI AÇ</string>
+    <string name="scan_issue_no_document">Evrakın tamamını koyu bir zemin üzerinde çerçeveye alın.</string>
+    <string name="scan_issue_cut_off">Biraz geri çekin — dört köşe de görünmeli.</string>
+    <string name="scan_issue_too_far">Evraka yaklaşın.</string>
+    <string name="scan_issue_tilted">Telefonu evrakın tam üstünde, düz tutun.</string>
+    <string name="scan_issue_too_dark">Çok karanlık — ışığı açın.</string>
+    <string name="scan_issue_glare">Evrakta parlama var — açıyı değiştirin veya ışığı kapatın.</string>
+    <string name="scan_issue_blurry">Bulanık — telefonu sabit tutun.</string>
+    <string name="scan_issue_low_resolution">Okunamayacak kadar küçük — daha yakından çekin.</string>
+    <string name="incident_done_title_sent">Bildirim gönderildi</string>
+    <string name="incident_done_body_sent">Bildirim sefere kaydedildi.</string>
+
+    <!-- Driver App operations (TH-2026-0439) -->
+    <string name="action_continue_trip">SEFERE DEVAM ET</string>
+    <string name="exec_start">SEFERE BAŞLADIM</string>
+    <string name="exec_pickup_full">DOLU KONTEYNERİ ALDIM</string>
+    <string name="exec_pickup_empty">BOŞ KONTEYNERİ ALDIM</string>
+    <string name="exec_pickup">KONTEYNERİ ALDIM</string>
+    <string name="exec_load_done">KONTEYNER YÜKLEMESİ TAMAMLANDI</string>
+    <string name="exec_unload_done">KONTEYNER BOŞALTMASI TAMAMLANDI</string>
+    <string name="exec_empty_return">BOŞ KONTEYNERİ İADE ETTİM</string>
+    <string name="exec_deliver_full">DOLU KONTEYNERİ TESLİM ETTİM</string>
+    <string name="exec_deliver_empty">BOŞ KONTEYNERİ TESLİM ETTİM</string>
+    <string name="exec_deliver">KONTEYNERİ TESLİM ETTİM</string>
+    <string name="exec_stop_done">DURAK TAMAMLANDI</string>
+    <string name="exec_rest">MOLA BİLDİR</string>
+    <string name="exec_problem">SORUN BİLDİR</string>
+    <string name="exec_recorded">Sunucuya kaydedildi.</string>
+    <string name="exec_context_container">Konteyner %1$s</string>
+    <string name="exec_plan_loading">Sıradaki adımlar yükleniyor…</string>
+    <string name="exec_plan_error">Sıradaki adımlar yüklenemedi.</string>
+    <string name="exec_no_action">Şu an yapılacak bir adım yok. Beklenmiyorsa planlamacınızla görüşün.</string>
+    <string name="exec_legacy_notice">Bu sefer adım adım işlemlerden önce başlatıldı; önceki durum adımlarıyla devam eder.</string>
+    <string name="pending_action_title">Son işlem: %1$s</string>
+    <string name="pending_state_sending">Gönderiliyor…</string>
+    <string name="pending_state_unknown">Bağlantı koptu — sunucunun kaydedip kaydetmediği bilinmiyor.</string>
+    <string name="pending_state_not_sent">Gönderilmedi.</string>
+    <string name="pending_state_recorded">Gönderildi</string>
+    <string name="pending_resend">AYNI İŞLEMİ TEKRAR GÖNDER</string>
+    <string name="pending_discard">Vazgeç ve planı yenile</string>
+    <string name="receipts_title">Kaydedilen işlemler</string>
+    <string name="receipt_received">Sunucu kaydı: %1$s</string>
+    <string name="receipt_observed">Cihaz zamanı: %1$s</string>
+    <string name="receipt_start">Sefer başlatıldı</string>
+    <string name="receipt_complete_stop">Durak / konteyner tamamlandı</string>
+    <string name="receipt_rest">Mola bildirildi</string>
+    <string name="receipt_problem">Sorun bildirildi</string>
+    <string name="receipt_unknown">Diğer işlem</string>
+    <string name="location_missing">Konum bilgisi eksik</string>
+    <string name="trip_next_stop">Sıradaki durak</string>
+    <string name="trip_next_stop_value">Sıradaki: %1$s</string>
+    <string name="stop_navigate">Bu durağa yol tarifi al</string>
+    <string name="trip_messages">Sefer mesajları</string>
+    <string name="slot_stop_unknown">Planda olmayan durak</string>
+    <string name="document_type_customs">Gümrük evrağı (A1)</string>
+    <string name="document_type_interchange">Interchange</string>
+    <string name="document_type_unknown">Evrak</string>
+    <string name="slot_state_missing">Eksik</string>
+    <string name="slot_state_not_required">Gerekli değil</string>
+    <string name="slot_state_pending_review">Kontrol bekliyor</string>
+    <string name="slot_state_approved">Onaylandı</string>
+    <string name="slot_state_rejected">Reddedildi — yeniden yükleyin</string>
+    <string name="slot_state_unknown">Durum bilinmiyor</string>
+    <string name="slot_required">Zorunlu</string>
+    <string name="slot_optional">Zorunlu değil</string>
+    <string name="slot_trip_level">Tüm sefer</string>
+    <string name="slot_review_note">Red nedeni: %1$s</string>
+    <string name="slot_review_comment">Not: %1$s</string>
+    <string name="documents_pick_pdf">PDF seç</string>
+    <string name="documents_select_slot">Eklenecek evrakı listeden seçin.</string>
+    <string name="documents_upload_not_possible">Evrak eklemek için önce seferi kabul edin.</string>
+    <string name="documents_files_title">Yüklenen dosyalar</string>
+    <string name="documents_active_file">Aktif dosya: %1$s</string>
+    <string name="documents_none_open">Eksik evrak yok</string>
+    <string name="data_stale">Yenilenemedi. Son yüklenen bilgi gösteriliyor.</string>
+    <string name="error_photo_required">Bu evrak için JPEG veya PNG fotoğraf gerekir.</string>
+    <string name="error_plan_changed">Plan veya sıradaki adım değişti. Güncel adımı kontrol edip yeniden seçin.</string>
+    <string name="error_outcome_unknown">Bağlantı koptu. Kaydedilip kaydedilmediği bilinmiyor — aynı işlemi tekrar gönderin.</string>
+    <string name="error_pending_action">Önce bu seferin önceki işlemini tekrar gönderin veya vazgeçin.</string>
+    <string name="feature_demo_unavailable">Demo modunda kullanılamaz.</string>
+    <string name="payroll_title">Ücretlerim</string>
+    <string name="payroll_previous_month">Önceki ay</string>
+    <string name="payroll_next_month">Sonraki ay</string>
+    <string name="payroll_unpublished">Bu ayın ücret bilgisi henüz yayınlanmadı.</string>
+    <string name="payroll_published_at">Yayın tarihi: %1$s</string>
+    <string name="payroll_no_currency">Yayınlanan kayıtta ücret satırı yok.</string>
+    <string name="payroll_currency">%1$s tutarları</string>
+    <string name="payroll_base_gross">Temel brüt ücret</string>
+    <string name="payroll_additions">Ek ödemeler</string>
+    <string name="payroll_deductions">Kesintiler</string>
+    <string name="payroll_none">Yok</string>
+    <string name="payroll_gross_earnings">Brüt kazanç</string>
+    <string name="payroll_total_deductions">Toplam kesinti</string>
+    <string name="payroll_balance">Yasal kesintiler öncesi kalan</string>
+    <string name="payroll_earnings">Kazançlar</string>
+    <string name="payroll_balance_note">Bu tutar net maaş veya bankaya ödenen tutar değildir.</string>
+    <string name="payroll_effective_from">Başlangıç: %1$s</string>
+    <string name="payroll_finalized_title">Kesinleşmiş aylık tutarlar (ayrı kayıt)</string>
+    <string name="payroll_finalized_base">Temel brüt</string>
+    <string name="payroll_finalized_overtime">Fazla mesai brüt</string>
+    <string name="payroll_finalized_hours">Fazla mesai saati</string>
+    <string name="payroll_disclaimer">İK tarafından yayınlanan kayıt. Sonraki değişiklikler İK yeniden yayınlayınca görünür.</string>
+    <string name="payroll_type_salary">Maaş</string>
+    <string name="payroll_type_additional_payment">Ek ödeme</string>
+    <string name="payroll_type_bonus">Prim</string>
+    <string name="payroll_type_exam_bonus">Sınav primi</string>
+    <string name="payroll_type_traffic_fine">Trafik cezası</string>
+    <string name="payroll_type_overtime">Fazla mesai</string>
+    <string name="payroll_type_damage_cost">Hasar bedeli</string>
+    <string name="payroll_type_legal_document_fee">Resmî evrak ücreti</string>
+    <string name="payroll_type_port_card_fee">Liman kartı ücreti</string>
+    <string name="payroll_type_visa_travel_expense">Vize / seyahat gideri</string>
+    <string name="payroll_type_salary_advance">Maaş avansı</string>
+    <string name="payroll_type_loyalty_bonus">Sadakat primi</string>
+    <string name="payroll_type_cash_payment">Nakit ödeme</string>
+    <string name="payroll_type_adr_monthly_bonus">ADR aylık primi</string>
+    <string name="payroll_type_combi_chassis_monthly_bonus">Kombi şasi aylık primi</string>
+    <string name="payroll_type_purchase_request_deduction">Satın alma talebi kesintisi</string>
+    <string name="signed_documents_title">İmzalı evraklar</string>
+    <string name="signed_type_compensation">Ücret / ödeme belgesi</string>
+    <string name="signed_type_leave">İzin belgesi</string>
+    <string name="signed_type_unknown">İmzalı belge</string>
+    <string name="signed_at">İmza tarihi: %1$s</string>
+    <string name="signed_empty">İmzalı evrak yok.</string>
+    <string name="signed_note">Belgenin imzalandığı anda saklanan PDF açılır.</string>
+    <string name="signed_open">PDF dosyasını aç</string>
+    <string name="common_load_more">Daha fazla yükle</string>
+    <string name="nav_messages">Mesajlar</string>
+    <string name="messages_trip_title">Sefer %1$s mesajları</string>
+    <string name="messages_general_title">Genel mesajlar</string>
+    <string name="messages_trip_label">Sefer %1$s</string>
+    <string name="messages_preview_you">Siz: %1$s</string>
+    <string name="messages_preview_office">Ofis: %1$s</string>
+    <string name="messages_preview_sender">%1$s: %2$s</string>
+    <plurals name="messages_unread">
+        <item quantity="one">%d okunmamış</item>
+        <item quantity="other">%d okunmamış</item>
+    </plurals>
+    <string name="messages_empty">Henüz mesaj yok.</string>
+    <string name="messages_input">Mesaj</string>
+    <string name="messages_send">Gönder</string>
+    <string name="messages_load_older">Daha eski mesajları yükle</string>
+    <string name="messages_read">Okundu %1$s</string>
+    <string name="messages_retry">Tekrar gönder</string>
+    <string name="messages_discard">Sil</string>
+    <string name="messages_you">Siz</string>
+    <string name="messages_office">Ofis</string>
+    <string name="profile_account">Hesap</string>
+    <string name="profile_change_password">Şifre değiştir</string>
+    <string name="password_change_voluntary_body">Değişiklikten sonra yeni şifreyle yeniden giriş yapmanız gerekir.</string>
+    <string name="password_rules">12–128 karakter. Sunucu ayrıca şifre kurallarını kontrol eder.</string>
+    <string name="password_error_length">Yeni şifre 12–128 karakter olmalıdır.</string>
+    <string name="password_error_wrong_current">Mevcut şifre yanlış.</string>
+    <string name="password_error_weak">Yeni şifre kurallara uymuyor (büyük ve küçük harf, rakam, sembol).</string>
+    <plurals name="trip_documents_missing">
+        <item quantity="one">%d zorunlu evrak eksik</item>
+        <item quantity="other">%d zorunlu evrak eksik</item>
+    </plurals>
+    <plurals name="documents_open_count">
+        <item quantity="one">%d eksik</item>
+        <item quantity="other">%d eksik</item>
+    </plurals>
+    <plurals name="profile_logout_pending_body_real">
+        <item quantity="one">%d işlem veya mesaj doğrulanmadı. Çıkış yaparsanız bu telefondan silinir.</item>
+        <item quantity="other">%d işlem veya mesaj doğrulanmadı. Çıkış yaparsanız bu telefondan silinir.</item>
+    </plurals>
+</resources>

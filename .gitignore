@@ -6,6 +6,8 @@
 !.idea/inspectionProfiles
 .DS_Store
 /build
+build/
+.kotlin/
 /captures
 .externalNativeBuild
 .cxx
@@ -15,3 +17,5 @@
 .env.*
 secrets.properties
 google-services.json
+# Machine-specific ASP.NET Core development certificate for debug builds (tools/Export-DevHttpsCertificate.ps1)
+/app/dev-https/res/raw/

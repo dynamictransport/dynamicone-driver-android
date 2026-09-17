@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- DynamicONE brand mark, redrawn as a vector from DynamicONE.Web wwwroot/images/brand/dynamicone-logo.png. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="52dp"
+    android:height="60dp"
+    android:viewportWidth="1700"
+    android:viewportHeight="1961">
+    <path
+        android:fillColor="#FF1B5087"
+        android:pathData="M16,12L457,12L1015,793.5L457,1575L16,1575L570,793.5Z" />
+    <path
+        android:fillColor="#FF2E7BC4"
+        android:pathData="M684,12L1129,12L1687,793.5L1129,1575L684,1575L1242,793.5Z" />
+    <path
+        android:fillColor="#FF19C4A6"
+        android:pathData="M13,1725L237,1725L237,1949L13,1949Z" />
+</vector>

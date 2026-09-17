@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Notifications the system shows from a push while the app is in the background or closed look these strings up
+    by name (title_loc_key / body_loc_key, docs/13_PUSH_NOTIFICATIONS.md). No code references them, so release
+    resource shrinking would otherwise remove them.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@string/push_message_*" />

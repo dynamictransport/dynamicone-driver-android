@@ -141,7 +141,7 @@ Upload:
 - Ana buton minimum yaklaşık 56dp yükseklik, kritik actionlarda daha büyük.
 - Küçük metin linklerini ana operasyon için kullanma.
 - Aynı ekranda iki eşit önemde primary CTA verme.
-- Kırmızı yalnızca hata/tehlike/iptal gibi anlamlarda kullanılmalı.
+- Kırmızı yalnızca hata/tehlike/iptal gibi anlamlarda kullanılmalı. İstisna (kullanıcı kararı, 14.09.2026): Ücretler ekranında kesintiler kırmızı ve "−" işaretiyle, kazançlar yeşil ve "+" işaretiyle gösterilir.
 - Durumu sadece renkle anlatma; icon + text de kullan.
 - Şoförün sefer sırasında uzun metin yazmasını isteme.
 - Sebep gerekiyorsa preset seçenek + "Diğer" kullan.

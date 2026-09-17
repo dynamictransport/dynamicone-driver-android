@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- HTTPS only. Certificate pinning is intentionally not enabled until an operational key-rotation plan exists. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+    <!--
+        Applies only to debuggable builds: user-installed CAs are trusted. For the local ASP.NET Core
+        development certificate (not a CA, so not installable as one on phones) debug builds use
+        app/dev-https/res/xml/network_security_config.xml instead (tools/Export-DevHttpsCertificate.ps1).
+        Release builds trust system CAs only.
+        There is no trust-all TrustManager and hostname verification is never disabled.
+    -->
+    <debug-overrides>
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </debug-overrides>
+</network-security-config>

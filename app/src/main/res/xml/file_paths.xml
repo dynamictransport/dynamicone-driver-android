@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Document photos (files/document_media) are never shared with other apps. -->
+    <!-- Server documents downloaded for viewing; temporary cache, shared read-only with the viewer app. -->
+    <cache-path
+        name="document_view"
+        path="document_view/" />
+</paths>

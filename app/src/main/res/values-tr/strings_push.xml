@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="notification_channel_messages">Mesajlar</string>
+    <string name="notification_new_message">Yeni mesaj</string>
+    <string name="notifications_blocked">Bildirimler kapalı. Yeni mesajlardan haberdar olmak için açın.</string>
+    <string name="notifications_enable">Aç</string>
+    <string name="push_message_title_trip" tools:ignore="UnusedResources">Sefer %1$s: yeni mesaj</string>
+    <string name="push_message_title_general" tools:ignore="UnusedResources">Ofisten yeni mesaj</string>
+    <string name="push_message_body" tools:ignore="UnusedResources">Açmak için dokunun.</string>
+</resources>

@@ -12,11 +12,12 @@ DynamicONE Driver, şoförün günlük iş akışının tamamını tek ve basit 
 - Yeni seferi kabul / reddetme (red sebebi zorunlu)
 - Sefer adımlarını tek büyük butonla ilerletme
 - Mola başlatma / bitirme
-- CMR, Interchange/EIR, A1, POD ve diğer evrakları yükleme
+- Sunucunun sefer bazlı evrak listesine göre CMR, gümrük evrağı (A1 = `Customs`), Interchange, konteyner/mühür fotoğrafı ve diğer evrakları ayrı ayrı yükleme; kontrol durumu (eksik, kontrol bekliyor, onaylandı, reddedildi) ve PDF seçimi; fotoğraflar uygulama içi belge tarayıcıyla (çerçeve, canlı kalite kontrolü, otomatik çekim, perspektif düzeltme; okunaksız fotoğraf kabul edilmez — bkz. `ASSUMPTIONS.md` S1–S9)
 - Konteyner ve mühür fotoğrafı çekme
 - Sorun / gecikme / arıza bildirme
-- Ücret ve hakedişleri görme
-- Planlamacıdan gelen bildirimleri alma
+- Yayınlanan aylık ücret bilgilerini (para birimi bazında ek ödeme/kesinti) ve imzalı personel evraklarını görme
+- Ofisle genel ve sefer bazlı mesajlaşma
+- Sunucunun sefer planındaki işlem seçenekleriyle (durak/konteyner bazlı) ilerleme, koordinatlı navigasyon
 - İnternet yokken işlemlere devam etme ve daha sonra otomatik senkronize olma
 
 ## İlk platform
@@ -84,3 +85,105 @@ Kazanç/ücret görünümü, şoför belgeleri, geçerlilik tarihleri, profil.
 
 ### Faz 6 — İleri seviye
 NFC mesai, Webfleet doğrulama, GPS/ETA, rota sapması, QR/barcode, otomatik belge sınıflandırma.
+
+---
+
+## Geliştirme ortamı ve build
+
+### Gereksinimler
+
+- Android Studio 2026.1 veya üzeri (stable)
+- Android SDK Platform 37 (Android 17); build-tools 36.0.0 (AGP varsayılanı)
+- JDK: elle kurulum gerekmez. Gradle daemon ve testler **JDK 21** ile çalışır (`gradle/gradle-daemon-jvm.properties`); makinede yoksa Gradle indirir. Bytecode hedefi **Java 17**.
+- Sistem PATH'indeki Java sürümü build'i etkilemez; wrapper çağrılırken `JAVA_HOME` en az JDK 17 olmalıdır (ör. Android Studio JBR).
+
+| Bileşen | Sürüm |
+|---|---|
+| Gradle (wrapper) | 9.7.1 |
+| Android Gradle Plugin | 9.4.0 (built-in Kotlin) |
+| Kotlin | 2.3.21 |
+| Compose BOM | 2026.09.00 |
+| minSdk / targetSdk / compileSdk | 26 / 37 / 37 |
+
+Tüm sürümler `gradle/libs.versions.toml` içindedir; yalnızca stable sürümler kullanılır.
+
+### İlk kurulum
+
+1. Repository'yi Android Studio ile açın; Gradle sync'i bekleyin.
+2. SDK yolu için `local.properties` oluşturun (Git'e eklenmez):
+
+   ```properties
+   sdk.dir=C\:/Users/<kullanici>/AppData/Local/Android/Sdk
+   ```
+
+### Komutlar
+
+```bash
+./gradlew assembleDebug        # debug APK: app/build/outputs/apk/debug/
+./gradlew testDebugUnitTest    # unit + Robolectric Compose UI + MockWebServer API testleri
+./gradlew lintDebug            # Android lint (hata varsa build kırılır)
+```
+
+Windows'ta `gradlew.bat` kullanın. CI (`.github/workflows/android-ci.yml`) aynı üç komutu JDK 21 ile çalıştırır.
+
+### API ortamları
+
+| Build | Backend | Adres |
+|---|---|---|
+| Debug | development | `driver.devApiBaseUrl` (varsayılan `https://localhost:7167/api/driver/v1/`) |
+| Release | production | `driver.prodApiBaseUrl` (varsayılan `https://dynamicone.ai/api/driver/v1/`) |
+
+Build ayarları (`gradle.properties`, `~/.gradle/gradle.properties` veya `-P`):
+
+| Property | Varsayılan | Açıklama |
+|---|---|---|
+| `driver.devApiBaseUrl` | `https://localhost:7167/api/driver/v1/` | Debug build'in API adresi. Yalnızca HTTPS ve `/api/driver/v1/` ile biten adres kabul edilir |
+| `driver.prodApiBaseUrl` | `https://dynamicone.ai/api/driver/v1/` | Release build'in API adresi. Driver API uçları 15.09.2026'da üretime yayınlandı (backend TH-2026-0451) |
+| `driver.demoMode` | `false` | `true` → debug build uygulama içi demo backend ile çalışır. Release build'de etkisizdir |
+
+Uygulamada SQL bağlantısı, storage anahtarı, JWT imza anahtarı veya başka backend sırrı yoktur; yalnızca HTTPS REST API kullanılır. Kişisel değerler Git'e commit edilmez.
+
+### Development backend ile çalıştırma
+
+1. **Backend'de Driver API'yi açın** (varsayılan olarak kapalıdır ve her istek `404 api_disabled` döner): backend repository'sinde `./tools/Initialize-DriverApi.ps1` çalıştırın, sonra DynamicONE.Web'i Visual Studio'dan yeniden başlatın. `https://localhost:7167/api/driver/v1/health` 200 dönmelidir.
+2. **Cihazdan PC'ye port yönlendirin:** `adb reverse tcp:7167 tcp:7167` (emülatör ve USB cihaz için; her `adb` yeniden başlatmasından sonra tekrarlayın).
+3. **Geliştirme sertifikasını debug build'e ekleyin:** `powershell -ExecutionPolicy Bypass -File tools\Export-DevHttpsCertificate.ps1`. Script bu PC'nin ASP.NET Core geliştirme sertifikasının yalnızca açık kısmını (özel anahtar yok) `app/dev-https/res/raw/` altına yazar; dosya Git'e girmez. Dosya varsa yalnızca debug build bu sertifikaya güvenir (`app/dev-https/res/xml/network_security_config.xml` → `debug-overrides`). Telefona sertifika yüklemek gerekmez: ASP.NET geliştirme sertifikası CA olmadığı için Android ayarlarından CA olarak yüklenemez. Release build yalnızca sistem CA'larına güvenir; global SSL bypass yoktur.
+4. **Kurun ve açın:** `gradlew.bat installDebug`.
+5. **Giriş:** Identity kullanıcı adı (ör. `ad.soyad`, personel no değil) ve şifre. Hesabın `driver_access` yetkisi olmalı ve aktif bir sürücüye bağlı olmalıdır; MFA açık hesaplarda 6 haneli kod istenir.
+
+### Push bildirimleri (Firebase)
+
+- Firebase projesi `dynamicone-driver`, Android uygulaması `com.dynamictransport.driver`. Konsoldan indirilen `google-services.json` dosyasını `app/google-services.json` olarak koyun; dosya Git'e girmez. Dosya yoksa uygulama push olmadan derlenir ve çalışır (`BuildConfig.PUSH_CONFIGURED = false`).
+- FCM kaydı yalnızca gerçek backend'e giriş yapıldıktan sonra başlar; demo modunda push yoktur. Android 13+ cihazlarda girişten sonra bildirim izni istenir.
+- Cihaz kaydı (`POST`/`DELETE me/devices`) ve FCM mesaj push'u backend'de yayında (TH-2026-0444). Uygulama girişten sonra cihazı kaydeder, çıkıştan önce kaydı siler. Üretimde gönderimin etkinleştirilmesi backend'de ayrı adımdır. Ayrıntı: [docs/13_PUSH_NOTIFICATIONS.md](docs/13_PUSH_NOTIFICATIONS.md). Firebase service account anahtarı yalnızca backend'in gizli ayarlarına konur, bu repoya girmez.
+
+### Demo modu (backend olmadan)
+
+`gradlew.bat installDebug -Pdriver.demoMode=true` ile uygulama içi **fake backend** kullanılır; ekranlarda **DEMO** rozeti görünür. Demo, gerçek API hatalarında asla devreye girmez ve release build'de kullanılamaz.
+
+- Giriş: herhangi bir kullanıcı adı, şifre `demo`
+- Hazır veri: 1 yeni atanmış sefer, 1 kabul edilmiş yarınki sefer, 2 tamamlanmış sefer
+- Profil → Demo ayarları: **İnternet yokmuş gibi davran** (offline akışı denemek için), **Demo verilerini sıfırla**
+- Fake backend offline kuyruk, state machine, illegal geçişte 409 ve `clientActionId` idempotency kurallarını uygular
+
+### Mimari özeti
+
+```
+UI (Compose) → ViewModel → UseCase (gerektiğinde) → Repository (domain arayüzü)
+   gerçek API : Real*Repository → Retrofit DriverApi → DynamicONE Driver API v1 (bearer, tek refresh, problem+json)
+   demo       : OfflineFirst*Repository → Room + PendingAction kuyruğu → WorkManager → FakeDriverBackend
+```
+
+- `core/common/BackendMode` — debug/release ve `driver.demoMode`'a göre gerçek/demo seçimi; DI (`RepositoryModule`) tek yerde seçer.
+- `core/network` — OpenAPI DTO'ları, `DriverHttpClients` (header, bearer, serileştirilmiş refresh, otomatik tekrar yok), problem+json eşlemesi.
+- `data/real` — gerçek API repository'leri, sefer adımı eşlemesi (`DriverApiMapping`), upload hazırlığı, `ApiActivityTracker` (Retry-After, çevrimiçi durumu, son senkronizasyon).
+- `domain/statemachine/TripStateMachine` — tek merkezî geçiş tablosu; `NextActionResolver` ana aksiyonu sunucunun izin verdiği adımlar ∩ local kurallardan üretir.
+- `data/sync/SyncEngine` — demo modunda FIFO gönderim, idempotent tekrar, 409 → görünür hata.
+- `feature/*` — ekran başına ViewModel + stateless Compose ekranı.
+- `data/real/RealTripExecutionRepository` + `PendingCommandStore` — sunucu planındaki işlemler; `commandId` gönderimden önce Room `pending_commands` tablosuna yazılır, sonucu belirsiz komut aynı id ve payload ile tekrar gönderilir.
+- `data/real/RealDocumentRepository`, `RealPersonnelRepositories`, `RealMessageRepository` — evrak slotları, ücret ve imzalı evrak, mesajlar.
+- Kararlar ve API boşlukları: `ASSUMPTIONS.md` (R1–R15, O1–O14), `docs/12_API_CONTRACT_GAPS.md`.
+
+### Sorun giderme
+
+- `java.io.IOException: Unable to establish loopback connection`: JDK 16+ Windows'ta NIO pipe için geçici dizinde AF_UNIX soket açar. Geçici dizine erişim kısıtlıysa kısa ve yazılabilir bir dizin verin: `set JAVA_TOOL_OPTIONS=-Djdk.net.unixdomain.tmpdir=C:\Temp` (dizin mevcut olmalı).
