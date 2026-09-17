@@ -1,8 +1,11 @@
 # 15 — DynamicONE App: Mobile API v1 ve NFC ofis mesaisi (backend sözleşme önerisi)
 
-Durum: **backend'de uygulandı, henüz yayında değil** (17.09.2026). Uygulama: `dynamictransport/DynamicONE` branch
+Durum: **sözleşme metni kullanıcıdan gelen 17.09.2026 sürümüdür; backend'de uygulandı, yayında değil.** Bu dosyanın
+sözleşme bölümleri (§5.3 elapsed istisnası ve §7 dahil) kullanıcının verdiği son sürümle birebir aynıdır; endpoint,
+DTO, enum ve hata kodları uygulama tarafından değiştirilmez. Backend uygulaması: `dynamictransport/DynamicONE` branch
 `feature/mobile-api-nfc-attendance` (commit 2cfb6cb7), migration `20260917130519_MobileNfcAttendance`, kılavuz
-`docs/80_MobileAppApi.md`. Backend'in gerçek HTTP yanıtları Android testlerinde sözleşme testi olarak kullanılır
+`docs/80_MobileAppApi.md`; bu sürümün yayına alındığı **doğrulanmadı**, bu yüzden `app.mobileApi` varsayılanı `false`
+kalır (§8). Backend'in gerçek HTTP yanıtları Android testlerinde sözleşme testi olarak kullanılır
 (`app/src/test/resources/mobile-v1`). Bir alan değişirse iki taraf birlikte değişir; tek kaynak yayındaki OpenAPI
 (`mobile-v1`) dokümanıdır.
 
@@ -162,9 +165,13 @@ Hatalar: `403 attendance_access_required`.
 İşleme sırası:
 
 1. **Idempotency:** aynı kullanıcı + `commandId` daha önce işlendiyse ilk sonuç **200** ile aynen döner.
-   Kimlik alanları `commandId`, `direction`, `tagUid`, `scannedAtUtc`, `installationId`dir; `elapsedSinceScanMs` her denemede
-   değiştiği için karşılaştırılmaz ve resmi zaman ilk kabul edilen istekteki değerdir. Kimlik alanlarından biri farklıysa
-   `409 command_conflict`.
+   Karşılaştırılan alanlar `commandId`, `direction`, `tagUid`, `scannedAtUtc` ve `installationId`'dir.
+   `elapsedSinceScanMs` karşılaştırmaya dahil değildir: her tekrar denemede geçen süreye göre
+   büyüyebilir (null/atlanmış değer de kimliği değiştirmez). Diğer alanlar aynıysa farklı elapsed
+   ile tekrar **200** ve saklanan ilk yanıtı döndürür. Aynı kullanıcı + `commandId` altında
+   diğer karşılaştırılan alanlardan biri değişirse `409 command_conflict` döner.
+   Resmi `occurredAtUtc` ve `receivedAtUtc` ilk başarılı istekte hesaplanan değerler olarak kalır;
+   tekrar deneme zamanı veya elapsed değeri kaydı ya da saklanan yanıtı değiştirmez.
 2. Erişim: `officeAttendance` yoksa `403 attendance_access_required`.
 3. Etiket: etkin NFC noktası bulunamazsa `400 attendance_tag_unknown`.
 4. Yön: etiketin yönü `direction` ile aynı değilse `400 attendance_tag_direction_mismatch`.
@@ -245,7 +252,8 @@ gösterilmez).
 
 1. `me` modül listesi: şoför, ofis personeli, ikisi de olmayan (`mobile_access_required`) hesaplar.
 2. Mobile login token'ı Driver API'de, Driver API refresh token'ı Mobile API refresh'te çalışıyor.
-3. Aynı `commandId` iki kez → tek kayıt, ikinci yanıt 200 ve aynı gövde; farklı gövde → 409.
+3. Aynı `commandId` iki kez, elapsed farklı olsa da → tek kayıt, ikinci yanıt 200 ve ilk gövde;
+   elapsed dışındaki kimlik alanları değişirse → 409. İlk resmi zamanlar korunur.
 4. Bilinmeyen/pasif etiket, yanlış yön, gelecekteki/çok eski zaman hataları doğru kodlarla.
 5. `elapsedSinceScanMs` ile zaman hesabı; `null` iken `DeviceClock` işareti.
 6. `nextAction` kuralı: bugün In → CheckOut; dünden açık In → CheckIn; DST günü.

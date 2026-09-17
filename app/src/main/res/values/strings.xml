@@ -272,6 +272,7 @@
 
     <!-- Driver API (real backend) -->
     <string name="feature_not_connected">This feature is not connected to the server yet.</string>
+    <string name="feature_access_required">This account may not see this any more. Contact the office.</string>
     <string name="shift_line_unavailable">Shift tracking is not connected yet</string>
     <string name="shift_status_unavailable">Not connected</string>
     <string name="sync_offline_real">No connection. Actions cannot be sent until you are back online.</string>

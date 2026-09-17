@@ -76,7 +76,10 @@ data class AttendanceMonth(
 )
 
 enum class LocalPunchState {
-    /** Stored on the phone, waiting to be sent (no connection, server busy, session ended). */
+    /**
+     * Stored on the phone, waiting to be sent (no connection, server busy, session ended, attendance access missing).
+     * A [LocalPunch.failure] on a waiting punch is the reason the server did not take it yet, not a final answer.
+     */
     PENDING,
 
     /** Being sent right now. */
@@ -89,7 +92,10 @@ enum class LocalPunchState {
     FAILED,
 }
 
-/** Why the server did not accept a punch. */
+/**
+ * Why the server did not take a punch. A final answer on a `FAILED` punch (400/409), the reason a `PENDING` punch is
+ * still waiting on the phone (403, docs/15_MOBILE_APP_API.md §5.3).
+ */
 enum class PunchFailure {
     /** The tag is not registered as an attendance point (or it is disabled). */
     TAG_UNKNOWN,
@@ -100,7 +106,7 @@ enum class PunchFailure {
     /** The scan time is in the future or too old to be accepted. */
     TIME_REJECTED,
 
-    /** The account may not record office attendance. */
+    /** The account may not record office attendance (403): the punch keeps waiting and is sent again later. */
     ACCESS_REQUIRED,
 
     /** The same command id was used for a different punch. */
@@ -128,8 +134,11 @@ sealed interface PunchResult {
     /** The server recorded the punch. */
     data class Recorded(val punch: AttendancePunch) : PunchResult
 
-    /** Stored on the phone; it is sent automatically when the server can be reached. */
-    data class Saved(val commandId: String) : PunchResult
+    /**
+     * Stored on the phone; it is sent automatically with the same command id when the server takes it.
+     * [hold] names the reason the server did not take it yet when the server answered at all (403).
+     */
+    data class Saved(val commandId: String, val hold: PunchFailure? = null) : PunchResult
 
     /** The server rejected the punch; it stays on the phone as failed. */
     data class Failed(val failure: PunchFailure) : PunchResult

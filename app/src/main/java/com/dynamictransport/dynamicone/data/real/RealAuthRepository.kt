@@ -192,10 +192,20 @@ class RealAuthRepository @Inject constructor(
         try {
             val current = tracker.call { account.me() } ?: return
             val session = state.value as? SessionState.LoggedIn ?: return
-            if (current.id != userId || session.userId != userId) return
+            if (session.userId != userId) return
+            if (current.id != userId && !current.isDriverSessionOf(userId)) return
             if (current.modules.isEmpty()) {
                 // Access was removed: the app has nothing left to show for this account.
                 logout()
+                return
+            }
+            if (current.id != userId) {
+                // Update from a Driver API session: `me` now answers with the user id instead of the driver id.
+                // The session and the driver's stored commands stay; the account does not have to sign in again.
+                sessionData.keepStoredDataOf(current)
+                sessionPreferences.setLoggedInUser(current)
+                profile.value = current
+                state.value = SessionState.LoggedIn(current.id, current.modules)
                 return
             }
             sessionPreferences.updateProfile(current)
@@ -238,6 +248,12 @@ class RealAuthRepository @Inject constructor(
         profile.value = null
         state.value = SessionState.LoggedOut
     }
+
+    /**
+     * A session stored by an older app version, where the Driver API `me` was the source: its session key is the
+     * driver id. The Mobile API answers for the same account with the user id and the same driver id.
+     */
+    private fun UserProfile.isDriverSessionOf(storedUserId: String): Boolean = driverId != null && driverId == storedUserId
 
     private fun RemoteException.toLoginResult(): LoginResult = when (this) {
         is RemoteException.Unauthorized ->

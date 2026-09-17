@@ -267,6 +267,7 @@
 
     <!-- Driver API (prawdziwy serwer) -->
     <string name="feature_not_connected">Ta funkcja nie jest jeszcze połączona z serwerem.</string>
+    <string name="feature_access_required">To konto nie ma już do tego dostępu. Skontaktuj się z biurem.</string>
     <string name="shift_line_unavailable">Rejestracja zmian nie jest jeszcze połączona</string>
     <string name="shift_status_unavailable">Niepołączone</string>
     <string name="sync_offline_real">Brak połączenia. Działania nie mogą zostać wysłane do czasu przywrócenia internetu.</string>

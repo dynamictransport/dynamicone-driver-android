@@ -21,6 +21,8 @@
     <string name="attendance_outcome_recorded_in">Wejście zapisane: %1$s</string>
     <string name="attendance_outcome_recorded_out">Wyjście zapisane: %1$s</string>
     <string name="attendance_outcome_saved">Brak połączenia z serwerem. Wpis zapisano w telefonie i zostanie wysłany automatycznie.</string>
+    <string name="attendance_hold_access">Nie wysłano: rejestracja czasu pracy nie jest włączona dla tego konta. Wpis pozostaje w telefonie i zostanie wysłany, gdy biuro ją włączy.</string>
+    <string name="attendance_access_removed">Rejestracja czasu pracy nie jest już włączona dla tego konta. Skontaktuj się z biurem.</string>
     <string name="attendance_outcome_unreadable">Nie udało się odczytać tagu. Przyłóż telefon do tagu ponownie.</string>
     <string name="attendance_nfc_disabled">NFC jest wyłączone. Włącz NFC, aby rejestrować czas pracy.</string>
     <string name="attendance_nfc_not_supported">Ten telefon nie ma NFC. Do rejestracji czasu pracy potrzebny jest telefon z NFC.</string>

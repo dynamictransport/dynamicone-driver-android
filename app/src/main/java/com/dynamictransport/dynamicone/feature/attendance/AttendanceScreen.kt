@@ -42,6 +42,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -100,8 +101,12 @@ fun AttendanceRoute(onOpenRecords: () -> Unit, viewModel: AttendanceViewModel = 
     }
     // Tags are only read while the screen waits for one; otherwise the system handles them as usual.
     NfcTagReaderEffect(active = state.scanning != null, onTag = viewModel::onTagRead)
+    val now = rememberCurrentInstant()
+    // The screen may stay open across midnight: the office work day (and with it the offered action) changes.
+    LaunchedEffect(now) { viewModel.onTimeChanged() }
     AttendanceScreen(
         state = state,
+        now = now,
         onPrimaryAction = viewModel::onPrimaryAction,
         onCancelScan = viewModel::onCancelScan,
         onOpenNfcSettings = { openNfcSettings(context) },
@@ -147,13 +152,18 @@ fun AttendanceScreen(
                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth().testTag("attendance_loading"))
                 return@Column
             }
-            if (state.unavailable) {
+            if (state.unavailable || state.accessRemoved) {
                 EmptyState(
-                    icon = Icons.Filled.CloudOff,
-                    title = stringResource(R.string.feature_not_connected),
+                    icon = if (state.accessRemoved) Icons.Filled.PhonelinkErase else Icons.Filled.CloudOff,
+                    title = stringResource(
+                        if (state.accessRemoved) R.string.attendance_access_removed else R.string.feature_not_connected,
+                    ),
                     body = null,
-                    modifier = Modifier.testTag("attendance_unavailable"),
+                    modifier = Modifier.testTag(if (state.accessRemoved) "attendance_access_removed" else "attendance_unavailable"),
                 )
+                // Scans the server has not taken yet stay visible: they are kept on the phone, not lost.
+                WaitingBanner(state)
+                state.failed.forEach { FailedPunchCard(it, state.submitting, onResend, onDismiss) }
                 return@Column
             }
             val scanning = state.scanning
@@ -170,14 +180,7 @@ fun AttendanceScreen(
                     modifier = Modifier.testTag("attendance_refresh_error"),
                 )
             }
-            if (state.waitingCount > 0) {
-                StatusBanner(
-                    message = pluralStringResource(R.plurals.attendance_waiting, state.waitingCount, state.waitingCount),
-                    icon = Icons.Filled.CloudUpload,
-                    tone = StatusTone.Info,
-                    modifier = Modifier.testTag("attendance_waiting"),
-                )
-            }
+            WaitingBanner(state)
             state.failed.forEach { FailedPunchCard(it, state.submitting, onResend, onDismiss) }
             TodayCard(state.today)
             SecondaryActionButton(
@@ -190,6 +193,20 @@ fun AttendanceScreen(
     }
 }
 
+/** Scans waiting on the phone, with the server's reason when it answered but did not take them (docs/15 §5.3). */
+@Composable
+private fun WaitingBanner(state: AttendanceUiState) {
+    if (state.waitingCount == 0) return
+    val hold = state.waitingHold
+    StatusBanner(
+        message = hold?.let { stringResource(it.holdMessageRes()) }
+            ?: pluralStringResource(R.plurals.attendance_waiting, state.waitingCount, state.waitingCount),
+        icon = if (hold == null) Icons.Filled.CloudUpload else Icons.Filled.SyncProblem,
+        tone = if (hold == null) StatusTone.Info else StatusTone.Warning,
+        modifier = Modifier.testTag("attendance_waiting"),
+    )
+}
+
 @Composable
 private fun AttendanceActionBar(
     state: AttendanceUiState,
@@ -200,7 +217,7 @@ private fun AttendanceActionBar(
     val next = state.situation?.nextDirection ?: AttendanceDirection.IN
     ActionBar {
         when {
-            state.unavailable -> PrimaryActionButton(
+            state.unavailable || state.accessRemoved -> PrimaryActionButton(
                 text = stringResource(next.actionRes()),
                 onClick = {},
                 icon = next.icon(),
@@ -333,12 +350,16 @@ private fun OutcomeBanner(outcome: PunchOutcome, onDismiss: () -> Unit) {
             tone = StatusTone.Positive,
             modifier = Modifier.testTag("attendance_outcome_recorded"),
         )
-        is PunchOutcome.Saved -> StatusBanner(
-            message = stringResource(R.string.attendance_outcome_saved),
-            icon = Icons.Filled.CloudUpload,
-            tone = StatusTone.Info,
-            modifier = Modifier.testTag("attendance_outcome_saved"),
-        )
+        // Saved on the phone: either the server could not be reached, or it answered but did not take the punch (403).
+        is PunchOutcome.Saved -> {
+            val hold = outcome.hold
+            StatusBanner(
+                message = stringResource(hold?.holdMessageRes() ?: R.string.attendance_outcome_saved),
+                icon = if (hold == null) Icons.Filled.CloudUpload else Icons.Filled.SyncProblem,
+                tone = if (hold == null) StatusTone.Info else StatusTone.Warning,
+                modifier = Modifier.testTag("attendance_outcome_saved"),
+            )
+        }
         is PunchOutcome.Failed -> StatusBanner(
             message = stringResource(outcome.failure.messageRes(outcome.direction)),
             icon = Icons.Filled.ErrorOutline,

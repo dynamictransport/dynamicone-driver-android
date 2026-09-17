@@ -15,6 +15,7 @@ import com.dynamictransport.dynamicone.domain.model.AttendanceMonth
 import com.dynamictransport.dynamicone.domain.model.AttendanceStatus
 import com.dynamictransport.dynamicone.domain.model.LocalPunch
 import com.dynamictransport.dynamicone.domain.model.LocalPunchState
+import com.dynamictransport.dynamicone.domain.model.PunchFailure
 import com.dynamictransport.dynamicone.domain.model.PunchResult
 import com.dynamictransport.dynamicone.domain.model.RefreshResult
 import com.dynamictransport.dynamicone.domain.repository.AttendanceRepository
@@ -40,8 +41,8 @@ import javax.inject.Singleton
 
 /**
  * Office attendance against the Mobile API. A scan is written to the phone with a new command id before it is sent;
- * when the server cannot be reached it stays waiting and is sent again automatically with the same command id (the
- * server is idempotent). A rejected punch is never shown as recorded.
+ * when the server does not take it it stays waiting and is sent again automatically with the same command id (the
+ * server is idempotent, docs/15 §5.3). Only 400 and 409 are final answers; a rejected punch is never shown as recorded.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @Singleton
@@ -163,7 +164,13 @@ class RealAttendanceRepository @Inject constructor(
                 dao.updateState(punch.commandId, LocalPunchState.FAILED, failure, clock.instant())
                 return PunchResult.Failed(failure)
             }
-            return waitForRetry(punch, scheduleRetry)
+            // Not recorded and not rejected either (403, 404, 429, 5xx, offline): the same command id is sent again.
+            return waitForRetry(
+                punch = punch,
+                scheduleRetry = scheduleRetry,
+                hold = AttendanceMapping.hold(e),
+                delaySeconds = (e as? RemoteException.RateLimited)?.retryAfterSeconds ?: 0L,
+            )
         }
         // A success without the contract body: resending returns the recorded punch (idempotent).
         val recorded = response.punch?.let(AttendanceMapping::punch) ?: return waitForRetry(punch, scheduleRetry)
@@ -173,10 +180,15 @@ class RealAttendanceRepository @Inject constructor(
         return PunchResult.Recorded(recorded)
     }
 
-    private suspend fun waitForRetry(punch: AttendancePunchEntity, scheduleRetry: Boolean): PunchResult {
-        dao.updateState(punch.commandId, LocalPunchState.PENDING, null, clock.instant())
-        if (scheduleRetry) scheduler.requestSend()
-        return PunchResult.Saved(punch.commandId)
+    private suspend fun waitForRetry(
+        punch: AttendancePunchEntity,
+        scheduleRetry: Boolean,
+        hold: PunchFailure? = null,
+        delaySeconds: Long = 0L,
+    ): PunchResult {
+        dao.updateState(punch.commandId, LocalPunchState.PENDING, hold, clock.instant())
+        if (scheduleRetry) scheduler.requestSend(delaySeconds)
+        return PunchResult.Saved(punch.commandId, hold)
     }
 
     /** Monotonic time since the scan; null after a restart, when the boot-relative clocks cannot be compared. */
@@ -193,9 +205,10 @@ class RealAttendanceRepository @Inject constructor(
         throw e
     } catch (e: RemoteException) {
         when {
-            // The account has no attendance access, or the Mobile API is not live on this server yet.
+            // `403 attendance_access_required`: the account may not record office attendance (any more).
             e is RemoteException.Forbidden && e.problem?.code != DriverErrorCodes.PASSWORD_CHANGE_REQUIRED ->
-                RefreshResult.NOT_SUPPORTED
+                RefreshResult.ACCESS_REQUIRED
+            // The Mobile API is not live on this server yet.
             e is RemoteException.NotFound && !e.isApiDisabled -> RefreshResult.NOT_SUPPORTED
             else -> e.toRefreshResult()
         }

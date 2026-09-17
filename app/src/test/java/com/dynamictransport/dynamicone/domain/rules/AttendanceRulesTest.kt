@@ -132,6 +132,30 @@ class AttendanceRulesTest {
     }
 
     @Test
+    fun `the clock change of a DST night does not move the work day`() {
+        // Warsaw goes from CEST to CET in the night of 25.10.2026: 02:59:59+02:00 is followed by 02:00:00+01:00.
+        val beforeChange = Instant.parse("2026-10-25T00:30:00Z") // 02:30+02:00, still the 25th
+        val afterChange = Instant.parse("2026-10-25T01:30:00Z") // 02:30+01:00, the same work day
+        val checkIn = local("cmd-in", IN, "2026-10-24T22:10:00Z") // 00:10+02:00 on the 25th
+        val dstDay = LocalDate.of(2026, 10, 25)
+        val status = AttendanceStatus(true, OUT, dstDay, warsaw, null)
+
+        val before = AttendanceRules.situation(status, listOf(checkIn), beforeChange, ZoneOffset.UTC)
+        val after = AttendanceRules.situation(status, listOf(checkIn), afterChange, ZoneOffset.UTC)
+
+        assertEquals(dstDay, before.today)
+        assertEquals(dstDay, after.today)
+        assertTrue(after.checkedIn)
+        assertEquals(OUT, after.nextDirection)
+
+        // The next morning is a new work day: an open check-in of the DST night does not carry over.
+        val nextMorning = AttendanceRules.situation(status, listOf(checkIn), Instant.parse("2026-10-26T06:00:00Z"), ZoneOffset.UTC)
+        assertEquals(LocalDate.of(2026, 10, 26), nextMorning.today)
+        assertFalse(nextMorning.checkedIn)
+        assertEquals(IN, nextMorning.nextDirection)
+    }
+
+    @Test
     fun `today is the work date of the office time zone, not of the phone`() {
         // 23:30 UTC on the 16th is already the 17th in Warsaw.
         val lateEvening = Instant.parse("2026-09-16T23:30:00Z")

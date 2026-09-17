@@ -68,5 +68,8 @@ enum class RefreshResult {
 
     /** The connected backend has no endpoint for this data. */
     NOT_SUPPORTED,
+
+    /** The account may not see this data (any more): `403` with the endpoint's access code. */
+    ACCESS_REQUIRED,
     FAILED,
 }

@@ -376,6 +376,7 @@ fun RefreshResult.messageRes(): Int? = when (this) {
     RefreshResult.SERVICE_UNAVAILABLE -> R.string.refresh_service_unavailable
     RefreshResult.RATE_LIMITED -> R.string.refresh_rate_limited
     RefreshResult.NOT_SUPPORTED -> R.string.feature_not_connected
+    RefreshResult.ACCESS_REQUIRED -> R.string.feature_access_required
     RefreshResult.FAILED -> R.string.refresh_failed
 }
 

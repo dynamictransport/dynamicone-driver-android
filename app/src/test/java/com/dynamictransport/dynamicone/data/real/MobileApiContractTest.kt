@@ -22,6 +22,9 @@ import com.dynamictransport.dynamicone.testing.jsonResponse
 import com.dynamictransport.dynamicone.testing.problemResponse
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.long
 import okhttp3.Headers
 import okhttp3.mockwebserver.MockResponse
 import org.junit.After
@@ -155,6 +158,30 @@ class MobileApiContractTest {
             MockResponse().setResponseCode(400).setHeader("Content-Type", "application/problem+json").setBody(example("direction-mismatch-400.json"))
         }
         assertEquals(PunchResult.Failed(PunchFailure.WRONG_TAG_DIRECTION), h.attendance.recordPunch(AttendanceDirection.OUT, "04A224B2C35E80"))
+    }
+
+    @Test
+    fun `a replay with a longer elapsed time keeps the first recorded times`() = runBlocking {
+        h.signInOffice()
+        // The backend answers 201 once and 200 with the stored result for every later attempt of the same command.
+        val attempts = mutableListOf<String>()
+        h.routes.onRequest("POST", "$MOBILE_API/attendance/punches") { request ->
+            attempts += request.body.readUtf8()
+            if (attempts.size == 1) jsonResponse(example("punch-201.json"), code = 201) else jsonResponse(example("punch-replay-200.json"))
+        }
+
+        val recorded = h.attendance.recordPunch(AttendanceDirection.IN, "04A224B2C35E80") as PunchResult.Recorded
+        h.uptime.elapsedMillis += 45_000
+        val replayed = h.attendance.resend("punch-1") as PunchResult.Recorded
+
+        // Only the elapsed time differs; the official times of the first answer stay (docs/15 §5.3).
+        assertEquals(recorded.punch, replayed.punch)
+        assertEquals(Instant.parse("2026-09-17T14:04:15.9223902Z"), replayed.punch.occurredAt)
+        val (first, second) = attempts.map { TEST_JSON.parseToJsonElement(it).jsonObject }
+        listOf("commandId", "direction", "tagUid", "scannedAtUtc", "installationId").forEach { field ->
+            assertEquals(field, first.getValue(field), second.getValue(field))
+        }
+        assertEquals(45_000L, second.getValue("elapsedSinceScanMs").jsonPrimitive.long - first.getValue("elapsedSinceScanMs").jsonPrimitive.long)
     }
 
     @Test

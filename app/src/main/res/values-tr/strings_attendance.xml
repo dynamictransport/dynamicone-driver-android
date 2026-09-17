@@ -21,6 +21,8 @@
     <string name="attendance_outcome_recorded_in">Giriş kaydedildi: %1$s</string>
     <string name="attendance_outcome_recorded_out">Çıkış kaydedildi: %1$s</string>
     <string name="attendance_outcome_saved">Sunucuya ulaşılamadı. Kayıt telefonda saklandı, bağlantı gelince otomatik gönderilecek.</string>
+    <string name="attendance_hold_access">Gönderilmedi: bu hesap için mesai kaydı açık değil. Kayıt telefonda duruyor ve ofis izni açınca gönderilecek.</string>
+    <string name="attendance_access_removed">Bu hesap için mesai kaydı artık açık değil. Ofisle iletişime geçin.</string>
     <string name="attendance_outcome_unreadable">Etiket okunamadı. Telefonu etikete tekrar yaklaştırın.</string>
     <string name="attendance_nfc_disabled">NFC kapalı. Mesai kaydı için NFC\'yi açın.</string>
     <string name="attendance_nfc_not_supported">Bu telefonda NFC yok. Mesai kaydı için NFC\'li bir telefon gerekir.</string>

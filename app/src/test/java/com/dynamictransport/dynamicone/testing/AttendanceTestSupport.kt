@@ -76,8 +76,12 @@ class FakeDeviceUptime(var elapsedMillis: Long = 1_000_000L, var boot: Int? = 7)
 class RecordingAttendanceSyncScheduler : AttendanceSyncScheduler {
     var requests = 0
 
-    override fun requestSend() {
+    /** The delays the repository asked for, in order (the server's `Retry-After`, 0 without one). */
+    val delaysSeconds = mutableListOf<Long>()
+
+    override fun requestSend(delaySeconds: Long) {
         requests++
+        delaysSeconds += delaySeconds
     }
 }
 

@@ -26,7 +26,7 @@ Dynamic Transport çalışanları için tek Android uygulaması (eski adı Dynam
 - Kaydın önce telefona yazılması; internet yokken bekleyip bağlantı gelince otomatik gönderilmesi (gönderildi / bekliyor / gönderilemedi ayrı gösterilir)
 - Aylık *Mesai kayıtlarım*: gün gün giriş/çıkış saatleri, gün durumu ve sunucunun hesapladığı çalışılan süre
 
-Backend sözleşmesi: [docs/15_MOBILE_APP_API.md](docs/15_MOBILE_APP_API.md). Mobile API yayına alınana kadar `app.mobileApi=false` ile giriş Driver API üzerinden yapılır (yalnızca şoför modülü).
+Backend sözleşmesi: [docs/15_MOBILE_APP_API.md](docs/15_MOBILE_APP_API.md). Mobile API yayına alınana kadar `app.mobileApi=false` ile giriş Driver API üzerinden yapılır (yalnızca şoför modülü); denemek için `gradlew.bat assembleDebug -Papp.mobileApi=true`. Yalnızca 400 ve 409 kalıcı hatadır; 403/404/429/5xx durumunda kayıt aynı `commandId` ile tekrar gönderilir (docs/15 §5.3).
 
 ## İlk platform
 

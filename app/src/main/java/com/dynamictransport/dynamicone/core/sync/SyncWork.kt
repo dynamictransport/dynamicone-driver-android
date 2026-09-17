@@ -72,7 +72,8 @@ class SyncWorker @AssistedInject constructor(
 
 /** Sends office attendance punches stored on the phone once the server can be reached (docs/15, ASSUMPTIONS M7). */
 interface AttendanceSyncScheduler {
-    fun requestSend()
+    /** [delaySeconds]: the server's `Retry-After` when it asked to be left alone for a while (429). */
+    fun requestSend(delaySeconds: Long = 0)
 }
 
 @Singleton
@@ -80,10 +81,11 @@ class WorkManagerAttendanceSyncScheduler @Inject constructor(
     @param:ApplicationContext private val context: Context,
 ) : AttendanceSyncScheduler {
 
-    override fun requestSend() {
+    override fun requestSend(delaySeconds: Long) {
         val request = OneTimeWorkRequestBuilder<AttendanceSyncWorker>()
             .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
             .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, ATTENDANCE_BACKOFF_SECONDS, TimeUnit.SECONDS)
+            .setInitialDelay(delaySeconds.coerceIn(0, MAX_RETRY_AFTER_SECONDS), TimeUnit.SECONDS)
             .build()
         // Every punch carries its own command id and the server is idempotent: restarting a running send is safe.
         WorkManager.getInstance(context).enqueueUniqueWork(UNIQUE_WORK_NAME, ExistingWorkPolicy.REPLACE, request)
@@ -92,6 +94,9 @@ class WorkManagerAttendanceSyncScheduler @Inject constructor(
     companion object {
         const val UNIQUE_WORK_NAME = "attendance-sync"
         private const val ATTENDANCE_BACKOFF_SECONDS = 30L
+
+        /** A `Retry-After` beyond this is treated as the limit: the punch must not sit on the phone for hours. */
+        private const val MAX_RETRY_AFTER_SECONDS = 15 * 60L
     }
 }
 

@@ -106,6 +106,36 @@ class NetworkLayerTest {
     }
 
     @Test
+    fun `concurrent Mobile API calls share one refresh of the stored Driver session token`() {
+        val refreshCalls = AtomicInteger()
+        val refreshBodies = Collections.synchronizedList(mutableListOf<String>())
+        val status = """{"state":"CheckedOut","nextAction":"CheckIn","workDate":"2026-09-12","timeZoneId":"Europe/Warsaw","lastPunch":null}"""
+        server.dispatcher = object : Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse = when (request.requestUrl?.encodedPath) {
+                "/api/mobile/v1/auth/refresh" -> {
+                    refreshCalls.incrementAndGet()
+                    refreshBodies += request.body.readUtf8()
+                    Thread.sleep(300)
+                    jsonResponse(DriverApiJson.tokens(access = "access-2", refresh = "refresh-2"))
+                }
+                "/api/mobile/v1/attendance/status" ->
+                    if (request.getHeader("Authorization") == "Bearer access-2") jsonResponse(status) else problemResponse(401, "unauthorized")
+                else -> MockResponse().setResponseCode(404)
+            }
+        }
+        // Stored by the Driver API version of the app: the Mobile API accepts the same refresh token (docs/15 §3).
+        storeTokens()
+        val mobileApi = DriverApiTestClient(server, tokenManager, clock, "/api/mobile/v1/").mobileApi
+
+        val answers = runBlocking(Dispatchers.IO) { (1..4).map { async { mobileApi.attendanceStatus() } }.awaitAll() }
+
+        assertEquals(4, answers.size)
+        assertEquals(1, refreshCalls.get())
+        assertEquals(listOf("""{"refreshToken":"refresh-1"}"""), refreshBodies)
+        assertEquals("refresh-2", tokenStore.tokens?.refreshToken)
+    }
+
+    @Test
     fun `rejected refresh clears the session once and does not loop`() = runBlocking {
         val events = Collections.synchronizedList(mutableListOf<SessionEvent>())
         val collector = launchCollector(events)

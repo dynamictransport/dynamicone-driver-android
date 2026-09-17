@@ -261,6 +261,7 @@
 
     <!-- Driver API (gerçek sunucu) -->
     <string name="feature_not_connected">Bu özellik henüz sunucuya bağlanmadı.</string>
+    <string name="feature_access_required">Bu hesabın artık buna erişimi yok. Ofisle iletişime geçin.</string>
     <string name="shift_line_unavailable">Mesai takibi henüz bağlı değil</string>
     <string name="shift_status_unavailable">Bağlı değil</string>
     <string name="sync_offline_real">Bağlantı yok. İnternet gelene kadar işlem gönderilemez.</string>

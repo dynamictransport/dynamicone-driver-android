@@ -88,7 +88,10 @@ object AttendanceMapping {
         return AttendanceMonth(month, zone, days.sortedByDescending { it.workDate })
     }
 
-    /** Null: not processed or outcome unknown, send the same punch again later. Otherwise the server's final answer. */
+    /**
+     * The server's final answer (400/409, docs/15 §5.3): the punch is shown as not recorded with its reason.
+     * Null means the punch was not processed or its outcome is unknown: the same command id is sent again later.
+     */
     fun failure(e: RemoteException): PunchFailure? = when (e) {
         is RemoteException.Validation -> when (e.problem?.code) {
             MobileErrorCodes.ATTENDANCE_TAG_UNKNOWN -> PunchFailure.TAG_UNKNOWN
@@ -97,12 +100,19 @@ object AttendanceMapping {
             else -> PunchFailure.REJECTED
         }
         is RemoteException.Conflict -> PunchFailure.CONFLICT
-        // The password change screen opens; the punch is sent after it.
-        is RemoteException.Forbidden ->
-            if (e.problem?.code == DriverErrorCodes.PASSWORD_CHANGE_REQUIRED) null else PunchFailure.ACCESS_REQUIRED
         is RemoteException.Rejected, is RemoteException.PayloadTooLarge -> PunchFailure.REJECTED
-        // Offline, 5xx, unreadable response, 401 (session), 404 (API not live or disabled), 429.
+        // Offline, 5xx, unreadable response, 401 (session), 403 (see hold), 404 (API not live or disabled), 429.
         else -> null
+    }
+
+    /**
+     * Why a punch that is kept on the phone was not taken: `403 attendance_access_required` means "not sent", not
+     * "rejected" (docs/15 §5.3). The password change screen opens first; the punch is sent after it.
+     */
+    fun hold(e: RemoteException): PunchFailure? = when {
+        e !is RemoteException.Forbidden -> null
+        e.problem?.code == DriverErrorCodes.PASSWORD_CHANGE_REQUIRED -> null
+        else -> PunchFailure.ACCESS_REQUIRED
     }
 
     private fun date(value: String?): LocalDate? = value?.let { runCatching { LocalDate.parse(it) }.getOrNull() }

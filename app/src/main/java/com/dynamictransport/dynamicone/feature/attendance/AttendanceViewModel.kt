@@ -46,7 +46,8 @@ data class TodayPunch(
 sealed interface PunchOutcome {
     data class Recorded(val direction: AttendanceDirection, val time: Instant) : PunchOutcome
 
-    data class Saved(val direction: AttendanceDirection) : PunchOutcome
+    /** [hold]: the server answered but did not take the punch yet (403); it stays on the phone. */
+    data class Saved(val direction: AttendanceDirection, val hold: PunchFailure? = null) : PunchOutcome
 
     data class Failed(val direction: AttendanceDirection, val failure: PunchFailure) : PunchOutcome
 
@@ -69,9 +70,13 @@ data class AttendanceUiState(
     /** Rejected punches (any day) with their reason. */
     val failed: List<LocalPunch> = emptyList(),
     val waitingCount: Int = 0,
+    /** Why the waiting punches were not taken, when the server answered at all (403). */
+    val waitingHold: PunchFailure? = null,
     val isOnline: Boolean = true,
-    /** The server has no attendance for this account or does not serve it yet. */
+    /** The server does not serve office attendance yet. */
     val unavailable: Boolean = false,
+    /** The account may not record office attendance (any more): `403 attendance_access_required`. */
+    val accessRemoved: Boolean = false,
     @param:StringRes val refreshError: Int? = null,
     val refreshing: Boolean = false,
 )
@@ -83,6 +88,8 @@ private data class Controls(
     val submitting: Boolean,
     val refreshResult: RefreshResult?,
     val refreshing: Boolean,
+    /** Moves with the screen's clock so the work day changes while the screen stays open. */
+    val now: Instant,
 )
 
 @HiltViewModel
@@ -99,15 +106,15 @@ class AttendanceViewModel @Inject constructor(
     private val outcome = MutableStateFlow<PunchOutcome?>(null)
     private val refreshResult = MutableStateFlow<RefreshResult?>(null)
     private val refreshing = MutableStateFlow(false)
+    private val now = MutableStateFlow(clock.instant())
     private val singleFlight = SingleFlight()
 
     private val controls = combine(
         combine(nfc, scanning, outcome, ::Triple),
-        singleFlight.busy,
-        refreshResult,
-        refreshing,
-    ) { (nfcState, scanDirection, lastOutcome), busy, result, isRefreshing ->
-        Controls(nfcState, scanDirection, lastOutcome, busy, result, isRefreshing)
+        combine(singleFlight.busy, refreshResult, refreshing, ::Triple),
+        now,
+    ) { (nfcState, scanDirection, lastOutcome), (busy, result, isRefreshing), currentTime ->
+        Controls(nfcState, scanDirection, lastOutcome, busy, result, isRefreshing, currentTime)
     }
 
     val uiState: StateFlow<AttendanceUiState> = combine(
@@ -117,8 +124,9 @@ class AttendanceViewModel @Inject constructor(
         networkMonitor.isOnline,
         controls,
     ) { status, local, profile, online, control ->
-        val situation = AttendanceRules.situation(status, local, clock.instant(), ZoneId.systemDefault())
+        val situation = AttendanceRules.situation(status, local, control.now, ZoneId.systemDefault())
         val result = control.refreshResult
+        val waiting = local.filter { it.state == LocalPunchState.PENDING || it.state == LocalPunchState.SENDING }
         AttendanceUiState(
             // Until the first read finishes, only what the phone knows can be shown.
             loading = status == null && result == null && local.isEmpty(),
@@ -130,11 +138,15 @@ class AttendanceViewModel @Inject constructor(
             outcome = control.outcome,
             today = todayPunches(status, local, situation),
             failed = local.filter { it.state == LocalPunchState.FAILED },
-            waitingCount = local.count { it.state == LocalPunchState.PENDING || it.state == LocalPunchState.SENDING },
+            waitingCount = waiting.size,
+            waitingHold = waiting.firstNotNullOfOrNull { it.failure },
             isOnline = online,
             unavailable = result == RefreshResult.NOT_SUPPORTED,
+            accessRemoved = result == RefreshResult.ACCESS_REQUIRED,
             // Offline is shown by the connectivity badge; the phone still records scans.
-            refreshError = result?.takeIf { it != RefreshResult.OFFLINE && it != RefreshResult.NOT_SUPPORTED }?.messageRes(),
+            refreshError = result
+                ?.takeIf { it != RefreshResult.OFFLINE && it != RefreshResult.NOT_SUPPORTED && it != RefreshResult.ACCESS_REQUIRED }
+                ?.messageRes(),
             refreshing = control.refreshing,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AttendanceUiState())
@@ -142,7 +154,21 @@ class AttendanceViewModel @Inject constructor(
     /** The screen came to the front: NFC may have been switched on in the settings, the state may have changed. */
     fun onResume() {
         nfc.value = nfcStatus.availability()
+        now.value = clock.instant()
         refresh()
+    }
+
+    /**
+     * The screen's clock moved on. A new work day of the office time zone means yesterday's answer is stale: the
+     * server decides the action again (docs/15 §5.2, an open check-in of yesterday offers `CheckIn` today).
+     */
+    fun onTimeChanged() {
+        val previous = now.value
+        val current = clock.instant()
+        if (current == previous) return
+        now.value = current
+        val zone = uiState.value.situation?.zone ?: ZoneId.systemDefault()
+        if (previous.atZone(zone).toLocalDate() != current.atZone(zone).toLocalDate()) refresh()
     }
 
     fun refresh() {
@@ -161,7 +187,7 @@ class AttendanceViewModel @Inject constructor(
     fun onPrimaryAction() {
         val state = uiState.value
         val situation = state.situation ?: return
-        if (state.submitting || state.scanning != null || state.unavailable) return
+        if (state.submitting || state.scanning != null || state.unavailable || state.accessRemoved) return
         nfc.value = nfcStatus.availability()
         if (nfc.value != NfcAvailability.AVAILABLE) return
         outcome.value = null
@@ -203,7 +229,7 @@ class AttendanceViewModel @Inject constructor(
 
     private fun PunchResult.toOutcome(direction: AttendanceDirection): PunchOutcome = when (this) {
         is PunchResult.Recorded -> PunchOutcome.Recorded(direction, punch.occurredAt)
-        is PunchResult.Saved -> PunchOutcome.Saved(direction)
+        is PunchResult.Saved -> PunchOutcome.Saved(direction, hold)
         is PunchResult.Failed -> PunchOutcome.Failed(direction, failure)
         PunchResult.UnreadableTag -> PunchOutcome.UnreadableTag
         PunchResult.NotLoggedIn -> PunchOutcome.NotLoggedIn
@@ -229,6 +255,17 @@ class AttendanceViewModel @Inject constructor(
             ?.let { TodayPunch(it.id, it.direction, it.occurredAt, SyncState.SYNCED, it.pointName) }
         return (fromPhone + listOfNotNull(fromServer)).sortedByDescending { it.time }
     }
+}
+
+/**
+ * A punch the server answered about but did not take yet: it waits on the phone and is sent again with the same
+ * command id (docs/15 §5.3). Only `403` produces this today.
+ */
+@StringRes
+fun PunchFailure.holdMessageRes(): Int = when (this) {
+    PunchFailure.ACCESS_REQUIRED -> R.string.attendance_hold_access
+    // A final answer never holds a punch; it is shown as not recorded instead.
+    else -> R.string.attendance_failure_rejected
 }
 
 @StringRes

@@ -6,6 +6,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -182,6 +183,48 @@ class AttendanceScreensTest {
     }
 
     @Test
+    fun aPunchTheServerWouldNotTakeYetIsShownAsWaitingWithItsReason() {
+        setScreen(
+            AttendanceUiState(
+                loading = false,
+                situation = situation(checkedIn = false),
+                outcome = PunchOutcome.Saved(AttendanceDirection.IN, PunchFailure.ACCESS_REQUIRED),
+                waitingCount = 1,
+                waitingHold = PunchFailure.ACCESS_REQUIRED,
+            ),
+        )
+
+        composeRule.onNodeWithTag("attendance_outcome_saved").assertIsDisplayed()
+        composeRule.onNodeWithTag("attendance_waiting").assertIsDisplayed()
+        // The reason replaces "waiting for the connection": the server answered, it just did not take the punch.
+        composeRule.onAllNodes(
+            hasText(
+                "Not sent: attendance recording is not enabled for this account. " +
+                    "The record is kept on this phone and is sent as soon as the office enables it.",
+            ),
+        ).assertCountEquals(2)
+    }
+
+    @Test
+    fun anAccountWithoutOfficeAccessSeesWhyAndKeepsItsWaitingPunches() {
+        setScreen(
+            AttendanceUiState(
+                loading = false,
+                situation = situation(checkedIn = false),
+                accessRemoved = true,
+                waitingCount = 1,
+                waitingHold = PunchFailure.ACCESS_REQUIRED,
+            ),
+        )
+
+        composeRule.onNodeWithTag("attendance_access_removed").assertIsDisplayed()
+        composeRule.onNodeWithText("Attendance recording is no longer enabled for this account. Contact the office.")
+            .assertIsDisplayed()
+        composeRule.onNodeWithTag("attendance_waiting").assertIsDisplayed()
+        composeRule.onNodeWithTag(PRIMARY_ACTION_TAG).assertIsNotEnabled()
+    }
+
+    @Test
     @Config(qualifiers = "tr-w411dp-h891dp")
     fun turkishLabelsAreUsed() {
         setScreen(AttendanceUiState(loading = false, situation = situation(checkedIn = false)))
@@ -201,6 +244,14 @@ class AttendanceScreensTest {
                         canGoForward = false,
                         zone = ZoneOffset.UTC,
                         days = listOf(
+                            RecordDayUi(
+                                date = LocalDate.of(2026, 9, 11),
+                                state = AttendanceDayState.INCOMPLETE,
+                                workedMinutes = null,
+                                punches = listOf(
+                                    RecordPunchUi("p-3", AttendanceDirection.IN, TEST_NOW.minusSeconds(86_400 + 3_600), "Entrance", null),
+                                ),
+                            ),
                             RecordDayUi(
                                 date = LocalDate.of(2026, 9, 10),
                                 state = AttendanceDayState.COMPLETE,
@@ -227,6 +278,10 @@ class AttendanceScreensTest {
         composeRule.onNodeWithText("Check-out 16:12").assertIsDisplayed()
         composeRule.onNodeWithText("Waiting to send").assertIsDisplayed()
         composeRule.onNodeWithText("8 h 12 min").assertIsDisplayed()
+        // A day the server did not calculate shows "—", never a zero the app made up (docs/15 §5.5).
+        composeRule.onNodeWithTag("records_day_2026-09-11").performScrollTo()
+        composeRule.onNodeWithText("Record missing").assertIsDisplayed()
+        composeRule.onNodeWithText("—").assertIsDisplayed()
     }
 
     @Test

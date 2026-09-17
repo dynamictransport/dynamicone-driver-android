@@ -19,6 +19,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.EventBusy
+import androidx.compose.material.icons.filled.PhonelinkErase
 import androidx.compose.material.icons.filled.RateReview
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.SyncProblem
@@ -117,6 +118,8 @@ data class AttendanceRecordsUiState(
     @param:StringRes val loadError: Int? = null,
     val stale: Boolean = false,
     val unavailable: Boolean = false,
+    /** The account may not see office attendance (any more): `403 attendance_access_required`. */
+    val accessRemoved: Boolean = false,
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -136,7 +139,9 @@ class AttendanceRecordsViewModel @Inject constructor(
     val uiState: StateFlow<AttendanceRecordsUiState> =
         combine(data, attendance.observeLocalPunches(), refreshing, results) { (selected, server), local, busy, all ->
             val result = all[selected]
-            val failed = result?.takeIf { it != RefreshResult.SUCCESS && it != RefreshResult.NOT_SUPPORTED }
+            val failed = result?.takeIf {
+                it != RefreshResult.SUCCESS && it != RefreshResult.NOT_SUPPORTED && it != RefreshResult.ACCESS_REQUIRED
+            }
             val zone = server?.zone ?: ZoneId.systemDefault()
             AttendanceRecordsUiState(
                 month = selected,
@@ -148,6 +153,7 @@ class AttendanceRecordsViewModel @Inject constructor(
                 loadError = failed?.takeIf { server == null }?.messageRes(),
                 stale = failed != null && server != null,
                 unavailable = result == RefreshResult.NOT_SUPPORTED,
+                accessRemoved = result == RefreshResult.ACCESS_REQUIRED,
             )
         }.stateIn(
             viewModelScope,
@@ -245,7 +251,7 @@ fun AttendanceRecordsScreen(
                 onBack = onBack,
                 backContentDescription = stringResource(R.string.common_back),
                 actions = {
-                    if (!state.unavailable) {
+                    if (!state.unavailable && !state.accessRemoved) {
                         IconButton(onClick = onRefresh, enabled = !state.refreshing, modifier = Modifier.size(56.dp)) {
                             if (state.refreshing) {
                                 CircularProgressIndicator(strokeWidth = 3.dp, modifier = Modifier.size(24.dp))
@@ -280,6 +286,12 @@ fun AttendanceRecordsScreen(
             val days = state.days
             val loadError = state.loadError
             when {
+                state.accessRemoved -> EmptyState(
+                    icon = Icons.Filled.PhonelinkErase,
+                    title = stringResource(R.string.attendance_access_removed),
+                    body = null,
+                    modifier = Modifier.testTag("records_access_removed"),
+                )
                 state.unavailable -> EmptyState(
                     icon = Icons.Filled.CloudOff,
                     title = stringResource(R.string.feature_not_connected),
@@ -340,9 +352,13 @@ private fun DayCard(day: RecordDayUi, zone: ZoneId, locale: Locale) {
             day.state?.let { StatusUiBadge(it.toStatusUi()) }
         }
         day.punches.forEach { PunchRow(it.direction, it.time, it.pointName, it.syncState, zone) }
-        day.workedMinutes?.let { minutes ->
-            InfoRow(Icons.Filled.Timer, stringResource(R.string.attendance_worked), formatDuration(Duration.ofMinutes(minutes.toLong())))
-        }
+        // The server calculates the worked time; a day without one shows "—" (never 0, docs/15 §5.5).
+        InfoRow(
+            icon = Icons.Filled.Timer,
+            label = stringResource(R.string.attendance_worked),
+            value = day.workedMinutes?.let { formatDuration(Duration.ofMinutes(it.toLong())) }
+                ?: stringResource(R.string.value_unknown),
+        )
     }
 }
 

@@ -61,7 +61,8 @@ class AttendanceViewModelTest {
     @After
     fun tearDown() = TimeZone.setDefault(defaultZone)
 
-    private fun viewModel() = AttendanceViewModel(attendance, FakeAuthRepository(), network, nfc, MutableClock())
+    private fun viewModel(clock: MutableClock = MutableClock()) =
+        AttendanceViewModel(attendance, FakeAuthRepository(), network, nfc, clock)
 
     private fun checkedInStatus() = AttendanceStatus(
         checkedIn = true,
@@ -199,6 +200,77 @@ class AttendanceViewModelTest {
         advanceUntilIdle()
         assertEquals(listOf("cmd-1"), attendance.resent)
         assertEquals(listOf("cmd-1"), attendance.dismissed)
+    }
+
+    @Test
+    fun `a punch the server did not take yet is shown with its reason, never as recorded`() = runTest {
+        attendance.punchResult = { PunchResult.Saved("cmd-3", PunchFailure.ACCESS_REQUIRED) }
+        // Waiting since yesterday: the office has not enabled attendance for this account yet.
+        attendance.local.value = listOf(
+            LocalPunch(
+                "cmd-3", AttendanceDirection.IN, TEST_NOW.minusSeconds(86_400), LocalPunchState.PENDING, PunchFailure.ACCESS_REQUIRED, null, null,
+            ),
+        )
+        val viewModel = viewModel()
+        keepCollecting(viewModel.uiState)
+
+        viewModel.onPrimaryAction()
+        viewModel.onTagRead(TAG_ID)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals(PunchOutcome.Saved(AttendanceDirection.IN, PunchFailure.ACCESS_REQUIRED), state.outcome)
+        assertEquals(1, state.waitingCount)
+        assertEquals(PunchFailure.ACCESS_REQUIRED, state.waitingHold)
+        assertTrue(state.failed.isEmpty())
+    }
+
+    @Test
+    fun `an account whose office access was removed is told so and cannot scan`() = runTest {
+        attendance.refreshResult = RefreshResult.ACCESS_REQUIRED
+        val viewModel = viewModel()
+        keepCollecting(viewModel.uiState)
+        viewModel.onResume()
+        advanceUntilIdle()
+
+        viewModel.onPrimaryAction()
+
+        val state = viewModel.uiState.value
+        assertTrue(state.accessRemoved)
+        assertFalse(state.unavailable)
+        assertNull(state.refreshError)
+        assertNull(state.scanning)
+    }
+
+    @Test
+    fun `at midnight the state is read again and yesterday's check-in does not offer ending work`() = runTest {
+        // 23:30 in the office time zone, checked in since the morning.
+        val clock = MutableClock(Instant.parse("2026-09-12T21:30:00Z"))
+        attendance.status.value = AttendanceStatus(
+            checkedIn = true,
+            nextDirection = AttendanceDirection.OUT,
+            workDate = LocalDate.of(2026, 9, 12),
+            zone = WARSAW,
+            lastPunch = AttendancePunch(
+                "p-1", "cmd-1", AttendanceDirection.IN, Instant.parse("2026-09-12T06:00:00Z"), null, AttendancePunchSource.MOBILE_NFC, null,
+            ),
+        )
+        val viewModel = viewModel(clock)
+        keepCollecting(viewModel.uiState)
+        viewModel.onResume()
+        advanceUntilIdle()
+        assertEquals(AttendanceDirection.OUT, viewModel.uiState.value.situation?.nextDirection)
+
+        // 00:05 of the next work day while the screen stayed open.
+        clock.now = Instant.parse("2026-09-12T22:05:00Z")
+        viewModel.onTimeChanged()
+        advanceUntilIdle()
+
+        val situation = viewModel.uiState.value.situation!!
+        assertEquals(LocalDate.of(2026, 9, 13), situation.today)
+        assertFalse(situation.checkedIn)
+        assertEquals(AttendanceDirection.IN, situation.nextDirection)
+        assertEquals(2, attendance.statusRefreshes)
     }
 
     @Test

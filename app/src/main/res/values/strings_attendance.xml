@@ -21,6 +21,8 @@
     <string name="attendance_outcome_recorded_in">Check-in recorded: %1$s</string>
     <string name="attendance_outcome_recorded_out">Check-out recorded: %1$s</string>
     <string name="attendance_outcome_saved">The server cannot be reached. The record is saved on this phone and will be sent automatically.</string>
+    <string name="attendance_hold_access">Not sent: attendance recording is not enabled for this account. The record is kept on this phone and is sent as soon as the office enables it.</string>
+    <string name="attendance_access_removed">Attendance recording is no longer enabled for this account. Contact the office.</string>
     <string name="attendance_outcome_unreadable">The tag could not be read. Hold the phone against the tag again.</string>
     <string name="attendance_nfc_disabled">NFC is off. Turn on NFC to record your working time.</string>
     <string name="attendance_nfc_not_supported">This phone has no NFC. Recording working time needs a phone with NFC.</string>
