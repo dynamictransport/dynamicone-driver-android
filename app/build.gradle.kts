@@ -7,9 +7,14 @@ plugins {
     alias(libs.plugins.room)
 }
 
+val dynamicOneApplicationId = "com.dynamictransport.dynamicone"
+
 // Push notifications (Firebase Cloud Messaging) need the Firebase project's google-services.json in this module.
-// The file is Git-ignored and added locally; without it the app builds and runs without push notifications.
-val pushConfigured = file("google-services.json").exists()
+// The file is Git-ignored and added locally; without it, or while it has no Android app registered for this
+// application id (e.g. a file downloaded for the former driver app id), the app builds and runs without push.
+val googleServicesFile = file("google-services.json")
+val pushConfigured = googleServicesFile.exists() &&
+    Regex("\"package_name\"\\s*:\\s*\"${Regex.escape(dynamicOneApplicationId)}\"").containsMatchIn(googleServicesFile.readText())
 if (pushConfigured) {
     apply(plugin = "com.google.gms.google-services")
 }
@@ -31,13 +36,13 @@ listOf(developmentApiBaseUrl, productionApiBaseUrl).forEach { url ->
 }
 
 android {
-    namespace = "com.dynamictransport.driver"
+    namespace = "com.dynamictransport.dynamicone"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "com.dynamictransport.driver"
+        applicationId = dynamicOneApplicationId
         minSdk = 26
         targetSdk = 37
         versionCode = 1

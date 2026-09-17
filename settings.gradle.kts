@@ -25,5 +25,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "DynamicONE-Driver"
+rootProject.name = "DynamicONE-App"
 include(":app")

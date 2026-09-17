@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name" translatable="false">DynamicONE Driver</string>
+    <string name="app_name" translatable="false">DynamicONE</string>
     <string name="demo_badge" translatable="false">DEMO</string>
     <string name="trip_route" translatable="false">%1$s → %2$s</string>
     <string name="counter_of" translatable="false">%1$d / %2$d</string>
