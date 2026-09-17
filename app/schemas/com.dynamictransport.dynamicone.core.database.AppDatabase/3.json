@@ -1,0 +1,667 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 3,
+    "identityHash": "6d0ed8ee019192bd5203b96cc5730a02",
+    "entities": [
+      {
+        "tableName": "trips",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `tripNo` TEXT NOT NULL, `pickupName` TEXT NOT NULL, `deliveryName` TEXT NOT NULL, `plannedStartAt` INTEGER, `containerNo` TEXT, `pickupAddress` TEXT, `deliveryAddress` TEXT, `vehiclePlate` TEXT, `trailerPlate` TEXT, `sealNo` TEXT, `instructions` TEXT, `serverState` TEXT NOT NULL, `serverBreakState` TEXT NOT NULL, `serverAllowedActions` TEXT, `localState` TEXT NOT NULL, `localBreakState` TEXT NOT NULL, `syncState` TEXT NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tripNo",
+            "columnName": "tripNo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pickupName",
+            "columnName": "pickupName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "deliveryName",
+            "columnName": "deliveryName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "plannedStartAt",
+            "columnName": "plannedStartAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "containerNo",
+            "columnName": "containerNo",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "pickupAddress",
+            "columnName": "pickupAddress",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "deliveryAddress",
+            "columnName": "deliveryAddress",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "vehiclePlate",
+            "columnName": "vehiclePlate",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "trailerPlate",
+            "columnName": "trailerPlate",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "sealNo",
+            "columnName": "sealNo",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "instructions",
+            "columnName": "instructions",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "serverState",
+            "columnName": "serverState",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "serverBreakState",
+            "columnName": "serverBreakState",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "serverAllowedActions",
+            "columnName": "serverAllowedActions",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "localState",
+            "columnName": "localState",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "localBreakState",
+            "columnName": "localBreakState",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "syncState",
+            "columnName": "syncState",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "shift",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`slot` INTEGER NOT NULL, `shiftId` TEXT, `serverStatus` TEXT NOT NULL, `serverStartedAt` INTEGER, `serverEndedAt` INTEGER, `localStatus` TEXT NOT NULL, `localStartedAt` INTEGER, `localEndedAt` INTEGER, `vehiclePlate` TEXT, `trailerPlate` TEXT, `syncState` TEXT NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`slot`))",
+        "fields": [
+          {
+            "fieldPath": "slot",
+            "columnName": "slot",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "shiftId",
+            "columnName": "shiftId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "serverStatus",
+            "columnName": "serverStatus",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "serverStartedAt",
+            "columnName": "serverStartedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "serverEndedAt",
+            "columnName": "serverEndedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "localStatus",
+            "columnName": "localStatus",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "localStartedAt",
+            "columnName": "localStartedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "localEndedAt",
+            "columnName": "localEndedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "vehiclePlate",
+            "columnName": "vehiclePlate",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "trailerPlate",
+            "columnName": "trailerPlate",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "syncState",
+            "columnName": "syncState",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "slot"
+          ]
+        }
+      },
+      {
+        "tableName": "driver_profile",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `displayName` TEXT NOT NULL, `personnelNo` TEXT NOT NULL, `preferredLanguage` TEXT, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "displayName",
+            "columnName": "displayName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "personnelNo",
+            "columnName": "personnelNo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "preferredLanguage",
+            "columnName": "preferredLanguage",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "pending_actions",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `clientActionId` TEXT NOT NULL, `driverId` TEXT NOT NULL, `entityType` TEXT NOT NULL, `entityId` TEXT NOT NULL, `actionType` TEXT NOT NULL, `tripAction` TEXT, `payloadJson` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `retryCount` INTEGER NOT NULL, `state` TEXT NOT NULL, `lastError` TEXT, `acknowledged` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "clientActionId",
+            "columnName": "clientActionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "driverId",
+            "columnName": "driverId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "entityType",
+            "columnName": "entityType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "entityId",
+            "columnName": "entityId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "actionType",
+            "columnName": "actionType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tripAction",
+            "columnName": "tripAction",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "payloadJson",
+            "columnName": "payloadJson",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "retryCount",
+            "columnName": "retryCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "state",
+            "columnName": "state",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastError",
+            "columnName": "lastError",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "acknowledged",
+            "columnName": "acknowledged",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_pending_actions_clientActionId",
+            "unique": true,
+            "columnNames": [
+              "clientActionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_pending_actions_clientActionId` ON `${TABLE_NAME}` (`clientActionId`)"
+          },
+          {
+            "name": "index_pending_actions_entityType_entityId",
+            "unique": false,
+            "columnNames": [
+              "entityType",
+              "entityId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_pending_actions_entityType_entityId` ON `${TABLE_NAME}` (`entityType`, `entityId`)"
+          },
+          {
+            "name": "index_pending_actions_state",
+            "unique": false,
+            "columnNames": [
+              "state"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_pending_actions_state` ON `${TABLE_NAME}` (`state`)"
+          }
+        ]
+      },
+      {
+        "tableName": "documents",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`localId` TEXT NOT NULL, `tripId` TEXT NOT NULL, `type` TEXT NOT NULL, `clientActionId` TEXT NOT NULL, `localFilePath` TEXT, `fileName` TEXT NOT NULL, `contentType` TEXT NOT NULL, `capturedAt` INTEGER, `containerNo` TEXT, `sealNo` TEXT, `remoteId` TEXT, `remoteStatus` TEXT, `thumbnailUrl` TEXT, `syncState` TEXT NOT NULL, PRIMARY KEY(`localId`))",
+        "fields": [
+          {
+            "fieldPath": "localId",
+            "columnName": "localId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tripId",
+            "columnName": "tripId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "clientActionId",
+            "columnName": "clientActionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "localFilePath",
+            "columnName": "localFilePath",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "fileName",
+            "columnName": "fileName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "contentType",
+            "columnName": "contentType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "capturedAt",
+            "columnName": "capturedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "containerNo",
+            "columnName": "containerNo",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "sealNo",
+            "columnName": "sealNo",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "remoteId",
+            "columnName": "remoteId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "remoteStatus",
+            "columnName": "remoteStatus",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "thumbnailUrl",
+            "columnName": "thumbnailUrl",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "syncState",
+            "columnName": "syncState",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "localId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_documents_tripId",
+            "unique": false,
+            "columnNames": [
+              "tripId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_documents_tripId` ON `${TABLE_NAME}` (`tripId`)"
+          },
+          {
+            "name": "index_documents_clientActionId",
+            "unique": true,
+            "columnNames": [
+              "clientActionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_documents_clientActionId` ON `${TABLE_NAME}` (`clientActionId`)"
+          }
+        ]
+      },
+      {
+        "tableName": "pending_commands",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`commandId` TEXT NOT NULL, `driverId` TEXT NOT NULL, `kind` TEXT NOT NULL, `tripId` TEXT, `payloadJson` TEXT NOT NULL, `state` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`commandId`))",
+        "fields": [
+          {
+            "fieldPath": "commandId",
+            "columnName": "commandId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "driverId",
+            "columnName": "driverId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "kind",
+            "columnName": "kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tripId",
+            "columnName": "tripId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "payloadJson",
+            "columnName": "payloadJson",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "state",
+            "columnName": "state",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "commandId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_pending_commands_kind_tripId",
+            "unique": false,
+            "columnNames": [
+              "kind",
+              "tripId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_pending_commands_kind_tripId` ON `${TABLE_NAME}` (`kind`, `tripId`)"
+          }
+        ]
+      },
+      {
+        "tableName": "sync_meta",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`key` TEXT NOT NULL, `instant` INTEGER, PRIMARY KEY(`key`))",
+        "fields": [
+          {
+            "fieldPath": "key",
+            "columnName": "key",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "instant",
+            "columnName": "instant",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "key"
+          ]
+        }
+      },
+      {
+        "tableName": "attendance_punches",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`commandId` TEXT NOT NULL, `userId` TEXT NOT NULL, `direction` TEXT NOT NULL, `tagUid` TEXT NOT NULL, `scannedAt` INTEGER NOT NULL, `scannedElapsedMillis` INTEGER NOT NULL, `bootCount` INTEGER, `state` TEXT NOT NULL, `failure` TEXT, `occurredAt` INTEGER, `pointName` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`commandId`))",
+        "fields": [
+          {
+            "fieldPath": "commandId",
+            "columnName": "commandId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userId",
+            "columnName": "userId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "direction",
+            "columnName": "direction",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tagUid",
+            "columnName": "tagUid",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "scannedAt",
+            "columnName": "scannedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "scannedElapsedMillis",
+            "columnName": "scannedElapsedMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "bootCount",
+            "columnName": "bootCount",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "state",
+            "columnName": "state",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "failure",
+            "columnName": "failure",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "occurredAt",
+            "columnName": "occurredAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "pointName",
+            "columnName": "pointName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "commandId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_attendance_punches_userId_state",
+            "unique": false,
+            "columnNames": [
+              "userId",
+              "state"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_attendance_punches_userId_state` ON `${TABLE_NAME}` (`userId`, `state`)"
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6d0ed8ee019192bd5203b96cc5730a02')"
+    ]
+  }
+}

@@ -7,9 +7,13 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
+import com.dynamictransport.dynamicone.domain.model.AppModule
+import com.dynamictransport.dynamicone.domain.model.UserProfile
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
@@ -254,34 +258,53 @@ class SessionPreferences @Inject constructor(
 ) {
     val sessionExpired: Flow<Boolean> = dataStore.data.map { it[SESSION_EXPIRED] ?: false }
 
+    /** Session key of the signed-in account ([UserProfile.id]). */
+    suspend fun userId(): String? = dataStore.data.first()[USER_ID]
+
+    val userIdChanges: Flow<String?> = dataStore.data.map { it[USER_ID] }.distinctUntilChanged()
+
+    /** Driver API identity of the signed-in account; null without the driver module. Driver commands are bound to it. */
     suspend fun driverId(): String? = dataStore.data.first()[DRIVER_ID]
 
     suspend fun lastDriverId(): String? = dataStore.data.first()[LAST_DRIVER_ID]
 
-    suspend fun setLoggedInDriver(driverId: String) {
+    suspend fun modules(): Set<AppModule> = AppModule.fromWire(dataStore.data.first()[MODULES])
+
+    /** Stores who is signed in, with the modules and name the app needs to open offline. */
+    suspend fun setLoggedInUser(profile: UserProfile) {
         dataStore.edit {
-            it[DRIVER_ID] = driverId
-            it[LAST_DRIVER_ID] = driverId
+            it[USER_ID] = profile.id
+            if (profile.driverId == null) {
+                it.remove(DRIVER_ID)
+            } else {
+                it[DRIVER_ID] = profile.driverId
+                it[LAST_DRIVER_ID] = profile.driverId
+            }
             it[SESSION_EXPIRED] = false
+        }
+        updateProfile(profile)
+    }
+
+    /** A newer `me` of the same account: name and modules may have changed. */
+    suspend fun updateProfile(profile: UserProfile) {
+        dataStore.edit {
+            it[MODULES] = profile.modules.mapTo(LinkedHashSet()) { module -> module.wireName }
+            if (profile.displayName.isBlank()) it.remove(DISPLAY_NAME) else it[DISPLAY_NAME] = profile.displayName
         }
     }
 
-    suspend fun clearLoggedInDriver(expired: Boolean) {
+    suspend fun clearLoggedInUser(expired: Boolean) {
         dataStore.edit {
+            it.remove(USER_ID)
             it.remove(DRIVER_ID)
-            it.remove(DRIVER_DISPLAY_NAME)
+            it.remove(MODULES)
+            it.remove(DISPLAY_NAME)
             it[SESSION_EXPIRED] = expired
         }
     }
 
-    /** Display name from the Driver API profile, kept so the home screen can greet the driver offline. */
-    suspend fun driverDisplayName(): String? = dataStore.data.first()[DRIVER_DISPLAY_NAME]
-
-    suspend fun setDriverDisplayName(displayName: String?) {
-        dataStore.edit {
-            if (displayName.isNullOrBlank()) it.remove(DRIVER_DISPLAY_NAME) else it[DRIVER_DISPLAY_NAME] = displayName
-        }
-    }
+    /** Display name from `me`, kept so the app can greet the user offline. */
+    suspend fun displayName(): String? = dataStore.data.first()[DISPLAY_NAME]
 
     suspend fun lastUsername(): String? = dataStore.data.first()[LAST_USERNAME]
 
@@ -298,8 +321,10 @@ class SessionPreferences @Inject constructor(
     }
 
     private companion object {
+        val USER_ID = stringPreferencesKey("user_id")
         val DRIVER_ID = stringPreferencesKey("driver_id")
-        val DRIVER_DISPLAY_NAME = stringPreferencesKey("driver_display_name")
+        val MODULES = stringSetPreferencesKey("modules")
+        val DISPLAY_NAME = stringPreferencesKey("display_name")
         val LAST_DRIVER_ID = stringPreferencesKey("last_driver_id")
         val LAST_USERNAME = stringPreferencesKey("last_username")
         val INSTALLATION_ID = stringPreferencesKey("installation_id")

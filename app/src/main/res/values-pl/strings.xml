@@ -250,7 +250,7 @@
     <string name="login_two_factor_hint">Wpisz 6-cyfrowy kod z aplikacji uwierzytelniającej.</string>
     <string name="login_error_two_factor_format">Kod musi mieć 6 cyfr.</string>
     <string name="login_error_two_factor_invalid">Kod weryfikacyjny jest nieprawidłowy.</string>
-    <string name="login_error_driver_access">To konto nie ma dostępu do aplikacji kierowcy. Skontaktuj się z biurem.</string>
+    <string name="login_error_app_access">To konto nie ma dostępu do aplikacji DynamicONE. Skontaktuj się z biurem.</string>
     <string name="login_error_rate_limited">Zbyt wiele prób logowania. Odczekaj minutę i spróbuj ponownie.</string>
     <string name="login_session_expired_real">Sesja wygasła. Zaloguj się ponownie.</string>
 

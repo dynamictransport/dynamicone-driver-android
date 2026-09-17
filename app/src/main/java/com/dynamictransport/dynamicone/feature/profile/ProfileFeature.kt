@@ -1,5 +1,6 @@
 package com.dynamictransport.dynamicone.feature.profile
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -42,6 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -60,9 +62,11 @@ import com.dynamictransport.dynamicone.core.design.component.StatusBanner
 import com.dynamictransport.dynamicone.core.design.component.StatusTone
 import com.dynamictransport.dynamicone.core.design.theme.Dimens
 import com.dynamictransport.dynamicone.core.design.theme.DriverTheme
-import com.dynamictransport.dynamicone.domain.model.Driver
+import com.dynamictransport.dynamicone.domain.model.AppModule
 import com.dynamictransport.dynamicone.domain.model.FailedAction
+import com.dynamictransport.dynamicone.domain.model.SessionState
 import com.dynamictransport.dynamicone.domain.model.SyncOverview
+import com.dynamictransport.dynamicone.domain.model.UserProfile
 import com.dynamictransport.dynamicone.domain.repository.AppInfo
 import com.dynamictransport.dynamicone.domain.repository.AuthRepository
 import com.dynamictransport.dynamicone.domain.repository.DemoBackendControls
@@ -87,7 +91,8 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class ProfileUiState(
-    val driver: Driver? = null,
+    val profile: UserProfile? = null,
+    val modules: Set<AppModule> = emptySet(),
     val overview: SyncOverview = SyncOverview.Empty,
     val isOnline: Boolean = true,
     val versionName: String = "",
@@ -113,16 +118,18 @@ class ProfileViewModel @Inject constructor(
     private val singleFlight = SingleFlight()
 
     private val flags = combine(singleFlight.busy, showLogoutConfirmation, ::Pair)
+    private val account = combine(authRepository.observeProfile(), authRepository.sessionState, ::Pair)
 
     val uiState: StateFlow<ProfileUiState> = combine(
-        authRepository.observeDriver(),
+        account,
         syncRepository.observeOverview(),
         networkMonitor.isOnline,
         demoControls.simulateOffline,
         flags,
-    ) { driver, overview, online, simulateOffline, (busy, confirmLogout) ->
+    ) { (profile, session), overview, online, simulateOffline, (busy, confirmLogout) ->
         ProfileUiState(
-            driver = driver,
+            profile = profile,
+            modules = (session as? SessionState.LoggedIn)?.modules.orEmpty(),
             overview = overview,
             isOnline = online,
             versionName = appInfo.versionName,
@@ -132,7 +139,15 @@ class ProfileViewModel @Inject constructor(
             showLogoutConfirmation = confirmLogout,
             isDemoMode = appInfo.isDemoMode,
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ProfileUiState(versionName = appInfo.versionName, isDemoMode = appInfo.isDemoMode))
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5_000),
+        ProfileUiState(
+            modules = (authRepository.sessionState.value as? SessionState.LoggedIn)?.modules.orEmpty(),
+            versionName = appInfo.versionName,
+            isDemoMode = appInfo.isDemoMode,
+        ),
+    )
 
     fun onRetryAll() {
         viewModelScope.launch { syncRepository.retryFailed() }
@@ -167,8 +182,17 @@ class ProfileViewModel @Inject constructor(
     }
 }
 
+/** An area of the account's modules opened from the profile; [key] identifies it for the navigation. */
+data class ProfileLink(
+    val key: String,
+    @param:StringRes val label: Int,
+    val icon: ImageVector,
+)
+
 @Composable
 fun ProfileRoute(
+    links: List<ProfileLink>,
+    onOpenLink: (String) -> Unit,
     onOpenPayroll: () -> Unit,
     onOpenSignedDocuments: () -> Unit,
     onOpenChangePassword: () -> Unit,
@@ -177,6 +201,8 @@ fun ProfileRoute(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     ProfileScreen(
         state = state,
+        links = links,
+        onOpenLink = onOpenLink,
         onOpenPayroll = onOpenPayroll,
         onOpenSignedDocuments = onOpenSignedDocuments,
         onOpenChangePassword = onOpenChangePassword,
@@ -204,6 +230,8 @@ fun ProfileScreen(
     onOpenPayroll: () -> Unit = {},
     onOpenSignedDocuments: () -> Unit = {},
     onOpenChangePassword: () -> Unit = {},
+    links: List<ProfileLink> = emptyList(),
+    onOpenLink: (String) -> Unit = {},
 ) {
     var language by remember { mutableStateOf(AppLanguage.current()) }
 
@@ -223,7 +251,7 @@ fun ProfileScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = Dimens.ScreenPadding, vertical = 12.dp),
         ) {
-            state.driver?.let { driver ->
+            state.profile?.let { profile ->
                 SectionCard {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
@@ -236,9 +264,9 @@ fun ProfileScreen(
                         }
                         Spacer(Modifier.width(12.dp))
                         Column {
-                            Text(driver.displayName, style = MaterialTheme.typography.titleLarge)
+                            Text(profile.displayName, style = MaterialTheme.typography.titleLarge)
                             // Not part of the Driver API profile: shown only when the source provides it.
-                            driver.personnelNo?.let { personnelNo ->
+                            profile.personnelNo?.let { personnelNo ->
                                 Text(
                                     text = stringResource(
                                         R.string.value_separator,
@@ -254,22 +282,26 @@ fun ProfileScreen(
                 }
             }
 
+            val driver = AppModule.DRIVER in state.modules
             SectionCard(modifier = Modifier.testTag("profile_account")) {
                 Text(stringResource(R.string.profile_account), style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.size(8.dp))
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    SecondaryActionButton(
-                        text = stringResource(R.string.payroll_title),
-                        onClick = onOpenPayroll,
-                        icon = Icons.Filled.Payments,
-                        modifier = Modifier.testTag("profile_payroll"),
-                    )
-                    SecondaryActionButton(
-                        text = stringResource(R.string.signed_documents_title),
-                        onClick = onOpenSignedDocuments,
-                        icon = Icons.Filled.PictureAsPdf,
-                        modifier = Modifier.testTag("profile_signed_documents"),
-                    )
+                    // Pay and signed documents are Driver API data.
+                    if (driver) {
+                        SecondaryActionButton(
+                            text = stringResource(R.string.payroll_title),
+                            onClick = onOpenPayroll,
+                            icon = Icons.Filled.Payments,
+                            modifier = Modifier.testTag("profile_payroll"),
+                        )
+                        SecondaryActionButton(
+                            text = stringResource(R.string.signed_documents_title),
+                            onClick = onOpenSignedDocuments,
+                            icon = Icons.Filled.PictureAsPdf,
+                            modifier = Modifier.testTag("profile_signed_documents"),
+                        )
+                    }
                     SecondaryActionButton(
                         text = stringResource(R.string.profile_change_password),
                         onClick = onOpenChangePassword,
@@ -279,7 +311,26 @@ fun ProfileScreen(
                 }
             }
 
-            SyncCenter(state.overview, onRetryAll, onAcknowledgeFailure)
+            // Areas of the account's modules that have no place in the bottom bar.
+            if (links.isNotEmpty()) {
+                SectionCard(modifier = Modifier.testTag("profile_more")) {
+                    Text(stringResource(R.string.profile_more), style = MaterialTheme.typography.titleMedium)
+                    Spacer(Modifier.size(8.dp))
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        links.forEach { link ->
+                            SecondaryActionButton(
+                                text = stringResource(link.label),
+                                onClick = { onOpenLink(link.key) },
+                                icon = link.icon,
+                                modifier = Modifier.testTag("profile_link_${link.key}"),
+                            )
+                        }
+                    }
+                }
+            }
+
+            // The sync centre lists driver actions; attendance punches show their state on the attendance screen.
+            if (driver) SyncCenter(state.overview, onRetryAll, onAcknowledgeFailure)
 
             SectionCard {
                 Text(stringResource(R.string.profile_language), style = MaterialTheme.typography.titleMedium)

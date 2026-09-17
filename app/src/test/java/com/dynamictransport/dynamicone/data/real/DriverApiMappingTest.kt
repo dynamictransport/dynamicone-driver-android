@@ -178,6 +178,6 @@ class DriverApiMappingTest {
         assertEquals(StopActivity.OTHER, DriverApiMapping.stopActivity("Customs"))
         assertEquals(StopStatus.EN_ROUTE, DriverApiMapping.stopStatus("EnRoute"))
         assertEquals(StopStatus.UNKNOWN, DriverApiMapping.stopStatus(null))
-        assertNull(DriverApiMapping.driver(DriverProfileResponseDto(userId = "user-1", driverId = null, displayName = "No Driver")))
+        assertNull(AccountMapping.profile(DriverProfileResponseDto(userId = "user-1", driverId = null, displayName = "No Driver")))
     }
 }

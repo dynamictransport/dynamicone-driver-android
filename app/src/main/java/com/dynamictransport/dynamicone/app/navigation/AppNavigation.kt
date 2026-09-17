@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.EventNote
+import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Home
@@ -50,7 +52,10 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.dynamictransport.dynamicone.R
 import com.dynamictransport.dynamicone.app.AppViewModel
+import com.dynamictransport.dynamicone.domain.model.AppModule
 import com.dynamictransport.dynamicone.domain.model.SessionState
+import com.dynamictransport.dynamicone.feature.attendance.AttendanceRecordsRoute
+import com.dynamictransport.dynamicone.feature.attendance.AttendanceRoute
 import com.dynamictransport.dynamicone.feature.auth.ChangePasswordRoute
 import com.dynamictransport.dynamicone.feature.auth.LoginRoute
 import com.dynamictransport.dynamicone.feature.documents.DocumentsRoute
@@ -63,6 +68,7 @@ import com.dynamictransport.dynamicone.feature.messages.MessageBadgeViewModel
 import com.dynamictransport.dynamicone.feature.messages.MessagesRoute
 import com.dynamictransport.dynamicone.feature.payroll.PayrollRoute
 import com.dynamictransport.dynamicone.feature.personnel.SignedDocumentsRoute
+import com.dynamictransport.dynamicone.feature.profile.ProfileLink
 import com.dynamictransport.dynamicone.feature.profile.ProfileRoute
 import com.dynamictransport.dynamicone.feature.shift.ShiftRoute
 import com.dynamictransport.dynamicone.feature.tripdetail.RejectTripRoute
@@ -87,6 +93,14 @@ data object MessagesDestination
 
 @Serializable
 data object ProfileDestination
+
+/** Office attendance: state and the NFC check-in / check-out. */
+@Serializable
+data object AttendanceDestination
+
+/** The account's own attendance records by month. */
+@Serializable
+data object AttendanceRecordsDestination
 
 @Serializable
 data object ShiftDestination
@@ -124,18 +138,39 @@ data class RejectTripDestination(val tripId: String)
 @Serializable
 data class ReportIncidentDestination(val tripId: String? = null)
 
-/** Bottom navigation: 5 destinations at most (CLAUDE.md §7). */
-enum class TopLevelDestination(
-    val destination: Any,
-    @param:StringRes val label: Int,
-    val icon: ImageVector,
-) {
-    HOME(HomeDestination, R.string.nav_home, Icons.Filled.Home),
-    TRIPS(TripsDestination, R.string.nav_trips, Icons.Filled.LocalShipping),
-    DOCUMENTS(DocumentsDestination, R.string.nav_documents, Icons.Filled.Description),
-    MESSAGES(MessagesDestination, R.string.nav_messages, Icons.Filled.Forum),
-    PROFILE(ProfileDestination, R.string.nav_profile, Icons.Filled.Person),
-}
+private val AppSection.destination: Any
+    get() = when (this) {
+        AppSection.HOME -> HomeDestination
+        AppSection.TRIPS -> TripsDestination
+        AppSection.DOCUMENTS -> DocumentsDestination
+        AppSection.MESSAGES -> MessagesDestination
+        AppSection.ATTENDANCE -> AttendanceDestination
+        AppSection.ATTENDANCE_RECORDS -> AttendanceRecordsDestination
+        AppSection.PROFILE -> ProfileDestination
+    }
+
+@get:StringRes
+private val AppSection.label: Int
+    get() = when (this) {
+        AppSection.HOME -> R.string.nav_home
+        AppSection.TRIPS -> R.string.nav_trips
+        AppSection.DOCUMENTS -> R.string.nav_documents
+        AppSection.MESSAGES -> R.string.nav_messages
+        AppSection.ATTENDANCE -> R.string.nav_attendance
+        AppSection.ATTENDANCE_RECORDS -> R.string.nav_attendance_records
+        AppSection.PROFILE -> R.string.nav_profile
+    }
+
+private val AppSection.icon: ImageVector
+    get() = when (this) {
+        AppSection.HOME -> Icons.Filled.Home
+        AppSection.TRIPS -> Icons.Filled.LocalShipping
+        AppSection.DOCUMENTS -> Icons.Filled.Description
+        AppSection.MESSAGES -> Icons.Filled.Forum
+        AppSection.ATTENDANCE -> Icons.Filled.Badge
+        AppSection.ATTENDANCE_RECORDS -> Icons.AutoMirrored.Filled.EventNote
+        AppSection.PROFILE -> Icons.Filled.Person
+    }
 
 @Composable
 fun DynamicOneApp(appViewModel: AppViewModel) {
@@ -150,58 +185,42 @@ fun DynamicOneApp(appViewModel: AppViewModel) {
 
         SessionState.LoggedOut -> LoginRoute()
 
-        // The backend blocks every driver call until the password is changed.
+        // The backend blocks every call until the password is changed.
         SessionState.PasswordChangeRequired -> ChangePasswordRoute()
 
-        is SessionState.LoggedIn -> key(current.driverId) { MainNavigation() }
+        // A change of the account's modules rebuilds the navigation.
+        is SessionState.LoggedIn -> key(current.userId, current.modules) { MainNavigation(current.modules) }
     }
 }
 
 @Composable
-private fun MainNavigation(
-    badgeViewModel: MessageBadgeViewModel = hiltViewModel(),
-    routingViewModel: NotificationRoutingViewModel = hiltViewModel(),
-) {
+private fun MainNavigation(modules: Set<AppModule>) {
+    val layout = remember(modules) { AppShell.layout(modules) }
+    val driver = AppModule.DRIVER in modules
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
-    val currentTopLevel = backStackEntry?.destination.topLevelDestination()
-    val unreadMessages by badgeViewModel.unreadCount.collectAsStateWithLifecycle()
-    val openRequest by routingViewModel.openRequest.collectAsStateWithLifecycle()
+    val currentSection = backStackEntry?.destination.section()?.takeIf { it in layout.bottomBar }
+    val unreadMessages = if (driver) rememberUnreadMessages() else 0
 
-    // A tapped message notification opens its conversation (also when it was tapped before signing in).
-    LaunchedEffect(openRequest) {
-        val request = openRequest ?: return@LaunchedEffect
-        val tripId = request.tripId
-        if (tripId == null) navController.navigate(GeneralMessagesDestination) else navController.navigate(TripMessagesDestination(tripId))
-        routingViewModel.onOpenRequestHandled()
-    }
-
-    // Android 13+: new messages can only be announced once the driver allows notifications.
-    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
-    LaunchedEffect(Unit) {
-        if (routingViewModel.shouldAskForNotificationPermission()) {
-            routingViewModel.onNotificationPermissionAsked()
-            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-        }
-    }
+    if (driver) DriverNotificationEffects(navController)
 
     Scaffold(
         bottomBar = {
-            if (currentTopLevel != null) {
+            if (currentSection != null) {
                 NavigationBar {
-                    TopLevelDestination.entries.forEach { destination ->
+                    layout.bottomBar.forEach { section ->
                         NavigationBarItem(
-                            selected = destination == currentTopLevel,
-                            onClick = { navController.navigateToTopLevel(destination) },
+                            selected = section == currentSection,
+                            onClick = { navController.navigateToTopLevel(section) },
                             icon = {
-                                if (destination == TopLevelDestination.MESSAGES && unreadMessages > 0) {
-                                    UnreadIcon(destination.icon, unreadMessages)
+                                if (section == AppSection.MESSAGES && unreadMessages > 0) {
+                                    UnreadIcon(section.icon, unreadMessages)
                                 } else {
-                                    Icon(destination.icon, contentDescription = null)
+                                    Icon(section.icon, contentDescription = null)
                                 }
                             },
-                            label = { Text(stringResource(destination.label), maxLines = 1) },
-                            modifier = Modifier.testTag("nav_${destination.name}"),
+                            label = { Text(stringResource(section.label), maxLines = 1) },
+                            modifier = Modifier.testTag("nav_${section.name}"),
                         )
                     }
                 }
@@ -211,16 +230,24 @@ private fun MainNavigation(
     ) { padding ->
         NavHost(
             navController = navController,
-            startDestination = HomeDestination,
+            startDestination = layout.start.destination,
             modifier = Modifier
                 .padding(padding)
                 .consumeWindowInsets(padding),
         ) {
+            // An area outside the bar opens like a detail screen, with a back button.
+            val openSection: (AppSection) -> Unit = { section ->
+                if (section in layout.bottomBar) navController.navigateToTopLevel(section) else navController.navigate(section.destination)
+            }
+            val backUnlessInBar: (AppSection) -> (() -> Unit)? = { section ->
+                if (section in layout.bottomBar) null else ({ navController.popBackStack() })
+            }
+
             composable<HomeDestination> {
                 HomeRoute(
                     onOpenTrip = { navController.navigate(TripDetailDestination(it)) },
-                    onOpenTrips = { navController.navigateToTopLevel(TopLevelDestination.TRIPS) },
-                    onOpenDocuments = { navController.navigateToTopLevel(TopLevelDestination.DOCUMENTS) },
+                    onOpenTrips = { openSection(AppSection.TRIPS) },
+                    onOpenDocuments = { openSection(AppSection.DOCUMENTS) },
                     onOpenEarnings = { navController.navigate(PayrollDestination) },
                     onReportIncident = { navController.navigate(ReportIncidentDestination(it)) },
                     onOpenShift = { navController.navigate(ShiftDestination) },
@@ -230,7 +257,7 @@ private fun MainNavigation(
                 TripsRoute(onOpenTrip = { navController.navigate(TripDetailDestination(it)) })
             }
             composable<DocumentsDestination> { entry ->
-                DocumentsEntry(entry = entry, navController = navController, onBack = null)
+                DocumentsEntry(entry = entry, navController = navController, onBack = backUnlessInBar(AppSection.DOCUMENTS))
             }
             composable<MessagesDestination> {
                 ConversationsRoute(
@@ -239,8 +266,16 @@ private fun MainNavigation(
                     },
                 )
             }
+            composable<AttendanceDestination> {
+                AttendanceRoute(onOpenRecords = { openSection(AppSection.ATTENDANCE_RECORDS) })
+            }
+            composable<AttendanceRecordsDestination> {
+                AttendanceRecordsRoute(onBack = backUnlessInBar(AppSection.ATTENDANCE_RECORDS))
+            }
             composable<ProfileDestination> {
                 ProfileRoute(
+                    links = layout.overflow.map { ProfileLink(it.name, it.label, it.icon) },
+                    onOpenLink = { key -> openSection(AppSection.valueOf(key)) },
                     onOpenPayroll = { navController.navigate(PayrollDestination) },
                     onOpenSignedDocuments = { navController.navigate(SignedDocumentsDestination) },
                     onOpenChangePassword = { navController.navigate(ChangePasswordDestination) },
@@ -301,6 +336,38 @@ private fun MainNavigation(
     }
 }
 
+@Composable
+private fun rememberUnreadMessages(badgeViewModel: MessageBadgeViewModel = hiltViewModel()): Int {
+    val unread by badgeViewModel.unreadCount.collectAsStateWithLifecycle()
+    return unread
+}
+
+/** Driver module: message notifications open their conversation, and new messages need the notification permission. */
+@Composable
+private fun DriverNotificationEffects(
+    navController: NavHostController,
+    routingViewModel: NotificationRoutingViewModel = hiltViewModel(),
+) {
+    val openRequest by routingViewModel.openRequest.collectAsStateWithLifecycle()
+
+    // A tapped message notification opens its conversation (also when it was tapped before signing in).
+    LaunchedEffect(openRequest) {
+        val request = openRequest ?: return@LaunchedEffect
+        val tripId = request.tripId
+        if (tripId == null) navController.navigate(GeneralMessagesDestination) else navController.navigate(TripMessagesDestination(tripId))
+        routingViewModel.onOpenRequestHandled()
+    }
+
+    // Android 13+: new messages can only be announced once the driver allows notifications.
+    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
+    LaunchedEffect(Unit) {
+        if (routingViewModel.shouldAskForNotificationPermission()) {
+            routingViewModel.onNotificationPermissionAsked()
+            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+}
+
 /** Navigation icon with the number of unread messages; read out as "N unread". */
 @Composable
 private fun UnreadIcon(icon: ImageVector, count: Int) {
@@ -334,20 +401,22 @@ private fun DocumentsEntry(entry: NavBackStackEntry, navController: NavHostContr
     )
 }
 
-private fun NavDestination?.topLevelDestination(): TopLevelDestination? {
+private fun NavDestination?.section(): AppSection? {
     val hierarchy = this?.hierarchy ?: return null
     return when {
-        hierarchy.any { it.hasRoute<HomeDestination>() } -> TopLevelDestination.HOME
-        hierarchy.any { it.hasRoute<TripsDestination>() } -> TopLevelDestination.TRIPS
-        hierarchy.any { it.hasRoute<DocumentsDestination>() } -> TopLevelDestination.DOCUMENTS
-        hierarchy.any { it.hasRoute<MessagesDestination>() } -> TopLevelDestination.MESSAGES
-        hierarchy.any { it.hasRoute<ProfileDestination>() } -> TopLevelDestination.PROFILE
+        hierarchy.any { it.hasRoute<HomeDestination>() } -> AppSection.HOME
+        hierarchy.any { it.hasRoute<TripsDestination>() } -> AppSection.TRIPS
+        hierarchy.any { it.hasRoute<DocumentsDestination>() } -> AppSection.DOCUMENTS
+        hierarchy.any { it.hasRoute<MessagesDestination>() } -> AppSection.MESSAGES
+        hierarchy.any { it.hasRoute<AttendanceDestination>() } -> AppSection.ATTENDANCE
+        hierarchy.any { it.hasRoute<AttendanceRecordsDestination>() } -> AppSection.ATTENDANCE_RECORDS
+        hierarchy.any { it.hasRoute<ProfileDestination>() } -> AppSection.PROFILE
         else -> null
     }
 }
 
-private fun NavHostController.navigateToTopLevel(destination: TopLevelDestination) {
-    navigate(destination.destination) {
+private fun NavHostController.navigateToTopLevel(section: AppSection) {
+    navigate(section.destination) {
         popUpTo(graph.findStartDestination().id) { saveState = true }
         launchSingleTop = true
         restoreState = true

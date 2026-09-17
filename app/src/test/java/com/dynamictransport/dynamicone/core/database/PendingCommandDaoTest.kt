@@ -117,7 +117,7 @@ class AppDatabaseMigrationTest {
                 it.moveToFirst()
                 assertEquals(0, it.getInt(0))
             }
-            assertEquals(2, db.version)
+            assertEquals(3, db.version)
             assertTrue(runBlocking { room.pendingCommandDao().observeMessages(null).first() }.isEmpty())
         } finally {
             room.close()

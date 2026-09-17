@@ -10,6 +10,7 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import com.dynamictransport.dynamicone.domain.repository.AttendanceRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -67,4 +68,39 @@ class SyncWorker @AssistedInject constructor(
         SyncRunResult.COMPLETED -> Result.success()
         SyncRunResult.RETRY -> Result.retry()
     }
+}
+
+/** Sends office attendance punches stored on the phone once the server can be reached (docs/15, ASSUMPTIONS M7). */
+interface AttendanceSyncScheduler {
+    fun requestSend()
+}
+
+@Singleton
+class WorkManagerAttendanceSyncScheduler @Inject constructor(
+    @param:ApplicationContext private val context: Context,
+) : AttendanceSyncScheduler {
+
+    override fun requestSend() {
+        val request = OneTimeWorkRequestBuilder<AttendanceSyncWorker>()
+            .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, ATTENDANCE_BACKOFF_SECONDS, TimeUnit.SECONDS)
+            .build()
+        // Every punch carries its own command id and the server is idempotent: restarting a running send is safe.
+        WorkManager.getInstance(context).enqueueUniqueWork(UNIQUE_WORK_NAME, ExistingWorkPolicy.REPLACE, request)
+    }
+
+    companion object {
+        const val UNIQUE_WORK_NAME = "attendance-sync"
+        private const val ATTENDANCE_BACKOFF_SECONDS = 30L
+    }
+}
+
+@HiltWorker
+class AttendanceSyncWorker @AssistedInject constructor(
+    @Assisted context: Context,
+    @Assisted params: WorkerParameters,
+    private val attendanceRepository: AttendanceRepository,
+) : CoroutineWorker(context, params) {
+
+    override suspend fun doWork(): Result = if (attendanceRepository.sendPending()) Result.success() else Result.retry()
 }

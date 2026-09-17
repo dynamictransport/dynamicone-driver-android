@@ -244,7 +244,7 @@
     <string name="login_two_factor_hint">Doğrulama uygulamanızdaki 6 haneli kodu girin.</string>
     <string name="login_error_two_factor_format">Kod 6 haneli olmalıdır.</string>
     <string name="login_error_two_factor_invalid">Doğrulama kodu hatalı.</string>
-    <string name="login_error_driver_access">Bu hesabın şoför uygulamasına erişimi yok. Ofisle iletişime geçin.</string>
+    <string name="login_error_app_access">Bu hesabın DynamicONE uygulamasına erişimi yok. Ofisle iletişime geçin.</string>
     <string name="login_error_rate_limited">Çok fazla giriş denemesi. Bir dakika bekleyip tekrar deneyin.</string>
     <string name="login_session_expired_real">Oturumunuz sona erdi. Lütfen tekrar giriş yapın.</string>
 

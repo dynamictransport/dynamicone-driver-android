@@ -4,8 +4,10 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Upsert
+import com.dynamictransport.dynamicone.domain.model.LocalPunchState
 import com.dynamictransport.dynamicone.domain.model.PendingActionState
 import com.dynamictransport.dynamicone.domain.model.PendingCommandState
+import com.dynamictransport.dynamicone.domain.model.PunchFailure
 import com.dynamictransport.dynamicone.domain.model.SyncErrorCode
 import com.dynamictransport.dynamicone.domain.model.SyncState
 import kotlinx.coroutines.flow.Flow
@@ -203,4 +205,38 @@ interface SyncMetaDao {
 
     @Upsert
     suspend fun upsert(meta: SyncMetaEntity)
+}
+
+@Dao
+interface AttendancePunchDao {
+    @Query("SELECT * FROM attendance_punches WHERE userId = :userId ORDER BY scannedAt DESC, commandId")
+    fun observe(userId: String): Flow<List<AttendancePunchEntity>>
+
+    @Query("SELECT * FROM attendance_punches WHERE commandId = :commandId")
+    suspend fun get(commandId: String): AttendancePunchEntity?
+
+    /** Waiting punches, oldest first. `SENDING` rows are included: only an interrupted send leaves them behind. */
+    @Query("SELECT * FROM attendance_punches WHERE userId = :userId AND state IN ('PENDING', 'SENDING') ORDER BY scannedAt, commandId")
+    suspend fun getUnsent(userId: String): List<AttendancePunchEntity>
+
+    @Insert
+    suspend fun insert(punch: AttendancePunchEntity)
+
+    @Query("UPDATE attendance_punches SET state = :state, failure = :failure, updatedAt = :updatedAt WHERE commandId = :commandId")
+    suspend fun updateState(commandId: String, state: LocalPunchState, failure: PunchFailure?, updatedAt: Instant)
+
+    @Query(
+        "UPDATE attendance_punches SET state = 'SYNCED', failure = NULL, occurredAt = :occurredAt, pointName = :pointName, " +
+            "updatedAt = :updatedAt WHERE commandId = :commandId",
+    )
+    suspend fun markSynced(commandId: String, occurredAt: Instant, pointName: String?, updatedAt: Instant)
+
+    @Query("DELETE FROM attendance_punches WHERE commandId = :commandId")
+    suspend fun delete(commandId: String)
+
+    @Query("DELETE FROM attendance_punches WHERE state = 'SYNCED' AND scannedAt < :before")
+    suspend fun deleteSyncedBefore(before: Instant)
+
+    @Query("DELETE FROM attendance_punches WHERE userId != :userId")
+    suspend fun deleteForOtherUsers(userId: String)
 }

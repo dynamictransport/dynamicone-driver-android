@@ -2,17 +2,21 @@ package com.dynamictransport.dynamicone.domain.repository
 
 import com.dynamictransport.dynamicone.domain.model.ActionReceipt
 import com.dynamictransport.dynamicone.domain.model.ActionResult
+import com.dynamictransport.dynamicone.domain.model.AttendanceDirection
+import com.dynamictransport.dynamicone.domain.model.AttendanceMonth
+import com.dynamictransport.dynamicone.domain.model.AttendanceStatus
 import com.dynamictransport.dynamicone.domain.model.Conversation
 import com.dynamictransport.dynamicone.domain.model.ConversationList
 import com.dynamictransport.dynamicone.domain.model.DocumentContentResult
 import com.dynamictransport.dynamicone.domain.model.DocumentSlot
-import com.dynamictransport.dynamicone.domain.model.Driver
 import com.dynamictransport.dynamicone.domain.model.ExecutionAction
 import com.dynamictransport.dynamicone.domain.model.IncidentCategory
+import com.dynamictransport.dynamicone.domain.model.LocalPunch
 import com.dynamictransport.dynamicone.domain.model.LoginResult
 import com.dynamictransport.dynamicone.domain.model.MonthlyPayroll
 import com.dynamictransport.dynamicone.domain.model.PasswordChangeResult
 import com.dynamictransport.dynamicone.domain.model.PendingTripAction
+import com.dynamictransport.dynamicone.domain.model.PunchResult
 import com.dynamictransport.dynamicone.domain.model.RefreshResult
 import com.dynamictransport.dynamicone.domain.model.RejectReason
 import com.dynamictransport.dynamicone.domain.model.SessionState
@@ -24,6 +28,7 @@ import com.dynamictransport.dynamicone.domain.model.TripActionRecord
 import com.dynamictransport.dynamicone.domain.model.TripActionType
 import com.dynamictransport.dynamicone.domain.model.TripDocument
 import com.dynamictransport.dynamicone.domain.model.TripExecution
+import com.dynamictransport.dynamicone.domain.model.UserProfile
 import com.dynamictransport.dynamicone.domain.scan.ScanMode
 import com.dynamictransport.dynamicone.domain.scan.ScanOutcome
 import kotlinx.coroutines.flow.Flow
@@ -39,7 +44,7 @@ interface AuthRepository {
 
     suspend fun restoreSession()
 
-    fun observeDriver(): Flow<Driver?>
+    fun observeProfile(): Flow<UserProfile?>
 
     suspend fun login(username: String, password: String, twoFactorCode: String? = null): LoginResult
 
@@ -196,6 +201,34 @@ interface MessageRepository {
 
     /** Read receipt for an incoming message the driver has seen. Returns true when it was sent. */
     suspend fun markRead(tripId: String?, messageId: String): Boolean
+}
+
+/** Office attendance with NFC tags (module `officeAttendance`). */
+interface AttendanceRepository {
+    /** Null until read. */
+    fun observeStatus(): Flow<AttendanceStatus?>
+
+    /** Scans of the signed-in account stored on the phone (waiting, recently confirmed or rejected), newest first. */
+    fun observeLocalPunches(): Flow<List<LocalPunch>>
+
+    suspend fun refreshStatus(): RefreshResult
+
+    /** Stores the scan on the phone with a new command id first, then sends it. */
+    suspend fun recordPunch(direction: AttendanceDirection, tagUid: String): PunchResult
+
+    /** Sends every waiting punch of the signed-in account with its own command id. False: some must be tried again later. */
+    suspend fun sendPending(): Boolean
+
+    /** Sends a rejected punch again, unchanged. */
+    suspend fun resend(commandId: String): PunchResult
+
+    /** Removes a rejected punch from the phone. */
+    suspend fun dismiss(commandId: String)
+
+    /** Null until the month was read. */
+    fun observeMonth(month: YearMonth): Flow<AttendanceMonth?>
+
+    suspend fun refreshMonth(month: YearMonth): RefreshResult
 }
 
 interface SyncRepository {

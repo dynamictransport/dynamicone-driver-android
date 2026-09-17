@@ -9,14 +9,14 @@ import com.dynamictransport.dynamicone.core.security.SessionEvent
 import com.dynamictransport.dynamicone.core.security.SessionPreferences
 import com.dynamictransport.dynamicone.core.security.TokenManager
 import com.dynamictransport.dynamicone.core.security.TokenPair
-import com.dynamictransport.dynamicone.domain.model.PasswordChangeResult
 import com.dynamictransport.dynamicone.core.sync.SyncScheduler
 import com.dynamictransport.dynamicone.data.local.toDomain
 import com.dynamictransport.dynamicone.data.local.toEntity
 import com.dynamictransport.dynamicone.data.remote.DriverRemoteDataSource
-import com.dynamictransport.dynamicone.domain.model.Driver
 import com.dynamictransport.dynamicone.domain.model.LoginResult
+import com.dynamictransport.dynamicone.domain.model.PasswordChangeResult
 import com.dynamictransport.dynamicone.domain.model.SessionState
+import com.dynamictransport.dynamicone.domain.model.UserProfile
 import com.dynamictransport.dynamicone.domain.repository.AuthRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -59,17 +59,17 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override suspend fun restoreSession() {
-        val driverId = sessionPreferences.driverId()
-        state.value = if (driverId != null && tokenManager.hasSession()) {
-            SessionState.LoggedIn(driverId)
+        val userId = sessionPreferences.userId()
+        state.value = if (userId != null && tokenManager.hasSession()) {
+            SessionState.LoggedIn(userId, sessionPreferences.modules())
         } else {
             SessionState.LoggedOut
         }
     }
 
-    override fun observeDriver(): Flow<Driver?> = sessionState.flatMapLatest { session ->
+    override fun observeProfile(): Flow<UserProfile?> = sessionState.flatMapLatest { session ->
         if (session is SessionState.LoggedIn) {
-            driverProfileDao.observe(session.driverId).map { it?.toDomain() }
+            driverProfileDao.observe(session.userId).map { it?.toDomain() }
         } else {
             flowOf(null)
         }
@@ -85,9 +85,9 @@ class AuthRepositoryImpl @Inject constructor(
             val previousDriver = sessionPreferences.lastDriverId()
             if (previousDriver != null && previousDriver != profile.id) clearDriverScopedData()
             driverProfileDao.upsert(profile.toEntity())
-            sessionPreferences.setLoggedInDriver(profile.id)
+            sessionPreferences.setLoggedInUser(profile)
             sessionPreferences.setLastUsername(user)
-            state.value = SessionState.LoggedIn(profile.id)
+            state.value = SessionState.LoggedIn(profile.id, profile.modules)
             syncScheduler.requestSync()
             LoginResult.SUCCESS
         } catch (e: CancellationException) {
@@ -113,7 +113,7 @@ class AuthRepositoryImpl @Inject constructor(
 
     private suspend fun endSession(expired: Boolean) {
         tokenManager.clear()
-        sessionPreferences.clearLoggedInDriver(expired)
+        sessionPreferences.clearLoggedInUser(expired)
         state.value = SessionState.LoggedOut
     }
 

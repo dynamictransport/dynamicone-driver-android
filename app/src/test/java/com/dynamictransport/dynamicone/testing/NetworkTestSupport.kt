@@ -9,6 +9,7 @@ import com.dynamictransport.dynamicone.core.database.PendingCommandKind
 import com.dynamictransport.dynamicone.core.network.DriverApi
 import com.dynamictransport.dynamicone.core.network.DriverAuthApi
 import com.dynamictransport.dynamicone.core.network.DriverHttpClients
+import com.dynamictransport.dynamicone.core.network.MobileApi
 import com.dynamictransport.dynamicone.core.security.TokenManager
 import com.dynamictransport.dynamicone.core.security.TokenPair
 import com.dynamictransport.dynamicone.core.security.TokenStore
@@ -114,14 +115,15 @@ val TEST_JSON = Json {
 }
 
 /** The production client stack (headers, bearer, refresh, password-change detection) against a MockWebServer. */
-class DriverApiTestClient(server: MockWebServer, tokenManager: TokenManager, clock: Clock) {
+class DriverApiTestClient(server: MockWebServer, tokenManager: TokenManager, clock: Clock, authBasePath: String = "/api/driver/v1/") {
     private val base = DriverHttpClients.base(appVersion = "1.2.3", logRequests = false)
-    val authApi: DriverAuthApi = retrofit(server, base).create(DriverAuthApi::class.java)
-    val api: DriverApi = retrofit(server, DriverHttpClients.authenticated(base, tokenManager, authApi, clock))
-        .create(DriverApi::class.java)
+    val authApi: DriverAuthApi = retrofit(server, base, authBasePath).create(DriverAuthApi::class.java)
+    private val authenticated = DriverHttpClients.authenticated(base, tokenManager, authApi, clock)
+    val api: DriverApi = retrofit(server, authenticated, "/api/driver/v1/").create(DriverApi::class.java)
+    val mobileApi: MobileApi = retrofit(server, authenticated, "/api/mobile/v1/").create(MobileApi::class.java)
 
-    private fun retrofit(server: MockWebServer, client: OkHttpClient): Retrofit = Retrofit.Builder()
-        .baseUrl(server.url("/api/driver/v1/"))
+    private fun retrofit(server: MockWebServer, client: OkHttpClient, basePath: String): Retrofit = Retrofit.Builder()
+        .baseUrl(server.url(basePath))
         .client(client)
         .addConverterFactory(TEST_JSON.asConverterFactory("application/json".toMediaType()))
         .build()
@@ -134,12 +136,12 @@ class RoutingDispatcher : Dispatcher() {
     private val routes = java.util.concurrent.CopyOnWriteArrayList<Route>()
 
     fun on(method: String, path: String, query: Map<String, String> = emptyMap(), response: () -> MockResponse) {
-        routes += Route(method, API + path, query) { response() }
+        routes += Route(method, fullPath(path), query) { response() }
     }
 
     /** Route that inspects the request (e.g. the body of a command). */
     fun onRequest(method: String, path: String, response: (RecordedRequest) -> MockResponse) {
-        routes += Route(method, API + path, emptyMap(), response)
+        routes += Route(method, fullPath(path), emptyMap(), response)
     }
 
     override fun dispatch(request: RecordedRequest): MockResponse {
@@ -153,6 +155,10 @@ class RoutingDispatcher : Dispatcher() {
 
     companion object {
         const val API = "/api/driver/v1"
+        const val MOBILE_API = "/api/mobile/v1"
+
+        /** Paths are relative to the Driver API unless they name another API (e.g. [MOBILE_API]). */
+        private fun fullPath(path: String) = if (path.startsWith("/api/")) path else API + path
     }
 }
 

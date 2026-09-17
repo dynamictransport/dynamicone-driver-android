@@ -5,11 +5,11 @@ import com.dynamictransport.dynamicone.core.database.DriverProfileEntity
 import com.dynamictransport.dynamicone.core.database.PendingActionEntity
 import com.dynamictransport.dynamicone.core.database.ShiftEntity
 import com.dynamictransport.dynamicone.core.database.TripEntity
+import com.dynamictransport.dynamicone.domain.model.AppModule
 import com.dynamictransport.dynamicone.domain.model.BreakState
 import com.dynamictransport.dynamicone.domain.model.DocumentSlot
 import com.dynamictransport.dynamicone.domain.model.DocumentSlotState
 import com.dynamictransport.dynamicone.domain.model.DocumentType
-import com.dynamictransport.dynamicone.domain.model.Driver
 import com.dynamictransport.dynamicone.domain.model.FailedAction
 import com.dynamictransport.dynamicone.domain.model.PendingActionState
 import com.dynamictransport.dynamicone.domain.model.RemoteDocumentStatus
@@ -21,6 +21,7 @@ import com.dynamictransport.dynamicone.domain.model.Trip
 import com.dynamictransport.dynamicone.domain.model.TripActionRecord
 import com.dynamictransport.dynamicone.domain.model.TripActionType
 import com.dynamictransport.dynamicone.domain.model.TripDocument
+import com.dynamictransport.dynamicone.domain.model.UserProfile
 import java.time.Instant
 
 fun TripEntity.toDomain(): Trip {
@@ -102,14 +103,17 @@ fun newTripEntity(id: String, now: Instant) = TripEntity(
     updatedAt = now,
 )
 
-fun DriverProfileEntity.toDomain() = Driver(
+fun DriverProfileEntity.toDomain() = UserProfile(
     id = id,
     displayName = displayName,
     personnelNo = personnelNo.takeIf { it.isNotBlank() },
     preferredLanguage = preferredLanguage,
+    // The demo backend only knows drivers.
+    modules = setOf(AppModule.DRIVER),
+    driverId = id,
 )
 
-fun Driver.toEntity() = DriverProfileEntity(
+fun UserProfile.toEntity() = DriverProfileEntity(
     id = id,
     displayName = displayName,
     personnelNo = personnelNo.orEmpty(),

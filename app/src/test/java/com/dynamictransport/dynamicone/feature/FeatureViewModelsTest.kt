@@ -147,7 +147,7 @@ class LoginViewModelTest {
         viewModel.onPasswordChanged("secret")
 
         mapOf(
-            LoginResult.DRIVER_ACCESS_REQUIRED to R.string.login_error_driver_access,
+            LoginResult.APP_ACCESS_REQUIRED to R.string.login_error_app_access,
             LoginResult.RATE_LIMITED to R.string.login_error_rate_limited,
             LoginResult.SERVICE_UNAVAILABLE to R.string.refresh_service_unavailable,
         ).forEach { (result, message) ->

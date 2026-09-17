@@ -35,6 +35,11 @@ listOf(developmentApiBaseUrl, productionApiBaseUrl).forEach { url ->
     }
 }
 
+// DynamicONE Mobile API (docs/15_MOBILE_APP_API.md): sign-in, modules and office attendance on the same host.
+// Until the backend serves it, `app.mobileApi=false` keeps signing drivers in through the Driver API.
+fun mobileApiBaseUrl(driverApiBaseUrl: String) = driverApiBaseUrl.removeSuffix("/api/driver/v1/") + "/api/mobile/v1/"
+val mobileApiEnabled = providers.gradleProperty("app.mobileApi").getOrElse("false").toBoolean()
+
 android {
     namespace = "com.dynamictransport.dynamicone"
     compileSdk {
@@ -50,12 +55,14 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("boolean", "PUSH_CONFIGURED", pushConfigured.toString())
+        buildConfigField("boolean", "MOBILE_API_ENABLED", mobileApiEnabled.toString())
     }
 
     buildTypes {
         debug {
             buildConfigField("String", "API_ENVIRONMENT", "\"development\"")
             buildConfigField("String", "API_BASE_URL", "\"$developmentApiBaseUrl\"")
+            buildConfigField("String", "MOBILE_API_BASE_URL", "\"${mobileApiBaseUrl(developmentApiBaseUrl)}\"")
             buildConfigField("boolean", "DEMO_MODE", debugDemoMode.toString())
         }
         release {
@@ -67,6 +74,7 @@ android {
             )
             buildConfigField("String", "API_ENVIRONMENT", "\"production\"")
             buildConfigField("String", "API_BASE_URL", "\"$productionApiBaseUrl\"")
+            buildConfigField("String", "MOBILE_API_BASE_URL", "\"${mobileApiBaseUrl(productionApiBaseUrl)}\"")
             buildConfigField("boolean", "DEMO_MODE", "false")
         }
     }

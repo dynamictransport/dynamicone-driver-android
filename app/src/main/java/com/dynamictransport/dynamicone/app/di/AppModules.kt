@@ -8,16 +8,19 @@ import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.room.Room
 import com.dynamictransport.dynamicone.BuildConfig
 import com.dynamictransport.dynamicone.core.common.AndroidAppLogger
+import com.dynamictransport.dynamicone.core.common.AndroidDeviceUptime
 import com.dynamictransport.dynamicone.core.common.AppDirectories
 import com.dynamictransport.dynamicone.core.common.AppLogger
 import com.dynamictransport.dynamicone.core.common.ApplicationScope
 import com.dynamictransport.dynamicone.core.common.BackendMode
 import com.dynamictransport.dynamicone.core.common.BackendModeResolver
+import com.dynamictransport.dynamicone.core.common.DeviceUptime
 import com.dynamictransport.dynamicone.core.common.IdGenerator
 import com.dynamictransport.dynamicone.core.common.IoDispatcher
 import com.dynamictransport.dynamicone.core.common.UuidIdGenerator
-import com.dynamictransport.dynamicone.core.database.DocumentDao
 import com.dynamictransport.dynamicone.core.database.AppDatabase
+import com.dynamictransport.dynamicone.core.database.AttendancePunchDao
+import com.dynamictransport.dynamicone.core.database.DocumentDao
 import com.dynamictransport.dynamicone.core.database.DriverProfileDao
 import com.dynamictransport.dynamicone.core.database.PendingActionDao
 import com.dynamictransport.dynamicone.core.database.PendingCommandDao
@@ -27,6 +30,14 @@ import com.dynamictransport.dynamicone.core.database.TripDao
 import com.dynamictransport.dynamicone.core.network.DriverApi
 import com.dynamictransport.dynamicone.core.network.DriverAuthApi
 import com.dynamictransport.dynamicone.core.network.DriverHttpClients
+import com.dynamictransport.dynamicone.core.network.MobileApi
+import com.dynamictransport.dynamicone.core.nfc.AndroidNfcStatusProvider
+import com.dynamictransport.dynamicone.core.nfc.NfcStatusProvider
+import com.dynamictransport.dynamicone.core.push.AndroidMessageNotifier
+import com.dynamictransport.dynamicone.core.push.FirebasePushSession
+import com.dynamictransport.dynamicone.core.push.MessageNotifier
+import com.dynamictransport.dynamicone.core.push.PushRegistrar
+import com.dynamictransport.dynamicone.core.push.PushSession
 import com.dynamictransport.dynamicone.core.security.CryptoBox
 import com.dynamictransport.dynamicone.core.security.EncryptedTokenStore
 import com.dynamictransport.dynamicone.core.security.KeystoreCryptoBox
@@ -34,17 +45,14 @@ import com.dynamictransport.dynamicone.core.security.SessionDataStore
 import com.dynamictransport.dynamicone.core.security.TokenDataStore
 import com.dynamictransport.dynamicone.core.security.TokenManager
 import com.dynamictransport.dynamicone.core.security.TokenStore
+import com.dynamictransport.dynamicone.core.sync.AttendanceSyncScheduler
 import com.dynamictransport.dynamicone.core.sync.SyncRunner
 import com.dynamictransport.dynamicone.core.sync.SyncScheduler
-import com.dynamictransport.dynamicone.core.push.AndroidMessageNotifier
-import com.dynamictransport.dynamicone.core.push.FirebasePushSession
-import com.dynamictransport.dynamicone.core.push.MessageNotifier
-import com.dynamictransport.dynamicone.data.real.RealPushRegistrar
-import com.dynamictransport.dynamicone.core.push.PushRegistrar
-import com.dynamictransport.dynamicone.core.push.PushSession
+import com.dynamictransport.dynamicone.core.sync.WorkManagerAttendanceSyncScheduler
 import com.dynamictransport.dynamicone.core.sync.WorkManagerSyncScheduler
 import com.dynamictransport.dynamicone.data.demo.AppNetworkMonitor
 import com.dynamictransport.dynamicone.data.demo.FakeDemoBackendControls
+import com.dynamictransport.dynamicone.data.demo.UnavailableAttendanceRepository
 import com.dynamictransport.dynamicone.data.demo.UnavailableDemoBackendControls
 import com.dynamictransport.dynamicone.data.demo.UnavailableMessageRepository
 import com.dynamictransport.dynamicone.data.demo.UnavailablePayrollRepository
@@ -52,13 +60,18 @@ import com.dynamictransport.dynamicone.data.demo.UnavailableSignedDocumentReposi
 import com.dynamictransport.dynamicone.data.demo.UnavailableTripExecutionRepository
 import com.dynamictransport.dynamicone.data.media.BitmapDocumentScanner
 import com.dynamictransport.dynamicone.data.media.FileDocumentMediaStore
+import com.dynamictransport.dynamicone.data.real.AccountRemote
+import com.dynamictransport.dynamicone.data.real.DriverAccountRemote
+import com.dynamictransport.dynamicone.data.real.MobileAccountRemote
 import com.dynamictransport.dynamicone.data.real.NoOpSyncRunner
+import com.dynamictransport.dynamicone.data.real.RealAttendanceRepository
 import com.dynamictransport.dynamicone.data.real.RealAuthRepository
 import com.dynamictransport.dynamicone.data.real.RealDocumentRepository
 import com.dynamictransport.dynamicone.data.real.RealIncidentRepository
 import com.dynamictransport.dynamicone.data.real.RealMessageRepository
 import com.dynamictransport.dynamicone.data.real.RealNetworkMonitor
 import com.dynamictransport.dynamicone.data.real.RealPayrollRepository
+import com.dynamictransport.dynamicone.data.real.RealPushRegistrar
 import com.dynamictransport.dynamicone.data.real.RealShiftRepository
 import com.dynamictransport.dynamicone.data.real.RealSignedDocumentRepository
 import com.dynamictransport.dynamicone.data.real.RealSyncRepository
@@ -76,6 +89,7 @@ import com.dynamictransport.dynamicone.data.repository.OfflineFirstTripRepositor
 import com.dynamictransport.dynamicone.data.repository.SyncRepositoryImpl
 import com.dynamictransport.dynamicone.data.sync.SyncEngine
 import com.dynamictransport.dynamicone.domain.repository.AppInfo
+import com.dynamictransport.dynamicone.domain.repository.AttendanceRepository
 import com.dynamictransport.dynamicone.domain.repository.AuthRepository
 import com.dynamictransport.dynamicone.domain.repository.DemoBackendControls
 import com.dynamictransport.dynamicone.domain.repository.DocumentMediaStore
@@ -185,6 +199,9 @@ object DatabaseModule {
 
     @Provides
     fun provideSyncMetaDao(database: AppDatabase): SyncMetaDao = database.syncMetaDao()
+
+    @Provides
+    fun provideAttendancePunchDao(database: AppDatabase): AttendancePunchDao = database.attendancePunchDao()
 }
 
 @Module
@@ -227,11 +244,14 @@ object NetworkModule {
     fun provideBaseHttpClient(): OkHttpClient =
         DriverHttpClients.base(appVersion = BuildConfig.VERSION_NAME, logRequests = BuildConfig.DEBUG)
 
-    /** Token refresh runs without the authenticator, so a failed refresh can never recurse. */
+    /**
+     * Token refresh runs without the authenticator, so a failed refresh can never recurse. Tokens are refreshed where
+     * they were issued: the Mobile API once it is enabled, the Driver API before.
+     */
     @Provides
     @Singleton
     fun provideDriverAuthApi(@BaseHttpClient client: OkHttpClient, json: Json): DriverAuthApi =
-        retrofit(client, json).create(DriverAuthApi::class.java)
+        retrofit(client, json, accountBaseUrl()).create(DriverAuthApi::class.java)
 
     @Provides
     @Singleton
@@ -245,10 +265,24 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideDriverApi(client: OkHttpClient, json: Json): DriverApi =
-        retrofit(client, json).create(DriverApi::class.java)
+        retrofit(client, json, BuildConfig.API_BASE_URL).create(DriverApi::class.java)
 
-    private fun retrofit(client: OkHttpClient, json: Json): Retrofit = Retrofit.Builder()
-        .baseUrl(BuildConfig.API_BASE_URL)
+    @Provides
+    @Singleton
+    fun provideMobileApi(client: OkHttpClient, json: Json): MobileApi =
+        retrofit(client, json, BuildConfig.MOBILE_API_BASE_URL).create(MobileApi::class.java)
+
+    /** docs/15_MOBILE_APP_API.md: `app.mobileApi` switches sign-in to the Mobile API once the backend serves it. */
+    @Provides
+    @Singleton
+    fun provideAccountRemote(driverApi: Provider<DriverApi>, mobileApi: Provider<MobileApi>): AccountRemote =
+        if (BuildConfig.MOBILE_API_ENABLED) MobileAccountRemote(mobileApi.get()) else DriverAccountRemote(driverApi.get())
+
+    private fun accountBaseUrl(): String =
+        if (BuildConfig.MOBILE_API_ENABLED) BuildConfig.MOBILE_API_BASE_URL else BuildConfig.API_BASE_URL
+
+    private fun retrofit(client: OkHttpClient, json: Json, baseUrl: String): Retrofit = Retrofit.Builder()
+        .baseUrl(baseUrl)
         .client(client)
         .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
         .build()
@@ -318,6 +352,10 @@ object RepositoryModule {
         if (isDemoMode()) UnavailablePayrollRepository else real.get()
 
     @Provides
+    fun provideAttendanceRepository(real: Provider<RealAttendanceRepository>): AttendanceRepository =
+        if (isDemoMode()) UnavailableAttendanceRepository else real.get()
+
+    @Provides
     fun provideSignedDocumentRepository(real: Provider<RealSignedDocumentRepository>): SignedDocumentRepository =
         if (isDemoMode()) UnavailableSignedDocumentRepository else real.get()
 
@@ -361,4 +399,13 @@ abstract class BindingsModule {
 
     @Binds
     abstract fun bindPushSession(impl: FirebasePushSession): PushSession
+
+    @Binds
+    abstract fun bindAttendanceSyncScheduler(impl: WorkManagerAttendanceSyncScheduler): AttendanceSyncScheduler
+
+    @Binds
+    abstract fun bindDeviceUptime(impl: AndroidDeviceUptime): DeviceUptime
+
+    @Binds
+    abstract fun bindNfcStatusProvider(impl: AndroidNfcStatusProvider): NfcStatusProvider
 }

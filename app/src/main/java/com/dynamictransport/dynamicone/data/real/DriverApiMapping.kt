@@ -16,7 +16,6 @@ import com.dynamictransport.dynamicone.core.network.DriverPayrollCurrencyDto
 import com.dynamictransport.dynamicone.core.network.DriverPayrollLineDto
 import com.dynamictransport.dynamicone.core.network.DriverPayrollResponseDto
 import com.dynamictransport.dynamicone.core.network.DriverPayrollStateNames
-import com.dynamictransport.dynamicone.core.network.DriverProfileResponseDto
 import com.dynamictransport.dynamicone.core.network.DriverSignedDocumentDto
 import com.dynamictransport.dynamicone.core.network.DriverSignedDocumentTypeNames
 import com.dynamictransport.dynamicone.core.network.DriverSlotStateNames
@@ -30,7 +29,6 @@ import com.dynamictransport.dynamicone.domain.model.BreakState
 import com.dynamictransport.dynamicone.domain.model.DocumentSlot
 import com.dynamictransport.dynamicone.domain.model.DocumentSlotState
 import com.dynamictransport.dynamicone.domain.model.DocumentType
-import com.dynamictransport.dynamicone.domain.model.Driver
 import com.dynamictransport.dynamicone.domain.model.DriverMessage
 import com.dynamictransport.dynamicone.domain.model.ExecutionAction
 import com.dynamictransport.dynamicone.domain.model.ExecutionActionCode
@@ -343,17 +341,6 @@ internal object DriverApiMapping {
             val reportedAt = dto.reportedAtUtc?.toInstantOrNull() ?: return@mapNotNull null
             TripActionRecord(action, reportedAt, SyncState.SYNCED)
         }.sortedBy { it.occurredAt }
-
-    /** Null when the account is not linked to a driver. */
-    fun driver(dto: DriverProfileResponseDto): Driver? {
-        val driverId = dto.driverId?.takeIf { it.isNotBlank() } ?: return null
-        return Driver(
-            id = driverId,
-            displayName = dto.displayName.orEmpty(),
-            personnelNo = null,
-            preferredLanguage = dto.preferredLanguageCode?.takeIf { it.isNotBlank() },
-        )
-    }
 
     /** Slots without a key cannot be addressed and are skipped. */
     fun slot(dto: DriverDocumentSlotDto): DocumentSlot? {

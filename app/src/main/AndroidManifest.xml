@@ -6,11 +6,16 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Documents are photographed in the in-app scanner. -->
     <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Office attendance: check-in and check-out tags are read in the app (NFC reader mode). -->
+    <uses-permission android:name="android.permission.NFC" />
     <!-- Android 13+: notifications about new messages from the office. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <uses-feature
         android:name="android.hardware.camera"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.nfc"
         android:required="false" />
 
     <queries>

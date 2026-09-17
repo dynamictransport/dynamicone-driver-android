@@ -1,13 +1,20 @@
-# CLAUDE.md — DynamicONE Driver Development Contract
+# CLAUDE.md — DynamicONE App Development Contract
 
 Bu dosya proje için bağlayıcı geliştirme kurallarını tanımlar.
 
 ## 1. Proje amacı
 
-DynamicONE Driver, profesyonel kamyon şoförlerinin günlük operasyon uygulamasıdır.
-Kullanıcıların önemli kısmı uygulamayı araç içinde, hızlı ve stresli koşullarda kullanacaktır.
+DynamicONE App, Dynamic Transport çalışanlarının tek mobil uygulamasıdır (eski adı DynamicONE Driver).
+Her hesap sunucunun verdiği modülleri görür (`me.modules`, `docs/15_MOBILE_APP_API.md`):
 
-Bu nedenle:
+- `driver`: profesyonel kamyon şoförlerinin günlük operasyonu. Kullanıcıların önemli kısmı uygulamayı araç içinde,
+  hızlı ve stresli koşullarda kullanır.
+- `officeAttendance`: ofis personelinin NFC etiketiyle mesai girişi/çıkışı ve kendi mesai kayıtları.
+
+Yeni ihtiyaçlar yeni bir modül olarak eklenir: rol kararı uygulamada verilmez, menü modüllerden kurulur
+(`app/navigation/AppShell.kt`).
+
+Bu nedenle tüm modüllerde:
 - mümkün olan en az adım,
 - mümkün olan en az yazı girişi,
 - büyük dokunma hedefleri,
@@ -55,7 +62,7 @@ Kurallar:
 
 Önerilen paket yapısı:
 
-com.dynamictransport.driver
+com.dynamictransport.dynamicone
   app/
   core/
     common/
@@ -64,6 +71,7 @@ com.dynamictransport.driver
     database/
     sync/
     security/
+    nfc/
   feature/
     auth/
     home/
@@ -75,6 +83,7 @@ com.dynamictransport.driver
     messages/
     profile/
     incident/
+    attendance/
   domain/
   data/
 

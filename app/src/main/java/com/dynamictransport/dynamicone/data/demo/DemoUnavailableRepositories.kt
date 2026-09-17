@@ -3,15 +3,21 @@ package com.dynamictransport.dynamicone.data.demo
 import com.dynamictransport.dynamicone.domain.model.ActionReceipt
 import com.dynamictransport.dynamicone.domain.model.ActionRejection
 import com.dynamictransport.dynamicone.domain.model.ActionResult
+import com.dynamictransport.dynamicone.domain.model.AttendanceDirection
+import com.dynamictransport.dynamicone.domain.model.AttendanceMonth
+import com.dynamictransport.dynamicone.domain.model.AttendanceStatus
 import com.dynamictransport.dynamicone.domain.model.Conversation
 import com.dynamictransport.dynamicone.domain.model.ConversationList
 import com.dynamictransport.dynamicone.domain.model.DocumentContentResult
 import com.dynamictransport.dynamicone.domain.model.ExecutionAction
+import com.dynamictransport.dynamicone.domain.model.LocalPunch
 import com.dynamictransport.dynamicone.domain.model.MonthlyPayroll
 import com.dynamictransport.dynamicone.domain.model.PendingTripAction
+import com.dynamictransport.dynamicone.domain.model.PunchResult
 import com.dynamictransport.dynamicone.domain.model.RefreshResult
 import com.dynamictransport.dynamicone.domain.model.SignedDocument
 import com.dynamictransport.dynamicone.domain.model.TripExecution
+import com.dynamictransport.dynamicone.domain.repository.AttendanceRepository
 import com.dynamictransport.dynamicone.domain.repository.MessageRepository
 import com.dynamictransport.dynamicone.domain.repository.PayrollRepository
 import com.dynamictransport.dynamicone.domain.repository.SignedDocumentRepository
@@ -57,4 +63,17 @@ object UnavailableMessageRepository : MessageRepository {
     override suspend fun resend(commandId: String): ActionResult = ActionResult.Rejected(ActionRejection.NOT_SUPPORTED)
     override suspend fun discard(commandId: String) = Unit
     override suspend fun markRead(tripId: String?, messageId: String): Boolean = false
+}
+
+/** The demo backend only knows a driver account; office attendance needs the Mobile API. */
+object UnavailableAttendanceRepository : AttendanceRepository {
+    override fun observeStatus(): Flow<AttendanceStatus?> = flowOf(null)
+    override fun observeLocalPunches(): Flow<List<LocalPunch>> = flowOf(emptyList())
+    override suspend fun refreshStatus(): RefreshResult = RefreshResult.NOT_SUPPORTED
+    override suspend fun recordPunch(direction: AttendanceDirection, tagUid: String): PunchResult = PunchResult.NotLoggedIn
+    override suspend fun sendPending(): Boolean = true
+    override suspend fun resend(commandId: String): PunchResult = PunchResult.NotLoggedIn
+    override suspend fun dismiss(commandId: String) = Unit
+    override fun observeMonth(month: YearMonth): Flow<AttendanceMonth?> = flowOf(null)
+    override suspend fun refreshMonth(month: YearMonth): RefreshResult = RefreshResult.NOT_SUPPORTED
 }

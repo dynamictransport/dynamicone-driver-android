@@ -255,7 +255,7 @@
     <string name="login_two_factor_hint">Enter the 6-digit code from your authenticator app.</string>
     <string name="login_error_two_factor_format">The code must have 6 digits.</string>
     <string name="login_error_two_factor_invalid">The verification code is not correct.</string>
-    <string name="login_error_driver_access">This account has no access to the driver app. Contact the office.</string>
+    <string name="login_error_app_access">This account has no access to the DynamicONE app. Contact the office.</string>
     <string name="login_error_rate_limited">Too many sign-in attempts. Wait a minute and try again.</string>
     <string name="login_session_expired_real">Your session has ended. Please sign in again.</string>
 

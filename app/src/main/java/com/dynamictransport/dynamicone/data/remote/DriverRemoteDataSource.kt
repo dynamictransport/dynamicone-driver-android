@@ -2,13 +2,13 @@ package com.dynamictransport.dynamicone.data.remote
 
 import com.dynamictransport.dynamicone.domain.model.AuthTokens
 import com.dynamictransport.dynamicone.domain.model.DocumentUploadMetadata
-import com.dynamictransport.dynamicone.domain.model.Driver
 import com.dynamictransport.dynamicone.domain.model.IncidentReport
 import com.dynamictransport.dynamicone.domain.model.RemoteDocument
 import com.dynamictransport.dynamicone.domain.model.Shift
 import com.dynamictransport.dynamicone.domain.model.Trip
 import com.dynamictransport.dynamicone.domain.model.TripActionType
 import com.dynamictransport.dynamicone.domain.model.TripState
+import com.dynamictransport.dynamicone.domain.model.UserProfile
 import java.io.File
 import java.time.Instant
 
@@ -43,7 +43,7 @@ data class RemoteTripSummary(
 interface DriverRemoteDataSource {
     suspend fun login(username: String, password: String): AuthTokens
 
-    suspend fun getProfile(): Driver
+    suspend fun getProfile(): UserProfile
 
     suspend fun getCurrentShift(): Shift
 

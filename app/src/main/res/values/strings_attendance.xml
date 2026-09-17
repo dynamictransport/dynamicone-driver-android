@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App shell (modules) -->
+    <string name="nav_attendance">Attendance</string>
+    <string name="nav_attendance_records">My records</string>
+    <string name="profile_more">More</string>
+
+    <!-- Office attendance (NFC) -->
+    <string name="attendance_title">Attendance</string>
+    <string name="attendance_action_start">START WORK</string>
+    <string name="attendance_action_end">END WORK</string>
+    <string name="attendance_cancel_scan">STOP SCANNING</string>
+    <string name="attendance_open_nfc_settings">TURN ON NFC</string>
+    <string name="attendance_state_in">You are at work</string>
+    <string name="attendance_state_out">You are not at work</string>
+    <string name="attendance_since">Checked in %1$s · %2$s</string>
+    <string name="attendance_scan_in_title">Scan the check-in tag</string>
+    <string name="attendance_scan_out_title">Scan the check-out tag</string>
+    <string name="attendance_scan_in_body">Hold the back of the phone against the CHECK-IN tag in the office.</string>
+    <string name="attendance_scan_out_body">Hold the back of the phone against the CHECK-OUT tag in the office.</string>
+    <string name="attendance_outcome_recorded_in">Check-in recorded: %1$s</string>
+    <string name="attendance_outcome_recorded_out">Check-out recorded: %1$s</string>
+    <string name="attendance_outcome_saved">The server cannot be reached. The record is saved on this phone and will be sent automatically.</string>
+    <string name="attendance_outcome_unreadable">The tag could not be read. Hold the phone against the tag again.</string>
+    <string name="attendance_nfc_disabled">NFC is off. Turn on NFC to record your working time.</string>
+    <string name="attendance_nfc_not_supported">This phone has no NFC. Recording working time needs a phone with NFC.</string>
+    <plurals name="attendance_waiting">
+        <item quantity="one">%d attendance record is waiting on this phone and will be sent when the connection is back.</item>
+        <item quantity="other">%d attendance records are waiting on this phone and will be sent when the connection is back.</item>
+    </plurals>
+    <string name="attendance_failed_title">Not recorded: %1$s · %2$s</string>
+    <string name="attendance_resend">Send again</string>
+    <string name="attendance_remove">Remove</string>
+    <string name="attendance_today">Today</string>
+    <string name="attendance_today_empty">No records today yet.</string>
+    <string name="attendance_punch_line">%1$s %2$s</string>
+    <string name="attendance_direction_in">Check-in</string>
+    <string name="attendance_direction_out">Check-out</string>
+    <string name="attendance_all_records">All my attendance records</string>
+    <string name="attendance_failure_tag_unknown">This tag is not registered for attendance. Contact the office.</string>
+    <string name="attendance_failure_wrong_tag_in">This is not a check-in tag. Scan the CHECK-IN tag to start work.</string>
+    <string name="attendance_failure_wrong_tag_out">This is not a check-out tag. Scan the CHECK-OUT tag to end work.</string>
+    <string name="attendance_failure_time">The server did not accept the time of this record. Contact the office.</string>
+    <string name="attendance_failure_access">Attendance recording is not enabled for this account. Contact the office.</string>
+    <string name="attendance_failure_rejected">The server did not accept this record.</string>
+
+    <string name="attendance_records_title">My attendance records</string>
+    <string name="attendance_records_empty">No attendance records in this month.</string>
+    <string name="attendance_worked">Worked time</string>
+    <string name="attendance_day_complete">Complete</string>
+    <string name="attendance_day_open">In progress</string>
+    <string name="attendance_day_incomplete">Record missing</string>
+    <string name="attendance_day_review">Under review</string>
+    <string name="attendance_day_unknown">Unknown</string>
+</resources>

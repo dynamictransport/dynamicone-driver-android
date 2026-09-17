@@ -19,10 +19,15 @@ import java.time.Instant
         DocumentEntity::class,
         PendingCommandEntity::class,
         SyncMetaEntity::class,
+        AttendancePunchEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
-    autoMigrations = [AutoMigration(from = 1, to = 2, spec = AppDatabase.Version1To2::class)],
+    autoMigrations = [
+        AutoMigration(from = 1, to = 2, spec = AppDatabase.Version1To2::class),
+        // v3: office attendance punches stored on the phone.
+        AutoMigration(from = 2, to = 3),
+    ],
 )
 @TypeConverters(DatabaseConverters::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -33,6 +38,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun documentDao(): DocumentDao
     abstract fun pendingCommandDao(): PendingCommandDao
     abstract fun syncMetaDao(): SyncMetaDao
+    abstract fun attendancePunchDao(): AttendancePunchDao
 
     /**
      * v2: Driver API command store added; the demo earnings cache is dropped (pay data is no longer cached

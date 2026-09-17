@@ -1,10 +1,10 @@
-# DynamicONE Driver
+# DynamicONE App
 
-Dynamic Transport şoförleri için Android saha uygulaması.
+Dynamic Transport çalışanları için tek Android uygulaması (eski adı DynamicONE Driver). Her hesap sunucunun açtığı modülleri görür: şoförler sefer ekranlarını, ofis personeli NFC ile mesai kaydını.
 
 ## Amaç
 
-DynamicONE Driver, şoförün günlük iş akışının tamamını tek ve basit bir uygulamada toplar:
+**Şoför modülü (`driver`)** — şoförün günlük iş akışının tamamını tek ve basit bir uygulamada toplar:
 
 - Kullanıcı adı / şifre ile giriş
 - Mesai başlatma / bitirme
@@ -19,6 +19,14 @@ DynamicONE Driver, şoförün günlük iş akışının tamamını tek ve basit 
 - Ofisle genel ve sefer bazlı mesajlaşma
 - Sunucunun sefer planındaki işlem seçenekleriyle (durak/konteyner bazlı) ilerleme, koordinatlı navigasyon
 - İnternet yokken işlemlere devam etme ve daha sonra otomatik senkronize olma
+
+**Ofis mesaisi modülü (`officeAttendance`)** — ofis personeli için:
+
+- *MESAİ BAŞLAT* / *MESAİYİ BİTİR* tek butonu ve ofisteki giriş veya çıkış NFC etiketini okutma
+- Kaydın önce telefona yazılması; internet yokken bekleyip bağlantı gelince otomatik gönderilmesi (gönderildi / bekliyor / gönderilemedi ayrı gösterilir)
+- Aylık *Mesai kayıtlarım*: gün gün giriş/çıkış saatleri, gün durumu ve sunucunun hesapladığı çalışılan süre
+
+Backend sözleşmesi: [docs/15_MOBILE_APP_API.md](docs/15_MOBILE_APP_API.md). Mobile API yayına alınana kadar `app.mobileApi=false` ile giriş Driver API üzerinden yapılır (yalnızca şoför modülü).
 
 ## İlk platform
 
@@ -153,7 +161,7 @@ Uygulamada SQL bağlantısı, storage anahtarı, JWT imza anahtarı veya başka 
 
 ### Push bildirimleri (Firebase)
 
-- Firebase projesi `dynamicone-driver`, Android uygulaması `com.dynamictransport.driver`. Konsoldan indirilen `google-services.json` dosyasını `app/google-services.json` olarak koyun; dosya Git'e girmez. Dosya yoksa uygulama push olmadan derlenir ve çalışır (`BuildConfig.PUSH_CONFIGURED = false`).
+- Firebase projesi `dynamicone-driver`, Android uygulaması `com.dynamictransport.dynamicone` (applicationId 17.09.2026'da `com.dynamictransport.driver`'dan değişti: aynı Firebase projesine bu paket adıyla Android uygulaması eklenmeli). Konsoldan indirilen `google-services.json` dosyasını `app/google-services.json` olarak koyun; dosya Git'e girmez. Dosya yoksa veya bu paket adını içermiyorsa uygulama push olmadan derlenir ve çalışır (`BuildConfig.PUSH_CONFIGURED = false`).
 - FCM kaydı yalnızca gerçek backend'e giriş yapıldıktan sonra başlar; demo modunda push yoktur. Android 13+ cihazlarda girişten sonra bildirim izni istenir.
 - Cihaz kaydı (`POST`/`DELETE me/devices`) ve FCM mesaj push'u backend'de yayında (TH-2026-0444). Uygulama girişten sonra cihazı kaydeder, çıkıştan önce kaydı siler. Üretimde gönderimin etkinleştirilmesi backend'de ayrı adımdır. Ayrıntı: [docs/13_PUSH_NOTIFICATIONS.md](docs/13_PUSH_NOTIFICATIONS.md). Firebase service account anahtarı yalnızca backend'in gizli ayarlarına konur, bu repoya girmez.
 
@@ -182,7 +190,9 @@ UI (Compose) → ViewModel → UseCase (gerektiğinde) → Repository (domain ar
 - `feature/*` — ekran başına ViewModel + stateless Compose ekranı.
 - `data/real/RealTripExecutionRepository` + `PendingCommandStore` — sunucu planındaki işlemler; `commandId` gönderimden önce Room `pending_commands` tablosuna yazılır, sonucu belirsiz komut aynı id ve payload ile tekrar gönderilir.
 - `data/real/RealDocumentRepository`, `RealPersonnelRepositories`, `RealMessageRepository` — evrak slotları, ücret ve imzalı evrak, mesajlar.
-- Kararlar ve API boşlukları: `ASSUMPTIONS.md` (R1–R15, O1–O14), `docs/12_API_CONTRACT_GAPS.md`.
+- `app/navigation/AppShell` — hesabın modüllerinden alt menü (en fazla 5 öğe) ve ilk ekran; `data/real/AccountRemote` girişi Driver API veya Mobile API (`app.mobileApi`) üzerinden yapar.
+- `data/real/RealAttendanceRepository` + `core/nfc` — NFC etiketi okuma (reader mode), `attendance_punches` tablosu, `AttendanceSyncWorker` ile idempotent otomatik gönderim; kural: `domain/rules/AttendanceRules`.
+- Kararlar ve API boşlukları: `ASSUMPTIONS.md` (R1–R15, O1–O16, M1–M12), `docs/12_API_CONTRACT_GAPS.md`, `docs/15_MOBILE_APP_API.md`.
 
 ### Sorun giderme
 

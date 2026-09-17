@@ -1,11 +1,11 @@
 package com.dynamictransport.dynamicone.data.remote.fake
 
 import com.dynamictransport.dynamicone.core.network.RemoteException
+import com.dynamictransport.dynamicone.domain.model.AppModule
 import com.dynamictransport.dynamicone.domain.model.AuthTokens
 import com.dynamictransport.dynamicone.domain.model.BreakState
 import com.dynamictransport.dynamicone.domain.model.DocumentType
 import com.dynamictransport.dynamicone.domain.model.DocumentUploadMetadata
-import com.dynamictransport.dynamicone.domain.model.Driver
 import com.dynamictransport.dynamicone.domain.model.IncidentCategory
 import com.dynamictransport.dynamicone.domain.model.IncidentReport
 import com.dynamictransport.dynamicone.domain.model.RemoteDocument
@@ -15,6 +15,7 @@ import com.dynamictransport.dynamicone.domain.model.ShiftStatus
 import com.dynamictransport.dynamicone.domain.model.Trip
 import com.dynamictransport.dynamicone.domain.model.TripActionType
 import com.dynamictransport.dynamicone.domain.model.TripState
+import com.dynamictransport.dynamicone.domain.model.UserProfile
 import com.dynamictransport.dynamicone.domain.statemachine.TransitionResult
 import com.dynamictransport.dynamicone.domain.statemachine.TripSnapshot
 import com.dynamictransport.dynamicone.domain.statemachine.TripStateMachine
@@ -60,7 +61,7 @@ class FakeDriverBackend(
         )
     }
 
-    suspend fun profile(): Driver = call { state -> state to DEMO_DRIVER }
+    suspend fun profile(): UserProfile = call { state -> state to DEMO_DRIVER }
 
     suspend fun currentShift(): Shift = call { state -> state to state.shift.toDomain() }
 
@@ -202,11 +203,13 @@ class FakeDriverBackend(
         const val DEMO_PASSWORD = "demo"
         const val DEMO_VEHICLE = "WX 9234K"
         const val DEMO_TRAILER = "WGM 45T2"
-        val DEMO_DRIVER = Driver(
+        val DEMO_DRIVER = UserProfile(
             id = "drv-demo-1027",
             displayName = "Mehmet Demir",
             personnelNo = "1027",
             preferredLanguage = "tr",
+            modules = setOf(AppModule.DRIVER),
+            driverId = "drv-demo-1027",
         )
     }
 }

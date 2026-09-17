@@ -88,7 +88,7 @@ class RealApiRepositoriesTest {
         assertEquals(LoginResult.SUCCESS, h.auth.login("  anna.nowak ", "secret", null))
 
         assertEquals(SessionState.LoggedIn("driver-1"), h.auth.sessionState.value)
-        assertEquals("Anna Nowak", h.auth.observeDriver().first()?.displayName)
+        assertEquals("Anna Nowak", h.auth.observeProfile().first()?.displayName)
         assertEquals("access-1", h.tokenStore.tokens?.accessToken)
         assertEquals("refresh-1", h.tokenStore.tokens?.refreshToken)
         assertEquals("anna.nowak", h.auth.lastUsername())
@@ -107,7 +107,7 @@ class RealApiRepositoriesTest {
         next = { problemResponse(401, "two_factor_required") }
         assertEquals(LoginResult.TWO_FACTOR_REQUIRED, h.auth.login("anna.nowak", "secret", "123456"))
         next = { problemResponse(403, "driver_access_required") }
-        assertEquals(LoginResult.DRIVER_ACCESS_REQUIRED, h.auth.login("anna.nowak", "secret"))
+        assertEquals(LoginResult.APP_ACCESS_REQUIRED, h.auth.login("anna.nowak", "secret"))
         next = { problemResponse(404, "api_disabled") }
         assertEquals(LoginResult.SERVICE_UNAVAILABLE, h.auth.login("anna.nowak", "secret"))
         next = { problemResponse(429, "rate_limit_exceeded", retryAfterSeconds = 60) }

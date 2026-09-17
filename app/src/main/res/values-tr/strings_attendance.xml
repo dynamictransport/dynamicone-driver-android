@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App shell (modules) -->
+    <string name="nav_attendance">Mesai</string>
+    <string name="nav_attendance_records">Kayıtlarım</string>
+    <string name="profile_more">Diğer</string>
+
+    <!-- Office attendance (NFC) -->
+    <string name="attendance_title">Mesai</string>
+    <string name="attendance_action_start">MESAİ BAŞLAT</string>
+    <string name="attendance_action_end">MESAİYİ BİTİR</string>
+    <string name="attendance_cancel_scan">VAZGEÇ</string>
+    <string name="attendance_open_nfc_settings">NFC\'Yİ AÇ</string>
+    <string name="attendance_state_in">Mesaidesiniz</string>
+    <string name="attendance_state_out">Mesaide değilsiniz</string>
+    <string name="attendance_since">Giriş %1$s · %2$s</string>
+    <string name="attendance_scan_in_title">Giriş etiketini okutun</string>
+    <string name="attendance_scan_out_title">Çıkış etiketini okutun</string>
+    <string name="attendance_scan_in_body">Telefonun arkasını ofisteki GİRİŞ etiketine yaklaştırın.</string>
+    <string name="attendance_scan_out_body">Telefonun arkasını ofisteki ÇIKIŞ etiketine yaklaştırın.</string>
+    <string name="attendance_outcome_recorded_in">Giriş kaydedildi: %1$s</string>
+    <string name="attendance_outcome_recorded_out">Çıkış kaydedildi: %1$s</string>
+    <string name="attendance_outcome_saved">Sunucuya ulaşılamadı. Kayıt telefonda saklandı, bağlantı gelince otomatik gönderilecek.</string>
+    <string name="attendance_outcome_unreadable">Etiket okunamadı. Telefonu etikete tekrar yaklaştırın.</string>
+    <string name="attendance_nfc_disabled">NFC kapalı. Mesai kaydı için NFC\'yi açın.</string>
+    <string name="attendance_nfc_not_supported">Bu telefonda NFC yok. Mesai kaydı için NFC\'li bir telefon gerekir.</string>
+    <plurals name="attendance_waiting">
+        <item quantity="one">%d mesai kaydı telefonda bekliyor; bağlantı gelince gönderilecek.</item>
+        <item quantity="other">%d mesai kaydı telefonda bekliyor; bağlantı gelince gönderilecek.</item>
+    </plurals>
+    <string name="attendance_failed_title">Kaydedilmedi: %1$s · %2$s</string>
+    <string name="attendance_resend">Tekrar gönder</string>
+    <string name="attendance_remove">Kaldır</string>
+    <string name="attendance_today">Bugün</string>
+    <string name="attendance_today_empty">Bugün henüz kayıt yok.</string>
+    <string name="attendance_punch_line">%1$s %2$s</string>
+    <string name="attendance_direction_in">Giriş</string>
+    <string name="attendance_direction_out">Çıkış</string>
+    <string name="attendance_all_records">Tüm mesai kayıtlarım</string>
+    <string name="attendance_failure_tag_unknown">Bu etiket mesai etiketi olarak kayıtlı değil. Ofisle iletişime geçin.</string>
+    <string name="attendance_failure_wrong_tag_in">Bu bir giriş etiketi değil. Mesai başlatmak için GİRİŞ etiketini okutun.</string>
+    <string name="attendance_failure_wrong_tag_out">Bu bir çıkış etiketi değil. Mesaiyi bitirmek için ÇIKIŞ etiketini okutun.</string>
+    <string name="attendance_failure_time">Kaydın saati sunucu tarafından kabul edilmedi. Ofisle iletişime geçin.</string>
+    <string name="attendance_failure_access">Bu hesap için mesai kaydı açık değil. Ofisle iletişime geçin.</string>
+    <string name="attendance_failure_rejected">Kayıt sunucu tarafından kabul edilmedi.</string>
+
+    <string name="attendance_records_title">Mesai kayıtlarım</string>
+    <string name="attendance_records_empty">Bu ay mesai kaydı yok.</string>
+    <string name="attendance_worked">Çalışılan süre</string>
+    <string name="attendance_day_complete">Tamamlandı</string>
+    <string name="attendance_day_open">Devam ediyor</string>
+    <string name="attendance_day_incomplete">Eksik kayıt</string>
+    <string name="attendance_day_review">İnceleniyor</string>
+    <string name="attendance_day_unknown">Bilinmiyor</string>
+</resources>

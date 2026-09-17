@@ -103,7 +103,7 @@ class DataHarness(
         database, database.pendingActionDao(), database.syncMetaDao(), projector, scheduler, syncEngine, clock,
     )
 
-    suspend fun signIn() = sessionPreferences.setLoggedInDriver(FakeDriverBackend.DEMO_DRIVER.id)
+    suspend fun signIn() = sessionPreferences.setLoggedInUser(FakeDriverBackend.DEMO_DRIVER)
 
     suspend fun trip(id: String): Trip = trips.currentTrips().first { it.id == id }
 

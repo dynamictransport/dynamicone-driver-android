@@ -241,7 +241,7 @@ class OfflineSyncTest {
     @Test
     fun `nothing is sent without a signed in driver and nothing is deleted`() = runTest {
         harness.trips.submitAction(command(TripActionType.ACCEPT_TRIP))
-        harness.sessionPreferences.clearLoggedInDriver(expired = true)
+        harness.sessionPreferences.clearLoggedInUser(expired = true)
 
         assertEquals(SyncRunResult.COMPLETED, harness.syncEngine.sync())
 

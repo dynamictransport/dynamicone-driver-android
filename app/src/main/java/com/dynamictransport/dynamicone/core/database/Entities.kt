@@ -3,11 +3,14 @@ package com.dynamictransport.dynamicone.core.database
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.dynamictransport.dynamicone.domain.model.AttendanceDirection
 import com.dynamictransport.dynamicone.domain.model.BreakState
 import com.dynamictransport.dynamicone.domain.model.DocumentType
+import com.dynamictransport.dynamicone.domain.model.LocalPunchState
 import com.dynamictransport.dynamicone.domain.model.PendingActionState
 import com.dynamictransport.dynamicone.domain.model.PendingActionType
 import com.dynamictransport.dynamicone.domain.model.PendingCommandState
+import com.dynamictransport.dynamicone.domain.model.PunchFailure
 import com.dynamictransport.dynamicone.domain.model.RemoteDocumentStatus
 import com.dynamictransport.dynamicone.domain.model.ShiftStatus
 import com.dynamictransport.dynamicone.domain.model.SyncErrorCode
@@ -163,3 +166,31 @@ data class SyncMetaEntity(
         const val LAST_SUCCESSFUL_SYNC = "last_successful_sync"
     }
 }
+
+/**
+ * Office attendance scans of one account (docs/15_MOBILE_APP_API.md §5.3). Written before sending; the command id is
+ * the idempotency key. Recorded punches are kept for a few days so the phone knows today's state offline.
+ */
+@Entity(
+    tableName = "attendance_punches",
+    indices = [Index(value = ["userId", "state"])],
+)
+data class AttendancePunchEntity(
+    @PrimaryKey val commandId: String,
+    val userId: String,
+    val direction: AttendanceDirection,
+    /** Upper-case hex tag identifier. */
+    val tagUid: String,
+    /** Phone clock at the scan. */
+    val scannedAt: Instant,
+    /** `SystemClock.elapsedRealtime()` at the scan. */
+    val scannedElapsedMillis: Long,
+    /** Boot count at the scan; the elapsed time is only comparable within the same boot. */
+    val bootCount: Int?,
+    val state: LocalPunchState,
+    val failure: PunchFailure?,
+    val occurredAt: Instant?,
+    val pointName: String?,
+    val createdAt: Instant,
+    val updatedAt: Instant,
+)

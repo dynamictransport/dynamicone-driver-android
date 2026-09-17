@@ -6,11 +6,11 @@ import com.dynamictransport.dynamicone.data.remote.RemoteTripSummary
 import com.dynamictransport.dynamicone.data.remote.TripActionRequest
 import com.dynamictransport.dynamicone.domain.model.AuthTokens
 import com.dynamictransport.dynamicone.domain.model.DocumentUploadMetadata
-import com.dynamictransport.dynamicone.domain.model.Driver
 import com.dynamictransport.dynamicone.domain.model.IncidentReport
 import com.dynamictransport.dynamicone.domain.model.RemoteDocument
 import com.dynamictransport.dynamicone.domain.model.Shift
 import com.dynamictransport.dynamicone.domain.model.Trip
+import com.dynamictransport.dynamicone.domain.model.UserProfile
 import java.io.File
 import java.time.Instant
 import javax.inject.Inject
@@ -21,7 +21,7 @@ class FakeDriverRemoteDataSource @Inject constructor(
 
     override suspend fun login(username: String, password: String): AuthTokens = backend.login(username, password)
 
-    override suspend fun getProfile(): Driver = backend.profile()
+    override suspend fun getProfile(): UserProfile = backend.profile()
 
     override suspend fun getCurrentShift(): Shift = backend.currentShift()
 

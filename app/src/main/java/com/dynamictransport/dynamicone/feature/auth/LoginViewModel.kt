@@ -100,7 +100,7 @@ private fun LoginResult.errorRes(codeSent: Boolean): Int? = when (this) {
     LoginResult.SUCCESS -> null
     LoginResult.INVALID_CREDENTIALS -> R.string.login_error_invalid
     LoginResult.TWO_FACTOR_REQUIRED -> if (codeSent) R.string.login_error_two_factor_invalid else R.string.login_two_factor_hint
-    LoginResult.DRIVER_ACCESS_REQUIRED -> R.string.login_error_driver_access
+    LoginResult.APP_ACCESS_REQUIRED -> R.string.login_error_app_access
     LoginResult.RATE_LIMITED -> R.string.login_error_rate_limited
     LoginResult.SERVICE_UNAVAILABLE -> R.string.refresh_service_unavailable
     LoginResult.OFFLINE -> R.string.login_error_offline

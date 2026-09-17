@@ -3,11 +3,11 @@ package com.dynamictransport.dynamicone.testing
 import com.dynamictransport.dynamicone.domain.model.ActionReceipt
 import com.dynamictransport.dynamicone.domain.model.ActionRejection
 import com.dynamictransport.dynamicone.domain.model.ActionResult
+import com.dynamictransport.dynamicone.domain.model.AppModule
 import com.dynamictransport.dynamicone.domain.model.Conversation
 import com.dynamictransport.dynamicone.domain.model.ConversationList
 import com.dynamictransport.dynamicone.domain.model.DocumentContentResult
 import com.dynamictransport.dynamicone.domain.model.DocumentSlot
-import com.dynamictransport.dynamicone.domain.model.Driver
 import com.dynamictransport.dynamicone.domain.model.ExecutionAction
 import com.dynamictransport.dynamicone.domain.model.IncidentCategory
 import com.dynamictransport.dynamicone.domain.model.LoginResult
@@ -24,6 +24,7 @@ import com.dynamictransport.dynamicone.domain.model.Trip
 import com.dynamictransport.dynamicone.domain.model.TripActionRecord
 import com.dynamictransport.dynamicone.domain.model.TripDocument
 import com.dynamictransport.dynamicone.domain.model.TripExecution
+import com.dynamictransport.dynamicone.domain.model.UserProfile
 import com.dynamictransport.dynamicone.domain.repository.AppInfo
 import com.dynamictransport.dynamicone.domain.repository.AuthRepository
 import com.dynamictransport.dynamicone.domain.repository.DocumentMediaStore
@@ -56,7 +57,7 @@ import java.time.YearMonth
 class FakeAuthRepository : AuthRepository {
     override val sessionState = MutableStateFlow<SessionState>(SessionState.LoggedIn("drv-1"))
     override val sessionExpired = MutableStateFlow(false)
-    val driver = MutableStateFlow<Driver?>(Driver("drv-1", "Mehmet Demir", "1027", "tr"))
+    val driver = MutableStateFlow<UserProfile?>(UserProfile("drv-1", "Mehmet Demir", "1027", "tr", setOf(AppModule.DRIVER), "drv-1"))
     var loginResult = LoginResult.SUCCESS
     var loginCalls = 0
     var lastTwoFactorCode: String? = null
@@ -68,7 +69,7 @@ class FakeAuthRepository : AuthRepository {
 
     override suspend fun restoreSession() = Unit
 
-    override fun observeDriver(): Flow<Driver?> = driver
+    override fun observeProfile(): Flow<UserProfile?> = driver
 
     override suspend fun login(username: String, password: String, twoFactorCode: String?): LoginResult {
         loginCalls++

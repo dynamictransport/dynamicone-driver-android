@@ -13,7 +13,6 @@ import com.dynamictransport.dynamicone.domain.model.ActionRejection
 import com.dynamictransport.dynamicone.domain.model.ActionResult
 import com.dynamictransport.dynamicone.domain.model.AuthTokens
 import com.dynamictransport.dynamicone.domain.model.DocumentUploadMetadata
-import com.dynamictransport.dynamicone.domain.model.Driver
 import com.dynamictransport.dynamicone.domain.model.ExecutionActionCode
 import com.dynamictransport.dynamicone.domain.model.IncidentCategory
 import com.dynamictransport.dynamicone.domain.model.IncidentReport
@@ -24,6 +23,7 @@ import com.dynamictransport.dynamicone.domain.model.SyncOverview
 import com.dynamictransport.dynamicone.domain.model.Trip
 import com.dynamictransport.dynamicone.domain.model.TripState
 import com.dynamictransport.dynamicone.domain.model.TripWorkflow
+import com.dynamictransport.dynamicone.domain.model.UserProfile
 import com.dynamictransport.dynamicone.domain.repository.IncidentRepository
 import com.dynamictransport.dynamicone.domain.repository.ShiftRepository
 import com.dynamictransport.dynamicone.domain.repository.SyncRepository
@@ -166,7 +166,7 @@ object UnavailableDriverRemoteDataSource : DriverRemoteDataSource {
     private fun unavailable(): Nothing = throw RemoteException.NotSupported("demo_remote")
 
     override suspend fun login(username: String, password: String): AuthTokens = unavailable()
-    override suspend fun getProfile(): Driver = unavailable()
+    override suspend fun getProfile(): UserProfile = unavailable()
     override suspend fun getCurrentShift(): Shift = unavailable()
     override suspend fun startShift(request: DriverActionRequest): Shift? = unavailable()
     override suspend fun endShift(request: DriverActionRequest): Shift? = unavailable()

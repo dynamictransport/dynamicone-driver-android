@@ -45,8 +45,12 @@ class RealPushRegistrar @Inject constructor(
         bestEffort { api.deleteDevice(sessionPreferences.installationId()).requireSuccess() }
     }
 
-    /** Without a session the call could only fail, and its failed refresh would report an expired session. */
-    private suspend fun canCall(): Boolean = !appInfo.isDemoMode && tokenManager.hasSession()
+    /**
+     * Without a session the call could only fail, and its failed refresh would report an expired session. Devices are
+     * registered for driver accounts only (the push messages belong to the driver module).
+     */
+    private suspend fun canCall(): Boolean =
+        !appInfo.isDemoMode && tokenManager.hasSession() && sessionPreferences.driverId() != null
 
     private suspend fun bestEffort(call: suspend () -> Unit) {
         try {

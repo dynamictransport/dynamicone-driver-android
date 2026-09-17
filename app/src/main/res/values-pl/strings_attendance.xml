@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App shell (modules) -->
+    <string name="nav_attendance">Czas pracy</string>
+    <string name="nav_attendance_records">Moje wpisy</string>
+    <string name="profile_more">Więcej</string>
+
+    <!-- Office attendance (NFC) -->
+    <string name="attendance_title">Czas pracy</string>
+    <string name="attendance_action_start">ROZPOCZNIJ PRACĘ</string>
+    <string name="attendance_action_end">ZAKOŃCZ PRACĘ</string>
+    <string name="attendance_cancel_scan">PRZERWIJ SKANOWANIE</string>
+    <string name="attendance_open_nfc_settings">WŁĄCZ NFC</string>
+    <string name="attendance_state_in">Jesteś w pracy</string>
+    <string name="attendance_state_out">Nie jesteś w pracy</string>
+    <string name="attendance_since">Wejście %1$s · %2$s</string>
+    <string name="attendance_scan_in_title">Zeskanuj tag wejścia</string>
+    <string name="attendance_scan_out_title">Zeskanuj tag wyjścia</string>
+    <string name="attendance_scan_in_body">Przyłóż tył telefonu do tagu WEJŚCIE w biurze.</string>
+    <string name="attendance_scan_out_body">Przyłóż tył telefonu do tagu WYJŚCIE w biurze.</string>
+    <string name="attendance_outcome_recorded_in">Wejście zapisane: %1$s</string>
+    <string name="attendance_outcome_recorded_out">Wyjście zapisane: %1$s</string>
+    <string name="attendance_outcome_saved">Brak połączenia z serwerem. Wpis zapisano w telefonie i zostanie wysłany automatycznie.</string>
+    <string name="attendance_outcome_unreadable">Nie udało się odczytać tagu. Przyłóż telefon do tagu ponownie.</string>
+    <string name="attendance_nfc_disabled">NFC jest wyłączone. Włącz NFC, aby rejestrować czas pracy.</string>
+    <string name="attendance_nfc_not_supported">Ten telefon nie ma NFC. Do rejestracji czasu pracy potrzebny jest telefon z NFC.</string>
+    <plurals name="attendance_waiting">
+        <item quantity="one">%d wpis czasu pracy czeka w telefonie i zostanie wysłany po odzyskaniu połączenia.</item>
+        <item quantity="few">%d wpisy czasu pracy czekają w telefonie i zostaną wysłane po odzyskaniu połączenia.</item>
+        <item quantity="many">%d wpisów czasu pracy czeka w telefonie i zostanie wysłanych po odzyskaniu połączenia.</item>
+        <item quantity="other">%d wpisu czasu pracy czeka w telefonie i zostanie wysłane po odzyskaniu połączenia.</item>
+    </plurals>
+    <string name="attendance_failed_title">Nie zapisano: %1$s · %2$s</string>
+    <string name="attendance_resend">Wyślij ponownie</string>
+    <string name="attendance_remove">Usuń</string>
+    <string name="attendance_today">Dzisiaj</string>
+    <string name="attendance_today_empty">Dzisiaj nie ma jeszcze wpisów.</string>
+    <string name="attendance_punch_line">%1$s %2$s</string>
+    <string name="attendance_direction_in">Wejście</string>
+    <string name="attendance_direction_out">Wyjście</string>
+    <string name="attendance_all_records">Wszystkie moje wpisy czasu pracy</string>
+    <string name="attendance_failure_tag_unknown">Ten tag nie jest zarejestrowany do czasu pracy. Skontaktuj się z biurem.</string>
+    <string name="attendance_failure_wrong_tag_in">To nie jest tag wejścia. Aby rozpocząć pracę, zeskanuj tag WEJŚCIE.</string>
+    <string name="attendance_failure_wrong_tag_out">To nie jest tag wyjścia. Aby zakończyć pracę, zeskanuj tag WYJŚCIE.</string>
+    <string name="attendance_failure_time">Serwer nie zaakceptował czasu tego wpisu. Skontaktuj się z biurem.</string>
+    <string name="attendance_failure_access">Rejestracja czasu pracy nie jest włączona dla tego konta. Skontaktuj się z biurem.</string>
+    <string name="attendance_failure_rejected">Serwer nie zaakceptował tego wpisu.</string>
+
+    <string name="attendance_records_title">Moje wpisy czasu pracy</string>
+    <string name="attendance_records_empty">Brak wpisów czasu pracy w tym miesiącu.</string>
+    <string name="attendance_worked">Czas pracy</string>
+    <string name="attendance_day_complete">Kompletny</string>
+    <string name="attendance_day_open">W toku</string>
+    <string name="attendance_day_incomplete">Brak wpisu</string>
+    <string name="attendance_day_review">Do weryfikacji</string>
+    <string name="attendance_day_unknown">Nieznany</string>
+</resources>

@@ -66,7 +66,7 @@ class HomeViewModel @Inject constructor(
     private val refreshing = MutableStateFlow(false)
 
     private val content = combine(
-        authRepository.observeDriver(),
+        authRepository.observeProfile(),
         shiftRepository.observeShift(),
         tripRepository.observeTrips(),
         syncRepository.observeOverview(),
