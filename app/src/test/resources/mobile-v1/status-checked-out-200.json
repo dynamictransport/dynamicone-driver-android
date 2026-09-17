@@ -1,0 +1,1 @@
+{"state":"CheckedOut","nextAction":"CheckIn","workDate":"2026-09-17","timeZoneId":"Europe/Warsaw","lastPunch":{"id":"92f110e7-3c23-4196-9f8f-c4e9ce2d19e9","commandId":"5dcbca4a-7138-474d-9e08-1e4c9317959c","direction":"Out","occurredAtUtc":"2026-09-16T15:00:00Z","receivedAtUtc":"2026-09-17T14:04:16.8083926Z","workDate":"2026-09-16","source":"MobileNfc","pointName":"Office NFC"}}

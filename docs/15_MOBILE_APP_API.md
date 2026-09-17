@@ -1,8 +1,10 @@
 # 15 — DynamicONE App: Mobile API v1 ve NFC ofis mesaisi (backend sözleşme önerisi)
 
-Durum: **öneri — backend'de henüz yok** (17.09.2026). Android uygulaması bu sözleşmeye göre yazıldı ve
-MockWebServer ile test edildi. Backend (DynamicONE, Codex) bu dokümanı uygularken bir alanı değiştirirse
-uygulama da değişmelidir; tek kaynak, yayına alınan OpenAPI dokümanıdır.
+Durum: **backend'de uygulandı, henüz yayında değil** (17.09.2026). Uygulama: `dynamictransport/DynamicONE` branch
+`feature/mobile-api-nfc-attendance` (commit 2cfb6cb7), migration `20260917130519_MobileNfcAttendance`, kılavuz
+`docs/80_MobileAppApi.md`. Backend'in gerçek HTTP yanıtları Android testlerinde sözleşme testi olarak kullanılır
+(`app/src/test/resources/mobile-v1`). Bir alan değişirse iki taraf birlikte değişir; tek kaynak yayındaki OpenAPI
+(`mobile-v1`) dokümanıdır.
 
 ## 1. Amaç
 
@@ -160,7 +162,9 @@ Hatalar: `403 attendance_access_required`.
 İşleme sırası:
 
 1. **Idempotency:** aynı kullanıcı + `commandId` daha önce işlendiyse ilk sonuç **200** ile aynen döner.
-   Aynı `commandId` farklı gövdeyle gelirse `409 command_conflict`.
+   Kimlik alanları `commandId`, `direction`, `tagUid`, `scannedAtUtc`, `installationId`dir; `elapsedSinceScanMs` her denemede
+   değiştiği için karşılaştırılmaz ve resmi zaman ilk kabul edilen istekteki değerdir. Kimlik alanlarından biri farklıysa
+   `409 command_conflict`.
 2. Erişim: `officeAttendance` yoksa `403 attendance_access_required`.
 3. Etiket: etkin NFC noktası bulunamazsa `400 attendance_tag_unknown`.
 4. Yön: etiketin yönü `direction` ile aynı değilse `400 attendance_tag_direction_mismatch`.

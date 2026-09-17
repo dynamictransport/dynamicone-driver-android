@@ -203,8 +203,14 @@ class RealAuthRepository @Inject constructor(
             if (current.modules != session.modules) state.value = SessionState.LoggedIn(userId, current.modules)
         } catch (e: CancellationException) {
             throw e
-        } catch (_: RemoteException) {
-            // Offline or ended session: session events and the screens report it.
+        } catch (e: RemoteException) {
+            // The Mobile API answers `me` with 403 once an account has no module left: same as an empty module list.
+            // Anything else (offline, ended session) is reported by session events and the screens.
+            if (e is RemoteException.Forbidden && e.problem?.code == MobileErrorCodes.MOBILE_ACCESS_REQUIRED &&
+                (state.value as? SessionState.LoggedIn)?.userId == userId
+            ) {
+                logout()
+            }
         }
     }
 
