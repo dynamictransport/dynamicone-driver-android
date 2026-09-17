@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -96,11 +97,12 @@ fun LoginScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp, vertical = 32.dp),
         ) {
-            // The DynamicONE brand mark is designed for white, so it keeps a white tile in dark mode too.
+            // The DynamicONE brand mark is designed for white, so it keeps a white tile in dark mode too. The mark is wide
+            // (3:2), and so is the tile.
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(72.dp)
+                    .size(width = 104.dp, height = 72.dp)
                     .background(Color.White, RoundedCornerShape(18.dp))
                     .padding(12.dp)
                     .testTag("app_logo"),
@@ -197,16 +199,28 @@ fun LoginScreen(
                 loading = state.submitting,
                 modifier = Modifier.testTag(PRIMARY_ACTION_TAG),
             )
-            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                TextButton(onClick = { showLanguagePicker = true }, modifier = Modifier.heightIn(min = 48.dp)) {
+            // On narrow phones (360 dp) both links do not fit side by side: the second one moves to the next line
+            // instead of squeezing its label into one letter per line.
+            FlowRow(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                TextButton(
+                    onClick = { showLanguagePicker = true },
+                    modifier = Modifier
+                        .heightIn(min = 48.dp)
+                        .testTag("login_language"),
+                ) {
                     Icon(Icons.Filled.Language, contentDescription = null)
                     Spacer(Modifier.width(6.dp))
-                    Text(stringResource(R.string.login_language))
+                    Text(stringResource(R.string.login_language), maxLines = 1)
                 }
-                TextButton(onClick = { showSupport = true }, modifier = Modifier.heightIn(min = 48.dp)) {
+                TextButton(
+                    onClick = { showSupport = true },
+                    modifier = Modifier
+                        .heightIn(min = 48.dp)
+                        .testTag("login_support"),
+                ) {
                     Icon(Icons.Filled.SupportAgent, contentDescription = null)
                     Spacer(Modifier.width(6.dp))
-                    Text(stringResource(R.string.login_support))
+                    Text(stringResource(R.string.login_support), maxLines = 1)
                 }
             }
         }

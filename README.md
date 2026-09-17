@@ -194,6 +194,14 @@ UI (Compose) → ViewModel → UseCase (gerektiğinde) → Repository (domain ar
 - `data/real/RealAttendanceRepository` + `core/nfc` — NFC etiketi okuma (reader mode), `attendance_punches` tablosu, `AttendanceSyncWorker` ile idempotent otomatik gönderim; kural: `domain/rules/AttendanceRules`.
 - Kararlar ve API boşlukları: `ASSUMPTIONS.md` (R1–R15, O1–O16, M1–M12), `docs/12_API_CONTRACT_GAPS.md`, `docs/15_MOBILE_APP_API.md`.
 
+### Logo ve uygulama ikonu
+
+Kaynak: `branding/dynamicone-mark.png` (şeffaf DynamicONE işareti, 572×384). Uygulama ikonu (uyarlanabilir ön katman ve Android 13 tek renkli katmanı), açılış ekranı ikonu ve giriş ekranındaki logo bu dosyadan üretilir; logo değişince dosyayı değiştirip şunu çalıştırın:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\Generate-AppIcons.ps1
+```
+
 ### Sorun giderme
 
 - `java.io.IOException: Unable to establish loopback connection`: JDK 16+ Windows'ta NIO pipe için geçici dizinde AF_UNIX soket açar. Geçici dizine erişim kısıtlıysa kısa ve yazılabilir bir dizin verin: `set JAVA_TOOL_OPTIONS=-Djdk.net.unixdomain.tmpdir=C:\Temp` (dizin mevcut olmalı).
