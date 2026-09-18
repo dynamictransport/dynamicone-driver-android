@@ -266,6 +266,8 @@ class SessionPreferences @Inject constructor(
     /** Driver API identity of the signed-in account; null without the driver module. Driver commands are bound to it. */
     suspend fun driverId(): String? = dataStore.data.first()[DRIVER_ID]
 
+    val driverIdChanges: Flow<String?> = dataStore.data.map { it[DRIVER_ID] }.distinctUntilChanged()
+
     suspend fun lastDriverId(): String? = dataStore.data.first()[LAST_DRIVER_ID]
 
     suspend fun modules(): Set<AppModule> = AppModule.fromWire(dataStore.data.first()[MODULES])

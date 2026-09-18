@@ -70,7 +70,9 @@ import com.dynamictransport.dynamicone.feature.payroll.PayrollRoute
 import com.dynamictransport.dynamicone.feature.personnel.SignedDocumentsRoute
 import com.dynamictransport.dynamicone.feature.profile.ProfileLink
 import com.dynamictransport.dynamicone.feature.profile.ProfileRoute
+import com.dynamictransport.dynamicone.feature.restalarm.RestAlarmSettingsRoute
 import com.dynamictransport.dynamicone.feature.shift.ShiftRoute
+import com.dynamictransport.dynamicone.feature.shiftstart.StartShiftRoute
 import com.dynamictransport.dynamicone.feature.tripdetail.RejectTripRoute
 import com.dynamictransport.dynamicone.feature.tripdetail.TripDetailRoute
 import com.dynamictransport.dynamicone.feature.trips.TripsRoute
@@ -104,6 +106,14 @@ data object AttendanceRecordsDestination
 
 @Serializable
 data object ShiftDestination
+
+/** Daily shift start at the vehicle: tag and daily check (docs/16). */
+@Serializable
+data object StartShiftDestination
+
+/** The wake-up alarm's settings. */
+@Serializable
+data object RestAlarmSettingsDestination
 
 @Serializable
 data object PayrollDestination
@@ -251,6 +261,8 @@ private fun MainNavigation(modules: Set<AppModule>) {
                     onOpenEarnings = { navController.navigate(PayrollDestination) },
                     onReportIncident = { navController.navigate(ReportIncidentDestination(it)) },
                     onOpenShift = { navController.navigate(ShiftDestination) },
+                    onStartShift = { navController.navigate(StartShiftDestination) { launchSingleTop = true } },
+                    onOpenRestAlarmSettings = { navController.navigate(RestAlarmSettingsDestination) },
                 )
             }
             composable<TripsDestination> {
@@ -279,10 +291,21 @@ private fun MainNavigation(modules: Set<AppModule>) {
                     onOpenPayroll = { navController.navigate(PayrollDestination) },
                     onOpenSignedDocuments = { navController.navigate(SignedDocumentsDestination) },
                     onOpenChangePassword = { navController.navigate(ChangePasswordDestination) },
+                    onOpenRestAlarm = { navController.navigate(RestAlarmSettingsDestination) },
                 )
             }
             composable<ShiftDestination> {
-                ShiftRoute(onBack = { navController.popBackStack() })
+                ShiftRoute(
+                    onBack = { navController.popBackStack() },
+                    onStartDailyShift = { navController.navigate(StartShiftDestination) { launchSingleTop = true } },
+                    onOpenRestAlarmSettings = { navController.navigate(RestAlarmSettingsDestination) },
+                )
+            }
+            composable<StartShiftDestination> {
+                StartShiftRoute(onClose = { navController.popBackStack() })
+            }
+            composable<RestAlarmSettingsDestination> {
+                RestAlarmSettingsRoute(onBack = { navController.popBackStack() })
             }
             composable<PayrollDestination> {
                 PayrollRoute(onBack = { navController.popBackStack() })
@@ -300,6 +323,7 @@ private fun MainNavigation(modules: Set<AppModule>) {
                     onOpenMessages = { navController.navigate(TripMessagesDestination(it)) },
                     onReject = { navController.navigate(RejectTripDestination(it)) },
                     onReportIncident = { navController.navigate(ReportIncidentDestination(it)) },
+                    onStartShift = { navController.navigate(StartShiftDestination) { launchSingleTop = true } },
                 )
             }
             composable<TripDocumentsDestination> { entry ->
@@ -349,6 +373,7 @@ private fun DriverNotificationEffects(
     routingViewModel: NotificationRoutingViewModel = hiltViewModel(),
 ) {
     val openRequest by routingViewModel.openRequest.collectAsStateWithLifecycle()
+    val startShiftRequest by routingViewModel.startShiftRequest.collectAsStateWithLifecycle()
 
     // A tapped message notification opens its conversation (also when it was tapped before signing in).
     LaunchedEffect(openRequest) {
@@ -356,6 +381,13 @@ private fun DriverNotificationEffects(
         val tripId = request.tripId
         if (tripId == null) navController.navigate(GeneralMessagesDestination) else navController.navigate(TripMessagesDestination(tripId))
         routingViewModel.onOpenRequestHandled()
+    }
+
+    // The wake-up alarm opens the daily shift start.
+    LaunchedEffect(startShiftRequest) {
+        if (!startShiftRequest) return@LaunchedEffect
+        navController.navigate(StartShiftDestination) { launchSingleTop = true }
+        routingViewModel.onStartShiftRequestHandled()
     }
 
     // Android 13+: new messages can only be announced once the driver allows notifications.

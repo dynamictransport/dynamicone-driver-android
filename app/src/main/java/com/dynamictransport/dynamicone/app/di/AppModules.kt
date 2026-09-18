@@ -7,6 +7,15 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.room.Room
 import com.dynamictransport.dynamicone.BuildConfig
+import com.dynamictransport.dynamicone.core.alarm.AndroidRestAlarmNotifier
+import com.dynamictransport.dynamicone.core.alarm.AndroidRestAlarmPermissions
+import com.dynamictransport.dynamicone.core.alarm.AndroidRestAlarmScheduler
+import com.dynamictransport.dynamicone.core.alarm.ApiDriverDaySync
+import com.dynamictransport.dynamicone.core.alarm.DataStoreRestAlarmSettings
+import com.dynamictransport.dynamicone.core.alarm.RestAlarmDataStore
+import com.dynamictransport.dynamicone.core.alarm.RestAlarmNotifier
+import com.dynamictransport.dynamicone.core.alarm.RestAlarmPermissions
+import com.dynamictransport.dynamicone.core.alarm.RestAlarmScheduler
 import com.dynamictransport.dynamicone.core.common.AndroidAppLogger
 import com.dynamictransport.dynamicone.core.common.AndroidDeviceUptime
 import com.dynamictransport.dynamicone.core.common.AppDirectories
@@ -20,10 +29,13 @@ import com.dynamictransport.dynamicone.core.common.IoDispatcher
 import com.dynamictransport.dynamicone.core.common.UuidIdGenerator
 import com.dynamictransport.dynamicone.core.database.AppDatabase
 import com.dynamictransport.dynamicone.core.database.AttendancePunchDao
+import com.dynamictransport.dynamicone.core.database.CheckPhotoDao
 import com.dynamictransport.dynamicone.core.database.DocumentDao
+import com.dynamictransport.dynamicone.core.database.DriverCacheDao
 import com.dynamictransport.dynamicone.core.database.DriverProfileDao
 import com.dynamictransport.dynamicone.core.database.PendingActionDao
 import com.dynamictransport.dynamicone.core.database.PendingCommandDao
+import com.dynamictransport.dynamicone.core.database.ShiftCommandDao
 import com.dynamictransport.dynamicone.core.database.ShiftDao
 import com.dynamictransport.dynamicone.core.database.SyncMetaDao
 import com.dynamictransport.dynamicone.core.database.TripDao
@@ -46,21 +58,36 @@ import com.dynamictransport.dynamicone.core.security.TokenDataStore
 import com.dynamictransport.dynamicone.core.security.TokenManager
 import com.dynamictransport.dynamicone.core.security.TokenStore
 import com.dynamictransport.dynamicone.core.sync.AttendanceSyncScheduler
+import com.dynamictransport.dynamicone.core.sync.DriverDaySync
+import com.dynamictransport.dynamicone.core.sync.DriverDayWorkScheduler
+import com.dynamictransport.dynamicone.core.sync.NoOpDriverDaySync
+import com.dynamictransport.dynamicone.core.sync.ShiftSyncScheduler
 import com.dynamictransport.dynamicone.core.sync.SyncRunner
 import com.dynamictransport.dynamicone.core.sync.SyncScheduler
 import com.dynamictransport.dynamicone.core.sync.WorkManagerAttendanceSyncScheduler
+import com.dynamictransport.dynamicone.core.sync.WorkManagerDriverDayWorkScheduler
+import com.dynamictransport.dynamicone.core.sync.WorkManagerShiftSyncScheduler
 import com.dynamictransport.dynamicone.core.sync.WorkManagerSyncScheduler
 import com.dynamictransport.dynamicone.data.demo.AppNetworkMonitor
 import com.dynamictransport.dynamicone.data.demo.FakeDemoBackendControls
 import com.dynamictransport.dynamicone.data.demo.UnavailableAttendanceRepository
+import com.dynamictransport.dynamicone.data.demo.UnavailableDailyShiftRepository
 import com.dynamictransport.dynamicone.data.demo.UnavailableDemoBackendControls
+import com.dynamictransport.dynamicone.data.demo.UnavailableDriverTimesRepository
 import com.dynamictransport.dynamicone.data.demo.UnavailableMessageRepository
 import com.dynamictransport.dynamicone.data.demo.UnavailablePayrollRepository
 import com.dynamictransport.dynamicone.data.demo.UnavailableSignedDocumentRepository
 import com.dynamictransport.dynamicone.data.demo.UnavailableTripExecutionRepository
+import com.dynamictransport.dynamicone.data.demo.UnavailableVehicleCheckRepository
 import com.dynamictransport.dynamicone.data.media.BitmapDocumentScanner
+import com.dynamictransport.dynamicone.data.media.FileCheckPhotoStore
 import com.dynamictransport.dynamicone.data.media.FileDocumentMediaStore
 import com.dynamictransport.dynamicone.data.real.AccountRemote
+import com.dynamictransport.dynamicone.data.real.ApiDriverDaySessionData
+import com.dynamictransport.dynamicone.data.real.ApiDriverTimesRepository
+import com.dynamictransport.dynamicone.data.real.ApiShiftRepository
+import com.dynamictransport.dynamicone.data.real.ApiVehicleCheckRepository
+import com.dynamictransport.dynamicone.data.real.DriverDaySessionData
 import com.dynamictransport.dynamicone.data.real.DriverAccountRemote
 import com.dynamictransport.dynamicone.data.real.MobileAccountRemote
 import com.dynamictransport.dynamicone.data.real.NoOpSyncRunner
@@ -91,19 +118,24 @@ import com.dynamictransport.dynamicone.data.sync.SyncEngine
 import com.dynamictransport.dynamicone.domain.repository.AppInfo
 import com.dynamictransport.dynamicone.domain.repository.AttendanceRepository
 import com.dynamictransport.dynamicone.domain.repository.AuthRepository
+import com.dynamictransport.dynamicone.domain.repository.CheckPhotoStore
+import com.dynamictransport.dynamicone.domain.repository.DailyShiftRepository
 import com.dynamictransport.dynamicone.domain.repository.DemoBackendControls
 import com.dynamictransport.dynamicone.domain.repository.DocumentMediaStore
 import com.dynamictransport.dynamicone.domain.repository.DocumentRepository
 import com.dynamictransport.dynamicone.domain.repository.DocumentScanner
+import com.dynamictransport.dynamicone.domain.repository.DriverTimesRepository
 import com.dynamictransport.dynamicone.domain.repository.IncidentRepository
 import com.dynamictransport.dynamicone.domain.repository.MessageRepository
 import com.dynamictransport.dynamicone.domain.repository.NetworkMonitor
 import com.dynamictransport.dynamicone.domain.repository.PayrollRepository
+import com.dynamictransport.dynamicone.domain.repository.RestAlarmSettingsRepository
 import com.dynamictransport.dynamicone.domain.repository.ShiftRepository
 import com.dynamictransport.dynamicone.domain.repository.SignedDocumentRepository
 import com.dynamictransport.dynamicone.domain.repository.SyncRepository
 import com.dynamictransport.dynamicone.domain.repository.TripExecutionRepository
 import com.dynamictransport.dynamicone.domain.repository.TripRepository
+import com.dynamictransport.dynamicone.domain.repository.VehicleCheckRepository
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -127,6 +159,9 @@ import javax.inject.Singleton
 
 /** Demo data is reachable only in debug builds that select it explicitly; release always uses the real API. */
 private fun isDemoMode(): Boolean = BackendModeResolver.current == BackendMode.DEMO
+
+/** Driver API daily shift (docs/16): real backend and `app.driverShift=true` only; the demo keeps its simple shift. */
+private fun isDriverShift(): Boolean = BuildConfig.DRIVER_SHIFT_ENABLED && !isDemoMode()
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -167,6 +202,7 @@ object AppModule {
         override val isDemoMode: Boolean = isDemoMode()
         override val versionName: String = BuildConfig.VERSION_NAME
         override val isPushConfigured: Boolean = BuildConfig.PUSH_CONFIGURED
+        override val isDriverShiftEnabled: Boolean = isDriverShift()
     }
 }
 
@@ -202,6 +238,15 @@ object DatabaseModule {
 
     @Provides
     fun provideAttendancePunchDao(database: AppDatabase): AttendancePunchDao = database.attendancePunchDao()
+
+    @Provides
+    fun provideShiftCommandDao(database: AppDatabase): ShiftCommandDao = database.shiftCommandDao()
+
+    @Provides
+    fun provideCheckPhotoDao(database: AppDatabase): CheckPhotoDao = database.checkPhotoDao()
+
+    @Provides
+    fun provideDriverCacheDao(database: AppDatabase): DriverCacheDao = database.driverCacheDao()
 }
 
 @Module
@@ -228,6 +273,13 @@ object SecurityModule {
     @Singleton
     fun provideTokenStore(@TokenDataStore dataStore: DataStore<Preferences>, cryptoBox: CryptoBox): TokenStore =
         EncryptedTokenStore(dataStore, cryptoBox)
+
+    /** The wake-up alarm's settings; no secrets (docs/16). */
+    @Provides
+    @Singleton
+    @RestAlarmDataStore
+    fun provideRestAlarmDataStore(@ApplicationContext context: Context): DataStore<Preferences> =
+        PreferenceDataStoreFactory.create(produceFile = { context.preferencesDataStoreFile("rest_alarm") })
 }
 
 @Qualifier
@@ -324,8 +376,34 @@ object RepositoryModule {
         if (isDemoMode()) demo.get() else real.get()
 
     @Provides
-    fun provideShiftRepository(demo: Provider<OfflineFirstShiftRepository>, real: Provider<RealShiftRepository>): ShiftRepository =
-        if (isDemoMode()) demo.get() else real.get()
+    fun provideShiftRepository(
+        demo: Provider<OfflineFirstShiftRepository>,
+        real: Provider<RealShiftRepository>,
+        daily: Provider<ApiShiftRepository>,
+    ): ShiftRepository = when {
+        isDemoMode() -> demo.get()
+        isDriverShift() -> daily.get()
+        else -> real.get()
+    }
+
+    @Provides
+    fun provideDailyShiftRepository(daily: Provider<ApiShiftRepository>): DailyShiftRepository =
+        if (isDriverShift()) daily.get() else UnavailableDailyShiftRepository
+
+    @Provides
+    fun provideVehicleCheckRepository(real: Provider<ApiVehicleCheckRepository>): VehicleCheckRepository =
+        if (isDriverShift()) real.get() else UnavailableVehicleCheckRepository
+
+    @Provides
+    fun provideDriverTimesRepository(real: Provider<ApiDriverTimesRepository>): DriverTimesRepository =
+        if (isDriverShift()) real.get() else UnavailableDriverTimesRepository
+
+    @Provides
+    fun provideDriverDaySync(real: Provider<ApiDriverDaySync>): DriverDaySync = if (isDriverShift()) real.get() else NoOpDriverDaySync
+
+    @Provides
+    fun provideDriverDaySessionData(real: Provider<ApiDriverDaySessionData>): DriverDaySessionData =
+        if (isDriverShift()) real.get() else DriverDaySessionData.None
 
     @Provides
     fun provideTripRepository(demo: Provider<OfflineFirstTripRepository>, real: Provider<RealTripRepository>): TripRepository =
@@ -408,4 +486,25 @@ abstract class BindingsModule {
 
     @Binds
     abstract fun bindNfcStatusProvider(impl: AndroidNfcStatusProvider): NfcStatusProvider
+
+    @Binds
+    abstract fun bindCheckPhotoStore(impl: FileCheckPhotoStore): CheckPhotoStore
+
+    @Binds
+    abstract fun bindShiftSyncScheduler(impl: WorkManagerShiftSyncScheduler): ShiftSyncScheduler
+
+    @Binds
+    abstract fun bindDriverDayWorkScheduler(impl: WorkManagerDriverDayWorkScheduler): DriverDayWorkScheduler
+
+    @Binds
+    abstract fun bindRestAlarmScheduler(impl: AndroidRestAlarmScheduler): RestAlarmScheduler
+
+    @Binds
+    abstract fun bindRestAlarmNotifier(impl: AndroidRestAlarmNotifier): RestAlarmNotifier
+
+    @Binds
+    abstract fun bindRestAlarmPermissions(impl: AndroidRestAlarmPermissions): RestAlarmPermissions
+
+    @Binds
+    abstract fun bindRestAlarmSettings(impl: DataStoreRestAlarmSettings): RestAlarmSettingsRepository
 }

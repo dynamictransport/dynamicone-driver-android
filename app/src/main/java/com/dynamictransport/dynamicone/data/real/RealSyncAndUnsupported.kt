@@ -3,6 +3,8 @@ package com.dynamictransport.dynamicone.data.real
 import com.dynamictransport.dynamicone.core.common.ApplicationScope
 import com.dynamictransport.dynamicone.core.network.DriverStatusNames
 import com.dynamictransport.dynamicone.core.network.RemoteException
+import com.dynamictransport.dynamicone.core.sync.DriverDaySync
+import com.dynamictransport.dynamicone.core.sync.NoOpDriverDaySync
 import com.dynamictransport.dynamicone.core.sync.SyncRunResult
 import com.dynamictransport.dynamicone.core.sync.SyncRunner
 import com.dynamictransport.dynamicone.data.remote.DriverActionRequest
@@ -51,6 +53,7 @@ class RealSyncRepository @Inject constructor(
     private val tracker: ApiActivityTracker,
     private val commands: PendingCommandStore,
     @param:ApplicationScope private val appScope: CoroutineScope,
+    private val driverDaySync: DriverDaySync = NoOpDriverDaySync,
 ) : SyncRepository {
 
     private val lastRefresh = MutableStateFlow<RefreshResult?>(null)
@@ -83,6 +86,8 @@ class RealSyncRepository @Inject constructor(
             // Conversation list and unread counts; a failed read leaves the trip result unchanged.
             messages.refreshConversations()
         }
+        // Daily shift and tachograph summary (docs/16); its own endpoints, so it does not change the trip result.
+        driverDaySync.refresh()
         lastRefresh.value = result
         result
     }

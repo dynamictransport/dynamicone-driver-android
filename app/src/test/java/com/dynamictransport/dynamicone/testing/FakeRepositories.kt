@@ -233,6 +233,7 @@ class FakeNetworkMonitor(initiallyOnline: Boolean = true) : NetworkMonitor {
 class FakeAppInfo(
     override val isDemoMode: Boolean = false,
     override val versionName: String = "0.1.0-test",
+    override val isDriverShiftEnabled: Boolean = false,
 ) : AppInfo
 
 class FakeIncidentRepository : IncidentRepository {

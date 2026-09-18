@@ -116,6 +116,7 @@ fun TripDetailRoute(
     onOpenMessages: (String) -> Unit,
     onReject: (String) -> Unit,
     onReportIncident: (String) -> Unit,
+    onStartShift: () -> Unit = {},
     viewModel: TripDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -123,7 +124,10 @@ fun TripDetailRoute(
     TripDetailScreen(
         state = state,
         onBack = onBack,
-        onPrimaryAction = viewModel::onPrimaryAction,
+        onPrimaryAction = { action ->
+            // A daily shift starts at the vehicle: tag and check (docs/16).
+            if (action == PrimaryAction.StartShift && state.shiftStartsAtVehicle) onStartShift() else viewModel.onPrimaryAction(action)
+        },
         onSecondaryAction = { action ->
             when (action) {
                 TripActionType.REJECT_TRIP -> state.trip?.let { onReject(it.id) }
@@ -179,9 +183,10 @@ fun TripDetailScreen(
         bottomBar = {
             if (trip != null && !trip.state.isTerminal) {
                 ActionBar {
-                    if (state.usesServerActions) {
+                    if (state.usesServerActions && !state.shiftStartRequired) {
                         ExecutionActions(state, trip, onExecutionAction, onResendPending, onDiscardPending, onRetry)
                     } else {
+                        if (state.shiftStartRequired) CenteredHint(stringResource(R.string.trip_shift_start_first), Modifier.testTag("trip_shift_start_first"))
                         TripActions(state, onPrimaryAction, onSecondaryAction)
                     }
                 }

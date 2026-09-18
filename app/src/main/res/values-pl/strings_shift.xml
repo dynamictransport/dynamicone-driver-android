@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Wake-up alarm (docs/16) -->
+    <string name="rest_alarm_channel_alarm">Budzik</string>
+    <string name="rest_alarm_channel_alarm_description">Dzwoni dźwiękiem alarmu, gdy kończy się Twój odpoczynek dzienny.</string>
+    <string name="rest_alarm_channel_reminder">Przypomnienia o odpoczynku</string>
+    <string name="rest_alarm_channel_reminder_description">Powiadomienie, gdy kończy się Twój odpoczynek dzienny.</string>
+    <string name="rest_alarm_title">Odpoczynek zakończony</string>
+    <string name="rest_alarm_title_soon">Odpoczynek wkrótce się kończy</string>
+    <string name="rest_alarm_body_before">Twój odpoczynek dzienny kończy się o %1$s. Przygotuj się do rozpoczęcia zmiany.</string>
+    <string name="rest_alarm_body_ended">Twój odpoczynek dzienny zakończył się o %1$s. Możesz rozpocząć zmianę.</string>
+    <string name="rest_alarm_test_title">Alarm testowy</string>
+    <string name="rest_alarm_test_body">Tak brzmi budzik.</string>
+    <string name="rest_alarm_start_shift">ROZPOCZNIJ ZMIANĘ</string>
+    <string name="rest_alarm_snooze">Drzemka 10 min</string>
+    <string name="rest_alarm_stop">Wyłącz alarm</string>
+
+    <!-- Wake-up alarm settings -->
+    <string name="rest_alarm_settings_title">Budzik odpoczynku</string>
+    <string name="rest_alarm_settings_intro">Aplikacja budzi Cię, gdy według tachografu kończy się odpoczynek dzienny. Alarm jest ustawiony na tym telefonie i dzwoni także bez internetu.</string>
+    <string name="rest_alarm_settings_mode">Jak ma Cię obudzić?</string>
+    <string name="rest_alarm_mode_alarm">Dźwięk alarmu (pełny ekran)</string>
+    <string name="rest_alarm_mode_notification">Tylko powiadomienie</string>
+    <string name="rest_alarm_settings_when">Kiedy?</string>
+    <string name="rest_alarm_lead_at_end">Na koniec odpoczynku</string>
+    <string name="rest_alarm_lead_before">%1$d min przed końcem</string>
+    <string name="rest_alarm_settings_permissions">Ustawienia telefonu</string>
+    <string name="rest_alarm_permission_notifications">Powiadomienia</string>
+    <string name="rest_alarm_permission_exact">Alarmy i przypomnienia (punktualnie)</string>
+    <string name="rest_alarm_permission_full_screen">Pełny ekran na ekranie blokady</string>
+    <string name="rest_alarm_permission_on">Włączone</string>
+    <string name="rest_alarm_permission_off">Wyłączone – alarm może się spóźnić lub być cichy</string>
+    <string name="rest_alarm_permission_open">WŁĄCZ</string>
+    <string name="rest_alarm_settings_dnd">Tryb Nie przeszkadzać może wyciszyć alarm. Zezwól na alarmy w ustawieniach trybu Nie przeszkadzać.</string>
+    <string name="rest_alarm_try">Wypróbuj alarm</string>
+
+    <!-- Tachograph card -->
+    <string name="driver_day_title">Tachograf</string>
+    <string name="driver_day_rest">Odpoczynek dzienny</string>
+    <string name="driver_day_rest_over">Odpoczynek zakończony</string>
+    <string name="driver_day_rest_ends_at">Koniec o %1$s</string>
+    <string name="driver_day_rest_ended_at">Zakończony o %1$s</string>
+    <string name="driver_day_rest_left">Pozostało %1$s</string>
+    <string name="driver_day_rest_over_body">Możesz rozpocząć zmianę.</string>
+    <string name="driver_day_alarm_at">Alarm o %1$s</string>
+    <string name="driver_day_alarm_snoozed">Drzemka do %1$s</string>
+    <string name="driver_day_alarm_off_for_rest">Wyłącz</string>
+    <string name="driver_day_alarm_dismissed">Alarm wyłączony dla tego odpoczynku</string>
+    <string name="driver_day_alarm_on_again">Włącz</string>
+    <string name="driver_day_alarm_no_notifications">Powiadomienia są wyłączone: alarm nie może zadzwonić.</string>
+    <string name="driver_day_alarm_inexact">„Alarmy i przypomnienia” są wyłączone: alarm może spóźnić się o kilka minut.</string>
+    <string name="driver_day_alarm_settings">Ustawienia</string>
+    <string name="driver_day_driving_left">Pozostała jazda dziś: %1$s</string>
+    <string name="driver_day_driving_exceeded">Czas jazdy przekroczony o %1$s</string>
+    <string name="driver_day_break_due">Następna przerwa najpóźniej o %1$s</string>
+    <string name="driver_day_break_due_with">Następna przerwa najpóźniej o %1$s (%2$s)</string>
+    <string name="driver_day_shift_latest_end">Zmiana musi się skończyć najpóźniej o %1$s</string>
+    <string name="driver_day_infringement">Tachograf wykazuje naruszenie.</string>
+    <string name="driver_day_as_of">Dane tachografu %1$s · orientacyjnie</string>
+    <string name="driver_day_as_of_stale">Ostatnie znane dane tachografu: %1$s · orientacyjnie</string>
+    <string name="driver_day_indicative">Wartości orientacyjne; rozstrzyga tachograf.</string>
+    <string name="driver_day_not_linked">Brak danych tachografu: Twoja karta kierowcy nie jest powiązana w Webfleet, więc budzik nie może zostać ustawiony. Skontaktuj się z biurem.</string>
+    <string name="driver_day_no_data">Brak jeszcze danych tachografu. Budzik zostanie ustawiony, gdy dane dotrą.</string>
+
+    <!-- Daily shift start: vehicle tag and daily check -->
+    <string name="start_shift_title">Rozpocznij zmianę</string>
+    <string name="check_title">Codzienna kontrola pojazdu</string>
+    <string name="start_shift_cancel">Anuluj</string>
+    <string name="start_shift_rest_title">Odpoczynek jeszcze się nie skończył</string>
+    <string name="start_shift_rest_body">Według tachografu Twój odpoczynek dzienny kończy się o %1$s (pozostało %2$s).</string>
+    <string name="start_shift_rest_note">Jeśli zaczniesz teraz, biuro zobaczy, że zmiana zaczęła się przed końcem odpoczynku.</string>
+    <string name="start_shift_rest_confirm">ZACZNIJ MIMO TO</string>
+    <string name="start_shift_rest_wait">Poczekaj</string>
+    <string name="start_shift_scan_title">Zeskanuj tag pojazdu</string>
+    <string name="start_shift_scan_body">Podejdź do ciężarówki i przyłóż tył telefonu do tagu DynamicONE na pojeździe.</string>
+    <string name="start_shift_tag_help">Tag się nie odczytuje? Skontaktuj się z biurem.</string>
+    <string name="start_shift_use_planned">Tag się nie odczytuje: użyj %1$s</string>
+    <string name="start_shift_tag_unknown">Ten tag nie jest przypisany do pojazdu. Zeskanuj tag swojej ciężarówki lub skontaktuj się z biurem.</string>
+    <string name="start_shift_nfc_disabled">NFC jest wyłączone. Włącz NFC, aby zeskanować tag pojazdu.</string>
+    <string name="start_shift_nfc_not_supported">Ten telefon nie ma NFC, więc tagu pojazdu nie da się zeskanować.</string>
+    <string name="start_shift_tag_read">Tag odczytany</string>
+    <string name="start_shift_vehicle_verified">Pojazd rozpoznany.</string>
+    <string name="start_shift_vehicle_unverified">Brak połączenia: pojazd zostanie sprawdzony przy wysłaniu zmiany.</string>
+    <string name="start_shift_vehicle_manual">Tag nie został zeskanowany: biuro sprawdzi pojazd.</string>
+    <string name="start_shift_trailer">Naczepa: %1$s</string>
+    <string name="start_shift_other_vehicle">To nie jest Twój zaplanowany pojazd (%1$s). Planista to zobaczy.</string>
+    <string name="start_shift_begin_check">ROZPOCZNIJ KONTROLĘ</string>
+    <string name="start_shift_rescan">Zeskanuj inny tag</string>
+    <string name="check_progress">Punkt %1$d z %2$d</string>
+    <string name="check_ok">OK</string>
+    <string name="check_defect">PROBLEM</string>
+    <string name="check_not_applicable">NIE DOTYCZY</string>
+    <string name="check_answer_ok">OK</string>
+    <string name="check_answer_defect">Problem</string>
+    <string name="check_answer_not_applicable">Nie dotyczy</string>
+    <string name="check_defect_photo_required">Zrób zdjęcie problemu</string>
+    <string name="check_defect_photo_optional">Zdjęcie problemu (opcjonalnie)</string>
+    <string name="check_take_photo">Zrób zdjęcie</string>
+    <string name="check_photo_remove">Usuń zdjęcie</string>
+    <string name="check_note_optional">Krótka notatka (opcjonalnie)</string>
+    <string name="check_defect_done">DALEJ</string>
+    <string name="check_no_defect_after_all">Jednak bez problemu</string>
+    <string name="check_photo_required">Najpierw zrób zdjęcie problemu.</string>
+    <string name="check_photo_failed">Nie udało się zapisać zdjęcia. Zrób je ponownie.</string>
+    <string name="check_camera_unavailable">Na tym telefonie nie znaleziono aplikacji aparatu.</string>
+    <string name="check_camera_permission">Do zdjęcia potrzebne jest uprawnienie do aparatu.</string>
+    <plurals name="check_summary_items">
+        <item quantity="one">Sprawdzono %d punkt</item>
+        <item quantity="few">Sprawdzono %d punkty</item>
+        <item quantity="many">Sprawdzono %d punktów</item>
+        <item quantity="other">Sprawdzono %d punktu</item>
+    </plurals>
+    <string name="check_summary_no_defects">Brak problemów</string>
+    <plurals name="check_summary_defects">
+        <item quantity="one">Zgłoszono %d problem</item>
+        <item quantity="few">Zgłoszono %d problemy</item>
+        <item quantity="many">Zgłoszono %d problemów</item>
+        <item quantity="other">Zgłoszono %d problemu</item>
+    </plurals>
+    <plurals name="check_summary_not_applicable">
+        <item quantity="one">%d punkt nie dotyczy</item>
+        <item quantity="few">%d punkty nie dotyczą</item>
+        <item quantity="many">%d punktów nie dotyczy</item>
+        <item quantity="other">%d punktu nie dotyczy</item>
+    </plurals>
+    <plurals name="check_photo_count">
+        <item quantity="one">%d zdjęcie</item>
+        <item quantity="few">%d zdjęcia</item>
+        <item quantity="many">%d zdjęć</item>
+        <item quantity="other">%d zdjęcia</item>
+    </plurals>
+    <string name="check_edit">Zmień</string>
+    <string name="check_summary_defects_note">Problemy nie blokują zmiany: biuro otrzyma je ze zdjęciami i zdecyduje o pojeździe.</string>
+    <string name="start_shift_summary_rest">Rozpoczęto przed końcem odpoczynku</string>
+    <string name="start_shift_submit">WYŚLIJ KONTROLĘ I ROZPOCZNIJ ZMIANĘ</string>
+    <string name="start_shift_start_over">ZACZNIJ OD NOWA</string>
+    <string name="start_shift_recorded">Zmiana rozpoczęta</string>
+    <string name="start_shift_saved">Zapisano na tym telefonie</string>
+    <string name="start_shift_saved_body">Zmiana i kontrola zostaną wysłane automatycznie, gdy wróci internet.</string>
+    <plurals name="start_shift_defects_reported">
+        <item quantity="one">%d problem zgłoszono do biura.</item>
+        <item quantity="few">%d problemy zgłoszono do biura.</item>
+        <item quantity="many">%d problemów zgłoszono do biura.</item>
+        <item quantity="other">%d problemu zgłoszono do biura.</item>
+    </plurals>
+    <string name="start_shift_done">OK</string>
+
+    <!-- Shift screen (daily shift) -->
+    <string name="shift_end_during_trip">Trwa kurs. Możesz zakończyć zmianę na odpoczynek dzienny i kontynuować kurs w następnej zmianie.</string>
+    <string name="shift_ended_by">Zakończona przez</string>
+    <string name="shift_ended_by_tachograph">Tachograf: rozpoczął się odpoczynek dzienny</string>
+    <string name="shift_vehicle_identified">Pojazd</string>
+    <string name="shift_vehicle_manual">Tag nie zeskanowany – biuro sprawdza</string>
+    <string name="shift_vehicle_check">Kontrola dzienna</string>
+    <string name="shift_rest_note">Odpoczynek</string>
+    <string name="shift_started_before_rest_end">Rozpoczęto przed końcem odpoczynku</string>
+    <string name="shift_command_start">Początek zmiany %1$s</string>
+    <string name="shift_command_end">Koniec zmiany %1$s</string>
+    <string name="shift_command_waiting">Czeka na tym telefonie; zostanie wysłane automatycznie.</string>
+    <plurals name="shift_photos_waiting">
+        <item quantity="one">%d zdjęcie czeka na wysłanie</item>
+        <item quantity="few">%d zdjęcia czekają na wysłanie</item>
+        <item quantity="many">%d zdjęć czeka na wysłanie</item>
+        <item quantity="other">%d zdjęcia czeka na wysłanie</item>
+    </plurals>
+    <plurals name="shift_photos_failed">
+        <item quantity="one">Serwer nie przyjął %d zdjęcia</item>
+        <item quantity="few">Serwer nie przyjął %d zdjęć</item>
+        <item quantity="many">Serwer nie przyjął %d zdjęć</item>
+        <item quantity="other">Serwer nie przyjął %d zdjęcia</item>
+    </plurals>
+    <string name="shift_hold_access">Nie wysłano: dostęp kierowcy nie jest włączony dla tego konta. Zapis pozostaje na telefonie i zostanie wysłany, gdy biuro go włączy.</string>
+    <string name="shift_failure_tag_unknown">Nie zapisano: zeskanowany tag nie jest przypisany do pojazdu.</string>
+    <string name="shift_failure_check_invalid">Nie zapisano: lista kontrolna się zmieniła. Zacznij od nowa.</string>
+    <string name="shift_failure_time">Nie zapisano: czas w telefonie jest błędny lub zapis jest zbyt stary.</string>
+    <string name="shift_failure_already_active">Nie zapisano: inna zmiana już trwa.</string>
+    <string name="shift_failure_not_active">Nie zapisano: zmiana została już zakończona.</string>
+    <string name="shift_failure_rejected">Nie zapisano: serwer odrzucił zapis.</string>
+
+    <!-- Trip -->
+    <string name="trip_shift_start_first">Zanim będziesz kontynuować, rozpocznij zmianę przy pojeździe.</string>
+</resources>

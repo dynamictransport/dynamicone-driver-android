@@ -18,6 +18,12 @@ const val EXTRA_TRIP_ID = "tripId"
 const val EXTRA_MESSAGE_ID = "messageId"
 const val TYPE_DRIVER_MESSAGE = "driver.message"
 
+/** Data-only push: the driver's tachograph rest changed, read `driver-times` and set the alarm again (docs/16 §11). */
+const val TYPE_DRIVER_TIMES = "driver.times"
+
+/** A tapped wake-up alarm or reminder opens the daily shift start (docs/16 §1). */
+const val TYPE_START_SHIFT = "driver.startShift"
+
 /** The tag the backend's system notification uses too, so the app replaces and removes it. */
 fun conversationTag(tripId: String?): String = "message-${tripId ?: "general"}"
 
@@ -131,17 +137,33 @@ class NotificationNavigation @Inject constructor() {
     private val requests = MutableStateFlow<ConversationOpenRequest?>(null)
     val pending: StateFlow<ConversationOpenRequest?> = requests.asStateFlow()
 
+    private val startShift = MutableStateFlow(false)
+
+    /** The wake-up alarm asked to open the daily shift start (docs/16). */
+    val startShiftRequested: StateFlow<Boolean> = startShift.asStateFlow()
+
     /** The notification permission is asked at most once per app process. */
     @Volatile
     var permissionAsked: Boolean = false
 
-    fun handle(intent: Intent?) {
-        val tapped = intent ?: return
-        if (tapped.getStringExtra(EXTRA_TYPE) != TYPE_DRIVER_MESSAGE) return
-        requests.value = ConversationOpenRequest(tapped.getStringExtra(EXTRA_TRIP_ID)?.takeIf { it.isNotBlank() })
+    /** True when the intent opens the daily shift start. */
+    fun handle(intent: Intent?): Boolean {
+        val tapped = intent ?: return false
+        when (tapped.getStringExtra(EXTRA_TYPE)) {
+            TYPE_DRIVER_MESSAGE -> requests.value = ConversationOpenRequest(tapped.getStringExtra(EXTRA_TRIP_ID)?.takeIf { it.isNotBlank() })
+            TYPE_START_SHIFT -> {
+                startShift.value = true
+                return true
+            }
+        }
+        return false
     }
 
     fun consume() {
         requests.value = null
+    }
+
+    fun consumeStartShift() {
+        startShift.value = false
     }
 }

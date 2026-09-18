@@ -28,6 +28,15 @@ Dynamic Transport çalışanları için tek Android uygulaması (eski adı Dynam
 
 Backend sözleşmesi: [docs/15_MOBILE_APP_API.md](docs/15_MOBILE_APP_API.md). Mobile API yayına alınana kadar `app.mobileApi=false` ile giriş Driver API üzerinden yapılır (yalnızca şoför modülü); denemek için `gradlew.bat assembleDebug -Papp.mobileApi=true`. Yalnızca 400 ve 409 kalıcı hatadır; 403/404/429/5xx durumunda kayıt aynı `commandId` ile tekrar gönderilir (docs/15 §5.3).
 
+**Şoför günlük mesaisi (şoför modülünde, `app.driverShift`)** — takograf dinlenmesi ve günlük araç kontrolü:
+
+- Ana ekranda takograf kartı: dinlenmenin bitişi ve kalan süre; çalışırken kalan günlük sürüş ve sonraki mola (Webfleet, gösterge amaçlı)
+- Dinlenme bitince telefonda kurulu uyandırma alarmı (kilit ekranında tam ekran, 10 dk erteleme, o dinlenme için kapatma; ayarlardan sadece bildirim, 15/30 dk önce)
+- *MESAİ BAŞLAT* → araçtaki NFC etiketini okutma → maddeler tek tek *Tamam* / *Sorun var* (sorunda fotoğraf) → basılı tutarak gönderme; internet yoksa telefonda bekler
+- Uzun seferde günlük dinlenme için mesaiyi bitirme; dinlenmeden sonra yeni mesaide aynı sefere devam
+
+Backend sözleşmesi ve Codex görevi: [docs/16_DRIVER_SHIFT_REST_AND_VEHICLE_CHECK.md](docs/16_DRIVER_SHIFT_REST_AND_VEHICLE_CHECK.md). Backend uçları yayına alınana kadar `app.driverShift=false` (varsayılan) ile bugünkü davranış sürer; denemek için `gradlew.bat assembleDebug -Papp.driverShift=true`.
+
 ## İlk platform
 
 - Android

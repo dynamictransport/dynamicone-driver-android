@@ -20,7 +20,12 @@ class NotificationRoutingViewModel @Inject constructor(
 
     val openRequest: StateFlow<ConversationOpenRequest?> = navigation.pending
 
+    /** The wake-up alarm opened the app on the daily shift start. */
+    val startShiftRequest: StateFlow<Boolean> = navigation.startShiftRequested
+
     fun onOpenRequestHandled() = navigation.consume()
+
+    fun onStartShiftRequestHandled() = navigation.consumeStartShift()
 
     /** Android 13+, push set up for the real backend, not allowed yet, and not asked before in this process. */
     fun shouldAskForNotificationPermission(): Boolean =

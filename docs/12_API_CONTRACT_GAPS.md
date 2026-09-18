@@ -28,6 +28,10 @@ Uygulama ayrıca şunları gönderiyor (isimler öneri):
 - `POST /shift/start` ve `/shift/end` cevap gövdesi yok → uygulama ardından `GET /shift/current` çağırıyor. **Öneri:** `Shift` dön.
 - Araç/dorse seçimi ve checklist alanları yok (01_DRIVER_JOURNEY A).
 - Mesai özeti (çalışma süresi, sefer sayısı) yok.
+- **18.09.2026:** Driver API için şoför günlük mesaisi, takograf özeti, araç NFC etiketi ve günlük kontrol sözleşmesi önerildi:
+  [16_DRIVER_SHIFT_REST_AND_VEHICLE_CHECK.md](16_DRIVER_SHIFT_REST_AND_VEHICLE_CHECK.md) (`GET driver-times`, `GET shift`,
+  `GET vehicle-tags/{uid}`, `GET vehicle-check/template`, `POST shift/start`, `POST shift/end`,
+  `POST vehicle-checks/{id}/photos`). Backend'de henüz yok; uygulama `app.driverShift=true` ile bu uçları kullanır.
 
 ## 5. Trips
 

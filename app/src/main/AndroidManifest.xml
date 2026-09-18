@@ -10,6 +10,12 @@
     <uses-permission android:name="android.permission.NFC" />
     <!-- Android 13+: notifications about new messages from the office. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Driver wake-up alarm at the end of the tachograph rest (docs/16): exact alarm clock, the driver allows it. -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <!-- The wake-up alarm shows over the lock screen. -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <!-- Alarms are lost at a restart: they are set again from the stored rest. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <uses-feature
         android:name="android.hardware.camera"
@@ -49,6 +55,33 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Wake-up alarm over the lock screen (opened only by the alarm's full-screen notification). -->
+        <activity
+            android:name=".app.RestAlarmActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:taskAffinity=""
+            android:theme="@style/Theme.DynamicOne" />
+
+        <!-- The alarm went off, or snooze / stop on its notification. -->
+        <receiver
+            android:name=".core.alarm.RestAlarmReceiver"
+            android:exported="false" />
+
+        <!-- Sets the alarm again after a restart, an app update and clock or permission changes (system broadcasts). -->
+        <receiver
+            android:name=".core.alarm.RestAlarmRescheduleReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
+            </intent-filter>
+        </receiver>
 
         <!-- Persists the per-app language on API < 33 (AppCompat). -->
         <service

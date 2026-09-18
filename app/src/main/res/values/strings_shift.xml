@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Wake-up alarm (docs/16) -->
+    <string name="rest_alarm_channel_alarm">Wake-up alarm</string>
+    <string name="rest_alarm_channel_alarm_description">Rings with the alarm sound when your daily rest ends.</string>
+    <string name="rest_alarm_channel_reminder">Rest reminders</string>
+    <string name="rest_alarm_channel_reminder_description">A notification when your daily rest ends.</string>
+    <string name="rest_alarm_title">Your rest is over</string>
+    <string name="rest_alarm_title_soon">Your rest ends soon</string>
+    <string name="rest_alarm_body_before">Your daily rest ends at %1$s. Get ready to start your shift.</string>
+    <string name="rest_alarm_body_ended">Your daily rest ended at %1$s. You can start your shift.</string>
+    <string name="rest_alarm_test_title">Test alarm</string>
+    <string name="rest_alarm_test_body">This is how the wake-up alarm sounds.</string>
+    <string name="rest_alarm_start_shift">START SHIFT</string>
+    <string name="rest_alarm_snooze">Snooze 10 min</string>
+    <string name="rest_alarm_stop">Stop alarm</string>
+
+    <!-- Wake-up alarm settings -->
+    <string name="rest_alarm_settings_title">Rest alarm</string>
+    <string name="rest_alarm_settings_intro">The app wakes you when your daily rest ends according to the tachograph. The alarm is set on this phone and also rings without internet.</string>
+    <string name="rest_alarm_settings_mode">How should it wake you?</string>
+    <string name="rest_alarm_mode_alarm">Alarm sound (full screen)</string>
+    <string name="rest_alarm_mode_notification">Notification only</string>
+    <string name="rest_alarm_settings_when">When?</string>
+    <string name="rest_alarm_lead_at_end">When the rest ends</string>
+    <string name="rest_alarm_lead_before">%1$d min before the end</string>
+    <string name="rest_alarm_settings_permissions">Phone settings</string>
+    <string name="rest_alarm_permission_notifications">Notifications</string>
+    <string name="rest_alarm_permission_exact">Alarms &amp; reminders (on time)</string>
+    <string name="rest_alarm_permission_full_screen">Full screen on the lock screen</string>
+    <string name="rest_alarm_permission_on">Allowed</string>
+    <string name="rest_alarm_permission_off">Not allowed – the alarm may be late or silent</string>
+    <string name="rest_alarm_permission_open">ALLOW</string>
+    <string name="rest_alarm_settings_dnd">Do Not Disturb can silence the alarm. Allow alarms in the Do Not Disturb settings.</string>
+    <string name="rest_alarm_try">Test alarm</string>
+
+    <!-- Tachograph card -->
+    <string name="driver_day_title">Tachograph</string>
+    <string name="driver_day_rest">Daily rest</string>
+    <string name="driver_day_rest_over">Your rest is over</string>
+    <string name="driver_day_rest_ends_at">Ends at %1$s</string>
+    <string name="driver_day_rest_ended_at">Ended at %1$s</string>
+    <string name="driver_day_rest_left">%1$s left</string>
+    <string name="driver_day_rest_over_body">You can start your shift.</string>
+    <string name="driver_day_alarm_at">Alarm at %1$s</string>
+    <string name="driver_day_alarm_snoozed">Snoozed until %1$s</string>
+    <string name="driver_day_alarm_off_for_rest">Switch off</string>
+    <string name="driver_day_alarm_dismissed">Alarm switched off for this rest</string>
+    <string name="driver_day_alarm_on_again">Switch on</string>
+    <string name="driver_day_alarm_no_notifications">Notifications are off: the alarm cannot ring.</string>
+    <string name="driver_day_alarm_inexact">\"Alarms &amp; reminders\" is off: the alarm can be several minutes late.</string>
+    <string name="driver_day_alarm_settings">Settings</string>
+    <string name="driver_day_driving_left">Driving left today: %1$s</string>
+    <string name="driver_day_driving_exceeded">Driving time exceeded by %1$s</string>
+    <string name="driver_day_break_due">Next break by %1$s</string>
+    <string name="driver_day_break_due_with">Next break by %1$s (%2$s)</string>
+    <string name="driver_day_shift_latest_end">Shift must end by %1$s</string>
+    <string name="driver_day_infringement">The tachograph shows an infringement.</string>
+    <string name="driver_day_as_of">Tachograph data %1$s · indicative</string>
+    <string name="driver_day_as_of_stale">Last known tachograph data: %1$s · indicative</string>
+    <string name="driver_day_indicative">Indicative values; the tachograph is authoritative.</string>
+    <string name="driver_day_not_linked">No tachograph data: your driver card is not linked in Webfleet, so the rest alarm cannot be set. Contact the office.</string>
+    <string name="driver_day_no_data">No tachograph data yet. The rest alarm is set once data arrives.</string>
+
+    <!-- Daily shift start: vehicle tag and daily check -->
+    <string name="start_shift_title">Start shift</string>
+    <string name="check_title">Daily vehicle check</string>
+    <string name="start_shift_cancel">Cancel</string>
+    <string name="start_shift_rest_title">Your rest is not over yet</string>
+    <string name="start_shift_rest_body">According to the tachograph your daily rest ends at %1$s (%2$s left).</string>
+    <string name="start_shift_rest_note">If you start now, the office sees that the shift started before the end of the rest.</string>
+    <string name="start_shift_rest_confirm">START ANYWAY</string>
+    <string name="start_shift_rest_wait">Wait</string>
+    <string name="start_shift_scan_title">Scan the vehicle tag</string>
+    <string name="start_shift_scan_body">Go to the truck and hold the back of the phone against the DynamicONE tag on the vehicle.</string>
+    <string name="start_shift_tag_help">The tag does not read? Contact the office.</string>
+    <string name="start_shift_use_planned">Tag does not read: use %1$s</string>
+    <string name="start_shift_tag_unknown">This tag is not registered to a vehicle. Scan the tag of your truck or contact the office.</string>
+    <string name="start_shift_nfc_disabled">NFC is off. Turn on NFC to scan the vehicle tag.</string>
+    <string name="start_shift_nfc_not_supported">This phone has no NFC, so the vehicle tag cannot be scanned.</string>
+    <string name="start_shift_tag_read">Tag read</string>
+    <string name="start_shift_vehicle_verified">Vehicle recognised.</string>
+    <string name="start_shift_vehicle_unverified">No connection: the vehicle is checked when the shift is sent.</string>
+    <string name="start_shift_vehicle_manual">Tag not scanned: the office will check the vehicle.</string>
+    <string name="start_shift_trailer">Trailer: %1$s</string>
+    <string name="start_shift_other_vehicle">This is not your planned vehicle (%1$s). Your planner will see it.</string>
+    <string name="start_shift_begin_check">START CHECK</string>
+    <string name="start_shift_rescan">Scan another tag</string>
+    <string name="check_progress">Item %1$d of %2$d</string>
+    <string name="check_ok">OK</string>
+    <string name="check_defect">PROBLEM</string>
+    <string name="check_not_applicable">NOT APPLICABLE</string>
+    <string name="check_answer_ok">OK</string>
+    <string name="check_answer_defect">Problem</string>
+    <string name="check_answer_not_applicable">Not applicable</string>
+    <string name="check_defect_photo_required">Take a photo of the problem</string>
+    <string name="check_defect_photo_optional">Photo of the problem (optional)</string>
+    <string name="check_take_photo">Take photo</string>
+    <string name="check_photo_remove">Remove photo</string>
+    <string name="check_note_optional">Short note (optional)</string>
+    <string name="check_defect_done">CONTINUE</string>
+    <string name="check_no_defect_after_all">No problem after all</string>
+    <string name="check_photo_required">Take a photo of the problem first.</string>
+    <string name="check_photo_failed">The photo could not be saved. Take it again.</string>
+    <string name="check_camera_unavailable">No camera app was found on this phone.</string>
+    <string name="check_camera_permission">Camera permission is needed to take the photo.</string>
+    <plurals name="check_summary_items">
+        <item quantity="one">%d item checked</item>
+        <item quantity="other">%d items checked</item>
+    </plurals>
+    <string name="check_summary_no_defects">No problems</string>
+    <plurals name="check_summary_defects">
+        <item quantity="one">%d problem reported</item>
+        <item quantity="other">%d problems reported</item>
+    </plurals>
+    <plurals name="check_summary_not_applicable">
+        <item quantity="one">%d item not applicable</item>
+        <item quantity="other">%d items not applicable</item>
+    </plurals>
+    <plurals name="check_photo_count">
+        <item quantity="one">%d photo</item>
+        <item quantity="other">%d photos</item>
+    </plurals>
+    <string name="check_edit">Change</string>
+    <string name="check_summary_defects_note">Problems do not block the shift: the office receives them with the photos and decides about the vehicle.</string>
+    <string name="start_shift_summary_rest">Started before the end of the rest</string>
+    <string name="start_shift_submit">SEND CHECK AND START SHIFT</string>
+    <string name="start_shift_start_over">START AGAIN</string>
+    <string name="start_shift_recorded">Shift started</string>
+    <string name="start_shift_saved">Saved on this phone</string>
+    <string name="start_shift_saved_body">The shift and the check are sent automatically when internet is back.</string>
+    <plurals name="start_shift_defects_reported">
+        <item quantity="one">%d problem reported to the office.</item>
+        <item quantity="other">%d problems reported to the office.</item>
+    </plurals>
+    <string name="start_shift_done">OK</string>
+
+    <!-- Shift screen (daily shift) -->
+    <string name="shift_end_during_trip">A trip is in progress. You can end the shift for your daily rest and continue the trip in your next shift.</string>
+    <string name="shift_ended_by">Ended by</string>
+    <string name="shift_ended_by_tachograph">Tachograph: daily rest started</string>
+    <string name="shift_vehicle_identified">Vehicle</string>
+    <string name="shift_vehicle_manual">Tag not scanned – the office checks it</string>
+    <string name="shift_vehicle_check">Daily check</string>
+    <string name="shift_rest_note">Rest</string>
+    <string name="shift_started_before_rest_end">Started before the end of the rest</string>
+    <string name="shift_command_start">Shift start %1$s</string>
+    <string name="shift_command_end">Shift end %1$s</string>
+    <string name="shift_command_waiting">Waiting on this phone; sent automatically.</string>
+    <plurals name="shift_photos_waiting">
+        <item quantity="one">%d photo waiting to be sent</item>
+        <item quantity="other">%d photos waiting to be sent</item>
+    </plurals>
+    <plurals name="shift_photos_failed">
+        <item quantity="one">%d photo was not accepted by the server</item>
+        <item quantity="other">%d photos were not accepted by the server</item>
+    </plurals>
+    <string name="shift_hold_access">Not sent: driver access is not enabled for this account. It is kept on this phone and sent as soon as the office enables it.</string>
+    <string name="shift_failure_tag_unknown">Not recorded: the scanned tag is not registered to a vehicle.</string>
+    <string name="shift_failure_check_invalid">Not recorded: the check list has changed. Start again.</string>
+    <string name="shift_failure_time">Not recorded: the phone\'s time is wrong or the record is too old.</string>
+    <string name="shift_failure_already_active">Not recorded: another shift is already running.</string>
+    <string name="shift_failure_not_active">Not recorded: the shift was already ended.</string>
+    <string name="shift_failure_rejected">Not recorded: the server rejected it.</string>
+
+    <!-- Trip -->
+    <string name="trip_shift_start_first">Start your shift at the vehicle before you continue.</string>
+</resources>

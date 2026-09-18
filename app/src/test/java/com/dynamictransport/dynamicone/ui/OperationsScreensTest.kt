@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.assertTextEquals
@@ -40,6 +41,8 @@ import com.dynamictransport.dynamicone.domain.model.TripExecution
 import com.dynamictransport.dynamicone.domain.model.TripLocation
 import com.dynamictransport.dynamicone.domain.model.TripState
 import com.dynamictransport.dynamicone.domain.model.TripWorkflow
+import com.dynamictransport.dynamicone.domain.statemachine.ActionPlan
+import com.dynamictransport.dynamicone.domain.statemachine.PrimaryAction
 import com.dynamictransport.dynamicone.feature.common.PRIMARY_ACTION_TAG
 import com.dynamictransport.dynamicone.feature.documents.DocumentsScreen
 import com.dynamictransport.dynamicone.feature.documents.DocumentsUiState
@@ -119,6 +122,16 @@ class TripExecutionScreenTest {
                 )
             }
         }
+    }
+
+    @Test
+    fun afterTheDailyRestTheShiftStartsBeforeTheTripContinues() {
+        val options = listOf(testAction(ExecutionActionCode.COMPLETE_STOP, "I picked up the full container", "s1", "c1"))
+        setScreen(state(options).copy(plan = ActionPlan(primary = PrimaryAction.StartShift), shiftStartsAtVehicle = true))
+
+        composeRule.onNodeWithTag("trip_shift_start_first").assertIsDisplayed()
+        composeRule.onNodeWithTag(PRIMARY_ACTION_TAG).assertTextContains("START SHIFT")
+        composeRule.onAllNodesWithText("I PICKED UP THE FULL CONTAINER").assertCountEquals(0)
     }
 
     @Test

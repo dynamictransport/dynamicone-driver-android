@@ -3,7 +3,12 @@ package com.dynamictransport.dynamicone.feature.home
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dynamictransport.dynamicone.core.alarm.RestAlarmController
 import com.dynamictransport.dynamicone.domain.model.ActionResult
+import com.dynamictransport.dynamicone.domain.model.RestWindow
+import com.dynamictransport.dynamicone.domain.repository.DriverTimesRepository
+import com.dynamictransport.dynamicone.feature.shift.DriverDayState
+import kotlinx.coroutines.flow.flowOf
 import com.dynamictransport.dynamicone.domain.model.RefreshResult
 import com.dynamictransport.dynamicone.domain.model.Shift
 import com.dynamictransport.dynamicone.domain.model.Trip
@@ -48,6 +53,8 @@ data class HomeUiState(
     @param:StringRes val refreshError: Int? = null,
     val submitting: Boolean = false,
     @param:StringRes val message: Int? = null,
+    /** Tachograph summary and wake-up alarm; null without the daily shift feature (docs/16). */
+    val driverDay: DriverDayState? = null,
 )
 
 @HiltViewModel
@@ -59,7 +66,15 @@ class HomeViewModel @Inject constructor(
     networkMonitor: NetworkMonitor,
     appInfo: AppInfo,
     private val submitTripAction: SubmitTripActionUseCase,
+    driverTimes: DriverTimesRepository,
+    private val restAlarm: RestAlarmController,
 ) : ViewModel() {
+
+    private val driverDay = if (appInfo.isDriverShiftEnabled) {
+        combine(driverTimes.observeDriverTimes(), restAlarm.status) { times, alarm -> DriverDayState(times, alarm) }
+    } else {
+        flowOf(null)
+    }
 
     private val singleFlight = SingleFlight()
     private val message = MutableStateFlow<Int?>(null)
@@ -89,8 +104,10 @@ class HomeViewModel @Inject constructor(
         )
     }
 
+    private val contentWithDay = combine(content, driverDay) { state, day -> state.copy(driverDay = day) }
+
     val uiState: StateFlow<HomeUiState> =
-        combine(content, syncRepository.observeLastRefresh(), refreshing, singleFlight.busy, message) {
+        combine(contentWithDay, syncRepository.observeLastRefresh(), refreshing, singleFlight.busy, message) {
                 state, lastRefresh, isRefreshing, busy, currentMessage ->
             state.copy(
                 // Until the first server read of the session is done there is nothing to decide on.
@@ -135,5 +152,19 @@ class HomeViewModel @Inject constructor(
 
     fun onMessageShown() {
         message.value = null
+    }
+
+    /** No wake-up alarm for this rest (e.g. weekly rest at home). */
+    fun onDismissRestAlarm(rest: RestWindow) {
+        viewModelScope.launch { restAlarm.dismiss(rest) }
+    }
+
+    fun onRestoreRestAlarm() {
+        viewModelScope.launch { restAlarm.restore() }
+    }
+
+    /** The screen came to the front: alarm permissions may have been changed in the settings. */
+    fun onResume() {
+        restAlarm.refreshPermissions()
     }
 }

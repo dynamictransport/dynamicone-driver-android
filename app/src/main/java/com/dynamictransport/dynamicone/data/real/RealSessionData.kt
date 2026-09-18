@@ -17,6 +17,7 @@ class RealSessionData @Inject constructor(
     private val downloader: ProtectedFileDownloader,
     private val commands: PendingCommandStore,
     private val attendance: RealAttendanceRepository,
+    private val driverDay: DriverDaySessionData = DriverDaySessionData.None,
 ) {
     /** Server data held in memory plus temporary viewing files. */
     suspend fun clearServerData() {
@@ -29,6 +30,7 @@ class RealSessionData @Inject constructor(
         sync.reset()
         downloader.clear()
         attendance.clear()
+        driverDay.clear()
     }
 
     /** Signing out or changing the password removes the driver's unconfirmed commands too. */
@@ -42,5 +44,46 @@ class RealSessionData @Inject constructor(
         val driverId = profile.driverId
         if (driverId == null) commands.clear() else commands.keepOnly(driverId)
         attendance.keepOnly(profile.id)
+        driverDay.keepOnly(driverId)
+    }
+}
+
+/**
+ * The daily shift's data of the signed-in driver (docs/16). Waiting starts and ends stay on the phone when the session
+ * ends, like attendance punches; another driver signing in removes them.
+ */
+interface DriverDaySessionData {
+    fun clear()
+
+    suspend fun keepOnly(driverId: String?)
+
+    object None : DriverDaySessionData {
+        override fun clear() = Unit
+
+        override suspend fun keepOnly(driverId: String?) = Unit
+    }
+}
+
+class ApiDriverDaySessionData @Inject constructor(
+    private val shift: ApiShiftRepository,
+    private val driverTimes: ApiDriverTimesRepository,
+    private val vehicleCheck: ApiVehicleCheckRepository,
+    private val cache: DriverCacheStore,
+) : DriverDaySessionData {
+    override fun clear() {
+        shift.clear()
+        driverTimes.clear()
+        vehicleCheck.clear()
+    }
+
+    override suspend fun keepOnly(driverId: String?) {
+        if (driverId == null) {
+            // An account without the driver module keeps no driver data: no driver id matches the empty one.
+            cache.clear()
+            shift.keepOnly("")
+        } else {
+            cache.keepOnly(driverId)
+            shift.keepOnly(driverId)
+        }
     }
 }

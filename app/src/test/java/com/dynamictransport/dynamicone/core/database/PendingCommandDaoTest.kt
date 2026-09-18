@@ -117,8 +117,15 @@ class AppDatabaseMigrationTest {
                 it.moveToFirst()
                 assertEquals(0, it.getInt(0))
             }
-            assertEquals(3, db.version)
+            assertEquals(4, db.version)
             assertTrue(runBlocking { room.pendingCommandDao().observeMessages(null).first() }.isEmpty())
+            // v4: the driver daily shift tables (docs/16) exist and start empty.
+            listOf("shift_commands", "check_photos", "driver_cache").forEach { table ->
+                db.query("SELECT COUNT(*) FROM $table").use {
+                    it.moveToFirst()
+                    assertEquals(0, it.getInt(0))
+                }
+            }
         } finally {
             room.close()
         }

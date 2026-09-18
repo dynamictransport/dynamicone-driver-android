@@ -5,12 +5,16 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.BackoffPolicy
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
+import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import com.dynamictransport.dynamicone.domain.model.RefreshResult
 import com.dynamictransport.dynamicone.domain.repository.AttendanceRepository
+import com.dynamictransport.dynamicone.domain.repository.DailyShiftRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -108,4 +112,113 @@ class AttendanceSyncWorker @AssistedInject constructor(
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result = if (attendanceRepository.sendPending()) Result.success() else Result.retry()
+}
+
+/** Sends daily shift starts, ends and defect photos stored on the phone (docs/16 §2, ASSUMPTIONS S7). */
+interface ShiftSyncScheduler {
+    /** [delaySeconds]: the server's `Retry-After` when it asked to be left alone for a while (429). */
+    fun requestSend(delaySeconds: Long = 0)
+}
+
+@Singleton
+class WorkManagerShiftSyncScheduler @Inject constructor(
+    @param:ApplicationContext private val context: Context,
+) : ShiftSyncScheduler {
+
+    override fun requestSend(delaySeconds: Long) {
+        val request = OneTimeWorkRequestBuilder<ShiftSyncWorker>()
+            .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, SHIFT_BACKOFF_SECONDS, TimeUnit.SECONDS)
+            .setInitialDelay(delaySeconds.coerceIn(0, MAX_RETRY_AFTER_SECONDS), TimeUnit.SECONDS)
+            .build()
+        // Every command carries its own command id and the server is idempotent: restarting a running send is safe.
+        WorkManager.getInstance(context).enqueueUniqueWork(UNIQUE_WORK_NAME, ExistingWorkPolicy.REPLACE, request)
+    }
+
+    companion object {
+        const val UNIQUE_WORK_NAME = "shift-sync"
+        private const val SHIFT_BACKOFF_SECONDS = 30L
+        private const val MAX_RETRY_AFTER_SECONDS = 15 * 60L
+    }
+}
+
+@HiltWorker
+class ShiftSyncWorker @AssistedInject constructor(
+    @Assisted context: Context,
+    @Assisted params: WorkerParameters,
+    private val dailyShiftRepository: DailyShiftRepository,
+) : CoroutineWorker(context, params) {
+
+    override suspend fun doWork(): Result = if (dailyShiftRepository.sendPending()) Result.success() else Result.retry()
+}
+
+/** Reads the driver's shift and tachograph summary and brings the wake-up alarm up to date (docs/16 §3, §11). */
+fun interface DriverDaySync {
+    suspend fun refresh(): RefreshResult
+}
+
+/** Without the daily shift feature there is nothing to read. */
+object NoOpDriverDaySync : DriverDaySync {
+    override suspend fun refresh(): RefreshResult = RefreshResult.SUCCESS
+}
+
+/**
+ * Background reads of the driver's day: every [PERIOD_MINUTES] while a driver is signed in, and once more a while after
+ * the shift ended, when the tachograph has registered the rest (Webfleet synchronises every five minutes).
+ */
+interface DriverDayWorkScheduler {
+    fun startPeriodic()
+
+    fun stop()
+
+    fun refreshAfter(delayMinutes: Long)
+}
+
+@Singleton
+class WorkManagerDriverDayWorkScheduler @Inject constructor(
+    @param:ApplicationContext private val context: Context,
+) : DriverDayWorkScheduler {
+
+    private val connected = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
+
+    override fun startPeriodic() {
+        val request = PeriodicWorkRequestBuilder<DriverDayRefreshWorker>(PERIOD_MINUTES, TimeUnit.MINUTES)
+            .setConstraints(connected)
+            .build()
+        WorkManager.getInstance(context).enqueueUniquePeriodicWork(PERIODIC_WORK_NAME, ExistingPeriodicWorkPolicy.KEEP, request)
+    }
+
+    override fun stop() {
+        WorkManager.getInstance(context).apply {
+            cancelUniqueWork(PERIODIC_WORK_NAME)
+            cancelUniqueWork(ONCE_WORK_NAME)
+        }
+    }
+
+    override fun refreshAfter(delayMinutes: Long) {
+        val request = OneTimeWorkRequestBuilder<DriverDayRefreshWorker>()
+            .setConstraints(connected)
+            .setInitialDelay(delayMinutes, TimeUnit.MINUTES)
+            .build()
+        WorkManager.getInstance(context).enqueueUniqueWork(ONCE_WORK_NAME, ExistingWorkPolicy.REPLACE, request)
+    }
+
+    companion object {
+        const val PERIODIC_WORK_NAME = "driver-day-refresh"
+        const val ONCE_WORK_NAME = "driver-day-refresh-once"
+        const val PERIOD_MINUTES = 30L
+    }
+}
+
+@HiltWorker
+class DriverDayRefreshWorker @AssistedInject constructor(
+    @Assisted context: Context,
+    @Assisted params: WorkerParameters,
+    private val driverDaySync: DriverDaySync,
+) : CoroutineWorker(context, params) {
+
+    override suspend fun doWork(): Result = when (driverDaySync.refresh()) {
+        RefreshResult.OFFLINE, RefreshResult.SERVICE_UNAVAILABLE -> Result.retry()
+        else -> Result.success()
+    }
 }

@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Wake-up alarm (docs/16) -->
+    <string name="rest_alarm_channel_alarm">Uyandırma alarmı</string>
+    <string name="rest_alarm_channel_alarm_description">Günlük dinlenmen bitince alarm sesiyle çalar.</string>
+    <string name="rest_alarm_channel_reminder">Dinlenme hatırlatmaları</string>
+    <string name="rest_alarm_channel_reminder_description">Günlük dinlenmen bitince bildirim.</string>
+    <string name="rest_alarm_title">Dinlenmen bitti</string>
+    <string name="rest_alarm_title_soon">Dinlenmen bitmek üzere</string>
+    <string name="rest_alarm_body_before">Günlük dinlenmenin bitişi: %1$s. Mesaiye hazırlan.</string>
+    <string name="rest_alarm_body_ended">Günlük dinlenmen bitti (%1$s). Mesaiye başlayabilirsin.</string>
+    <string name="rest_alarm_test_title">Deneme alarmı</string>
+    <string name="rest_alarm_test_body">Uyandırma alarmı böyle çalar.</string>
+    <string name="rest_alarm_start_shift">MESAİ BAŞLAT</string>
+    <string name="rest_alarm_snooze">10 dk ertele</string>
+    <string name="rest_alarm_stop">Alarmı kapat</string>
+
+    <!-- Wake-up alarm settings -->
+    <string name="rest_alarm_settings_title">Dinlenme alarmı</string>
+    <string name="rest_alarm_settings_intro">Uygulama, takografa göre günlük dinlenmen bitince seni uyandırır. Alarm bu telefonda kurulur ve internet olmasa da çalar.</string>
+    <string name="rest_alarm_settings_mode">Nasıl uyandırsın?</string>
+    <string name="rest_alarm_mode_alarm">Alarm sesi (tam ekran)</string>
+    <string name="rest_alarm_mode_notification">Sadece bildirim</string>
+    <string name="rest_alarm_settings_when">Ne zaman?</string>
+    <string name="rest_alarm_lead_at_end">Dinlenme bitince</string>
+    <string name="rest_alarm_lead_before">Bitişten %1$d dk önce</string>
+    <string name="rest_alarm_settings_permissions">Telefon ayarları</string>
+    <string name="rest_alarm_permission_notifications">Bildirimler</string>
+    <string name="rest_alarm_permission_exact">Alarmlar ve hatırlatıcılar (tam zamanında)</string>
+    <string name="rest_alarm_permission_full_screen">Kilit ekranında tam ekran</string>
+    <string name="rest_alarm_permission_on">Açık</string>
+    <string name="rest_alarm_permission_off">Kapalı – alarm gecikebilir veya sessiz kalabilir</string>
+    <string name="rest_alarm_permission_open">AÇ</string>
+    <string name="rest_alarm_settings_dnd">Rahatsız Etmeyin modu alarmı susturabilir. Rahatsız Etmeyin ayarlarında alarmlara izin ver.</string>
+    <string name="rest_alarm_try">Alarmı dene</string>
+
+    <!-- Tachograph card -->
+    <string name="driver_day_title">Takograf</string>
+    <string name="driver_day_rest">Günlük dinlenme</string>
+    <string name="driver_day_rest_over">Dinlenmen bitti</string>
+    <string name="driver_day_rest_ends_at">Bitiş: %1$s</string>
+    <string name="driver_day_rest_ended_at">Bitti: %1$s</string>
+    <string name="driver_day_rest_left">%1$s kaldı</string>
+    <string name="driver_day_rest_over_body">Mesaiye başlayabilirsin.</string>
+    <string name="driver_day_alarm_at">Alarm: %1$s</string>
+    <string name="driver_day_alarm_snoozed">Ertelendi: %1$s</string>
+    <string name="driver_day_alarm_off_for_rest">Kapat</string>
+    <string name="driver_day_alarm_dismissed">Bu dinlenme için alarm kapalı</string>
+    <string name="driver_day_alarm_on_again">Aç</string>
+    <string name="driver_day_alarm_no_notifications">Bildirimler kapalı: alarm çalamaz.</string>
+    <string name="driver_day_alarm_inexact">\"Alarmlar ve hatırlatıcılar\" kapalı: alarm birkaç dakika gecikebilir.</string>
+    <string name="driver_day_alarm_settings">Ayarlar</string>
+    <string name="driver_day_driving_left">Bugün kalan sürüş: %1$s</string>
+    <string name="driver_day_driving_exceeded">Sürüş süresi %1$s aşıldı</string>
+    <string name="driver_day_break_due">Sonraki mola en geç %1$s</string>
+    <string name="driver_day_break_due_with">Sonraki mola en geç %1$s (%2$s)</string>
+    <string name="driver_day_shift_latest_end">Vardiya en geç %1$s bitmeli</string>
+    <string name="driver_day_infringement">Takografta ihlal görünüyor.</string>
+    <string name="driver_day_as_of">Takograf verisi %1$s · gösterge amaçlı</string>
+    <string name="driver_day_as_of_stale">Son bilinen takograf verisi: %1$s · gösterge amaçlı</string>
+    <string name="driver_day_indicative">Gösterge amaçlıdır; takograf esastır.</string>
+    <string name="driver_day_not_linked">Takograf verisi yok: sürücü kartın Webfleet\'te eşleşmemiş, bu yüzden dinlenme alarmı kurulamaz. Ofisle görüş.</string>
+    <string name="driver_day_no_data">Henüz takograf verisi yok. Veri gelince dinlenme alarmı kurulur.</string>
+
+    <!-- Daily shift start: vehicle tag and daily check -->
+    <string name="start_shift_title">Mesai başlat</string>
+    <string name="check_title">Günlük araç kontrolü</string>
+    <string name="start_shift_cancel">Vazgeç</string>
+    <string name="start_shift_rest_title">Dinlenmen henüz bitmedi</string>
+    <string name="start_shift_rest_body">Takografa göre günlük dinlenmenin bitişi: %1$s (%2$s kaldı).</string>
+    <string name="start_shift_rest_note">Şimdi başlarsan ofis, mesainin dinlenme bitmeden başladığını görür.</string>
+    <string name="start_shift_rest_confirm">YİNE DE BAŞLA</string>
+    <string name="start_shift_rest_wait">Bekle</string>
+    <string name="start_shift_scan_title">Araç etiketini okut</string>
+    <string name="start_shift_scan_body">Araca git ve telefonun arkasını araçtaki DynamicONE etiketine tut.</string>
+    <string name="start_shift_tag_help">Etiket okunmuyor mu? Ofisle görüş.</string>
+    <string name="start_shift_use_planned">Etiket okunmuyor: %1$s ile başla</string>
+    <string name="start_shift_tag_unknown">Bu etiket bir araca kayıtlı değil. Aracının etiketini okut veya ofisle görüş.</string>
+    <string name="start_shift_nfc_disabled">NFC kapalı. Araç etiketini okutmak için NFC\'yi aç.</string>
+    <string name="start_shift_nfc_not_supported">Bu telefonda NFC yok, araç etiketi okutulamaz.</string>
+    <string name="start_shift_tag_read">Etiket okundu</string>
+    <string name="start_shift_vehicle_verified">Araç tanındı.</string>
+    <string name="start_shift_vehicle_unverified">İnternet yok: araç, mesai gönderilince kontrol edilecek.</string>
+    <string name="start_shift_vehicle_manual">Etiket okutulmadı: aracı ofis kontrol edecek.</string>
+    <string name="start_shift_trailer">Dorse: %1$s</string>
+    <string name="start_shift_other_vehicle">Bu, planlanan aracın değil (%1$s). Planlamacın görecek.</string>
+    <string name="start_shift_begin_check">KONTROLE BAŞLA</string>
+    <string name="start_shift_rescan">Başka etiket okut</string>
+    <string name="check_progress">Madde %1$d / %2$d</string>
+    <string name="check_ok">TAMAM</string>
+    <string name="check_defect">SORUN VAR</string>
+    <string name="check_not_applicable">GEÇERLİ DEĞİL</string>
+    <string name="check_answer_ok">Tamam</string>
+    <string name="check_answer_defect">Sorun var</string>
+    <string name="check_answer_not_applicable">Geçerli değil</string>
+    <string name="check_defect_photo_required">Sorunun fotoğrafını çek</string>
+    <string name="check_defect_photo_optional">Sorunun fotoğrafı (isteğe bağlı)</string>
+    <string name="check_take_photo">Fotoğraf çek</string>
+    <string name="check_photo_remove">Fotoğrafı kaldır</string>
+    <string name="check_note_optional">Kısa not (isteğe bağlı)</string>
+    <string name="check_defect_done">DEVAM</string>
+    <string name="check_no_defect_after_all">Sorun yok, tamam</string>
+    <string name="check_photo_required">Önce sorunun fotoğrafını çek.</string>
+    <string name="check_photo_failed">Fotoğraf kaydedilemedi. Tekrar çek.</string>
+    <string name="check_camera_unavailable">Bu telefonda kamera uygulaması bulunamadı.</string>
+    <string name="check_camera_permission">Fotoğraf için kamera izni gerekli.</string>
+    <plurals name="check_summary_items">
+        <item quantity="one">%d madde kontrol edildi</item>
+        <item quantity="other">%d madde kontrol edildi</item>
+    </plurals>
+    <string name="check_summary_no_defects">Sorun yok</string>
+    <plurals name="check_summary_defects">
+        <item quantity="one">%d sorun bildirildi</item>
+        <item quantity="other">%d sorun bildirildi</item>
+    </plurals>
+    <plurals name="check_summary_not_applicable">
+        <item quantity="one">%d madde geçerli değil</item>
+        <item quantity="other">%d madde geçerli değil</item>
+    </plurals>
+    <plurals name="check_photo_count">
+        <item quantity="one">%d fotoğraf</item>
+        <item quantity="other">%d fotoğraf</item>
+    </plurals>
+    <string name="check_edit">Değiştir</string>
+    <string name="check_summary_defects_note">Sorunlar mesaiyi engellemez: ofis onları fotoğraflarla birlikte alır ve araç hakkında karar verir.</string>
+    <string name="start_shift_summary_rest">Dinlenme bitmeden başlatıldı</string>
+    <string name="start_shift_submit">KONTROLÜ GÖNDER, MESAİYİ BAŞLAT</string>
+    <string name="start_shift_start_over">BAŞTAN BAŞLA</string>
+    <string name="start_shift_recorded">Mesai başladı</string>
+    <string name="start_shift_saved">Telefona kaydedildi</string>
+    <string name="start_shift_saved_body">Mesai ve kontrol, internet gelince otomatik gönderilecek.</string>
+    <plurals name="start_shift_defects_reported">
+        <item quantity="one">%d sorun ofise bildirildi.</item>
+        <item quantity="other">%d sorun ofise bildirildi.</item>
+    </plurals>
+    <string name="start_shift_done">TAMAM</string>
+
+    <!-- Shift screen (daily shift) -->
+    <string name="shift_end_during_trip">Devam eden bir sefer var. Günlük dinlenme için mesaiyi bitirebilirsin; sefere bir sonraki mesaide devam edersin.</string>
+    <string name="shift_ended_by">Bitiren</string>
+    <string name="shift_ended_by_tachograph">Takograf: günlük dinlenme başladı</string>
+    <string name="shift_vehicle_identified">Araç</string>
+    <string name="shift_vehicle_manual">Etiket okutulmadı – ofis kontrol ediyor</string>
+    <string name="shift_vehicle_check">Günlük kontrol</string>
+    <string name="shift_rest_note">Dinlenme</string>
+    <string name="shift_started_before_rest_end">Dinlenme bitmeden başlatıldı</string>
+    <string name="shift_command_start">Mesai başlangıcı %1$s</string>
+    <string name="shift_command_end">Mesai bitişi %1$s</string>
+    <string name="shift_command_waiting">Telefonda bekliyor; otomatik gönderilecek.</string>
+    <plurals name="shift_photos_waiting">
+        <item quantity="one">%d fotoğraf gönderilmeyi bekliyor</item>
+        <item quantity="other">%d fotoğraf gönderilmeyi bekliyor</item>
+    </plurals>
+    <plurals name="shift_photos_failed">
+        <item quantity="one">%d fotoğrafı sunucu kabul etmedi</item>
+        <item quantity="other">%d fotoğrafı sunucu kabul etmedi</item>
+    </plurals>
+    <string name="shift_hold_access">Gönderilmedi: bu hesap için şoför erişimi açık değil. Telefonda saklanıyor; ofis açınca gönderilecek.</string>
+    <string name="shift_failure_tag_unknown">Kaydedilmedi: okutulan etiket bir araca kayıtlı değil.</string>
+    <string name="shift_failure_check_invalid">Kaydedilmedi: kontrol listesi değişmiş. Baştan başla.</string>
+    <string name="shift_failure_time">Kaydedilmedi: telefonun saati yanlış veya kayıt çok eski.</string>
+    <string name="shift_failure_already_active">Kaydedilmedi: zaten açık bir mesain var.</string>
+    <string name="shift_failure_not_active">Kaydedilmedi: mesai zaten bitmiş.</string>
+    <string name="shift_failure_rejected">Kaydedilmedi: sunucu reddetti.</string>
+
+    <!-- Trip -->
+    <string name="trip_shift_start_first">Devam etmeden önce araçta mesaini başlat.</string>
+</resources>

@@ -38,6 +38,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dynamictransport.dynamicone.R
 import com.dynamictransport.dynamicone.core.design.component.DriverTopBar
@@ -47,6 +48,7 @@ import com.dynamictransport.dynamicone.core.design.component.StatusBanner
 import com.dynamictransport.dynamicone.core.design.component.StatusTone
 import com.dynamictransport.dynamicone.core.design.theme.Dimens
 import com.dynamictransport.dynamicone.core.design.theme.DriverTheme
+import com.dynamictransport.dynamicone.domain.model.RestWindow
 import com.dynamictransport.dynamicone.domain.model.Shift
 import com.dynamictransport.dynamicone.domain.model.ShiftStatus
 import com.dynamictransport.dynamicone.domain.model.Trip
@@ -66,6 +68,7 @@ import com.dynamictransport.dynamicone.feature.common.currentLocale
 import com.dynamictransport.dynamicone.feature.common.formatDuration
 import com.dynamictransport.dynamicone.feature.common.rememberCurrentInstant
 import com.dynamictransport.dynamicone.feature.common.toActionUi
+import com.dynamictransport.dynamicone.feature.shift.DriverDayCard
 import java.time.Duration
 import java.time.Instant
 
@@ -77,9 +80,15 @@ fun HomeRoute(
     onOpenEarnings: () -> Unit,
     onReportIncident: (String?) -> Unit,
     onOpenShift: () -> Unit,
+    onStartShift: () -> Unit = {},
+    onOpenRestAlarmSettings: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    LifecycleResumeEffect(viewModel) {
+        viewModel.onResume()
+        onPauseOrDispose { }
+    }
     HomeScreen(
         state = state,
         onPrimaryAction = { action ->
@@ -87,9 +96,14 @@ fun HomeRoute(
                 PrimaryAction.EndShift -> onOpenShift()
                 is PrimaryAction.ReviewNewTrip -> onOpenTrip(action.tripId)
                 is PrimaryAction.ContinueTrip -> onOpenTrip(action.tripId)
+                // A daily shift starts at the vehicle: tag and check (docs/16).
+                PrimaryAction.StartShift -> if (state.shift.requiresVehicleCheck) onStartShift() else viewModel.onPrimaryAction(action)
                 else -> viewModel.onPrimaryAction(action)
             }
         },
+        onDismissRestAlarm = viewModel::onDismissRestAlarm,
+        onRestoreRestAlarm = viewModel::onRestoreRestAlarm,
+        onOpenRestAlarmSettings = onOpenRestAlarmSettings,
         onOpenTrip = onOpenTrip,
         onOpenTrips = onOpenTrips,
         onOpenDocuments = onOpenDocuments,
@@ -115,6 +129,9 @@ fun HomeScreen(
     onRetrySync: () -> Unit,
     onMessageShown: () -> Unit,
     onRefresh: () -> Unit = {},
+    onDismissRestAlarm: (RestWindow) -> Unit = {},
+    onRestoreRestAlarm: () -> Unit = {},
+    onOpenRestAlarmSettings: () -> Unit = {},
     now: Instant = rememberCurrentInstant(),
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -146,6 +163,16 @@ fun HomeScreen(
                 .padding(horizontal = Dimens.ScreenPadding, vertical = 12.dp),
         ) {
             DriverHeader(state = state, now = now, onOpenShift = onOpenShift)
+            state.driverDay?.let { day ->
+                DriverDayCard(
+                    state = day,
+                    shift = state.shift,
+                    now = now,
+                    onDismissAlarm = onDismissRestAlarm,
+                    onRestoreAlarm = onRestoreRestAlarm,
+                    onOpenAlarmSettings = onOpenRestAlarmSettings,
+                )
+            }
             SyncBanners(
                 isOnline = state.isOnline,
                 pendingCount = state.pendingCount,

@@ -13,6 +13,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.dynamictransport.dynamicone.R
 import com.dynamictransport.dynamicone.core.common.ApplicationScope
+import com.dynamictransport.dynamicone.core.sync.DriverDaySync
 import com.dynamictransport.dynamicone.domain.repository.AppInfo
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.FirebaseMessagingService
@@ -138,7 +139,7 @@ class FirebasePushSession @Inject constructor(
     }
 }
 
-/** Receives push signals. Push types other than new messages are not specified yet and are ignored. */
+/** Receives push signals: new messages and tachograph rest changes. Other push types are ignored. */
 @AndroidEntryPoint
 class DriverMessagingService : FirebaseMessagingService() {
 
@@ -151,11 +152,22 @@ class DriverMessagingService : FirebaseMessagingService() {
     @Inject
     lateinit var appInfo: AppInfo
 
+    @Inject
+    lateinit var driverDaySync: DriverDaySync
+
     override fun onMessageReceived(message: RemoteMessage) {
-        if (appInfo.isDemoMode || message.data[EXTRA_TYPE] != TYPE_DRIVER_MESSAGE) return
-        // Called on a Firebase worker thread: finish the read before the process may be stopped.
-        val messageId = message.data[EXTRA_MESSAGE_ID]?.takeIf { it.isNotBlank() }
-        runBlocking { withTimeoutOrNull(SIGNAL_TIMEOUT_MILLIS) { handler.onMessageSignal(messageId) } }
+        if (appInfo.isDemoMode) return
+        when (message.data[EXTRA_TYPE]) {
+            TYPE_DRIVER_MESSAGE -> {
+                // Called on a Firebase worker thread: finish the read before the process may be stopped.
+                val messageId = message.data[EXTRA_MESSAGE_ID]?.takeIf { it.isNotBlank() }
+                runBlocking { withTimeoutOrNull(SIGNAL_TIMEOUT_MILLIS) { handler.onMessageSignal(messageId) } }
+            }
+            // The tachograph rest changed (docs/16 §11): read it and set the wake-up alarm again.
+            TYPE_DRIVER_TIMES -> if (appInfo.isDriverShiftEnabled) {
+                runBlocking { withTimeoutOrNull(SIGNAL_TIMEOUT_MILLIS) { driverDaySync.refresh() } }
+            }
+        }
     }
 
     override fun onNewToken(token: String) {

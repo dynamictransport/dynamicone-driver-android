@@ -48,7 +48,8 @@ class EndShiftUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(): ActionResult {
         if (!shifts.currentShift().isTracked) return ActionResult.Rejected(ActionRejection.NOT_SUPPORTED)
-        if (!ShiftStateMachine.canEndShift(trips.currentTrips())) {
+        // A daily shift ends for the daily rest, also in the middle of a long trip (docs/16 §9).
+        if (!shifts.requiresVehicleCheck && !ShiftStateMachine.canEndShift(trips.currentTrips())) {
             return ActionResult.Rejected(ActionRejection.TRIP_IN_PROGRESS)
         }
         return shifts.endShift()

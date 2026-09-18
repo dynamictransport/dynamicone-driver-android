@@ -1,8 +1,11 @@
 package com.dynamictransport.dynamicone.app
 
+import com.dynamictransport.dynamicone.core.alarm.RestAlarmController
 import com.dynamictransport.dynamicone.core.common.ApplicationScope
 import com.dynamictransport.dynamicone.core.push.PushSession
 import com.dynamictransport.dynamicone.core.sync.AttendanceSyncScheduler
+import com.dynamictransport.dynamicone.core.sync.DriverDayWorkScheduler
+import com.dynamictransport.dynamicone.core.sync.ShiftSyncScheduler
 import com.dynamictransport.dynamicone.core.sync.SyncScheduler
 import com.dynamictransport.dynamicone.data.sync.SyncEngine
 import com.dynamictransport.dynamicone.domain.model.AppModule
@@ -36,10 +39,46 @@ class AppStartup @Inject constructor(
     private val appInfo: AppInfo,
     private val pushSession: PushSession,
     @param:ApplicationScope private val scope: CoroutineScope,
+    private val shiftSyncScheduler: ShiftSyncScheduler,
+    private val driverDayWork: DriverDayWorkScheduler,
+    private val restAlarm: Provider<RestAlarmController>,
 ) {
+    /** Driver API daily shift with tachograph rest and wake-up alarm (docs/16). */
+    private val dailyShift: Boolean get() = appInfo.isDriverShiftEnabled && !appInfo.isDemoMode
+
     fun start() {
         scope.launch { authRepository.restoreSession() }
         if (appInfo.isDemoMode) startDemoSync() else startApiReads()
+        if (dailyShift) startDriverDay()
+    }
+
+    /**
+     * The alarm follows the stored data from process start (it must ring after a restart without network). Waiting
+     * starts and ends are sent and the day is read in the background while a driver is signed in.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun startDriverDay() {
+        restAlarm.get().start()
+        scope.launch {
+            authRepository.sessionState
+                .filter { it !is SessionState.Loading }
+                .map { (it as? SessionState.LoggedIn)?.modules?.contains(AppModule.DRIVER) == true }
+                .distinctUntilChanged()
+                .collect { driverSignedIn ->
+                    if (driverSignedIn) {
+                        shiftSyncScheduler.requestSend()
+                        driverDayWork.startPeriodic()
+                    } else {
+                        driverDayWork.stop()
+                    }
+                }
+        }
+        scope.launch {
+            networkMonitor.isOnline.drop(1).filter { it }.collect {
+                val session = authRepository.sessionState.value as? SessionState.LoggedIn ?: return@collect
+                if (AppModule.DRIVER in session.modules) shiftSyncScheduler.requestSend()
+            }
+        }
     }
 
     /** Demo: queue recovery and background sync against the in-app backend. */

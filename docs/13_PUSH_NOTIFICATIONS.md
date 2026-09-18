@@ -95,6 +95,9 @@ Additive migration ile `DriverDevices`: `Id`, `UserId`, `DriverProfileId`, `Inst
 - Bildirim kanalı `messages` ("Mesajlar"); sistemin push'tan gösterdiği bildirimler için varsayılan kanal ve ikon manifest'te tanımlıdır. Yerelleştirme anahtarları uygulamada vardır: `push_message_title_trip`, `push_message_title_general`, `push_message_body`. Kodda referansları olmadığı için release build'in kaynak küçültmesi bunları silmesin diye `app/src/main/res/raw/keep.xml` içinde tutulurlar.
 - Uygulama açıkken `type = driver.message` verisi gelince gelen kutusu API'den okunur. Ekranda açık olmayan ve yeni okunmamış mesajı olan her sohbet için `message-<tripId|general>` etiketli tek bildirim gösterilir; kilit ekranında mesaj içeriği gizlenir. Ekranda açık sohbet için bildirim gösterilmez, sohbet hemen yeniden okunur. Gelen kutusu okuması başarılı olmuş bir `messageId` tekrar gelirse işlenmez. Okundu bilgisi (`{}` gövdesiyle) yalnızca mesaj ekranda gerçekten görüldüğünde gönderilir; bildirimin gelmesi okundu sayılmaz.
 - Bildirime dokununca ilgili sohbet (genel veya sefer) açılır; sohbet ekranda açılınca bildirimi kalkar.
+- **18.09.2026 (öneri, docs/16 §11):** `type = driver.times` yalnızca veri push'u; şoförün takograf dinlenmesi değişince
+  gönderilir. Uygulama (`app.driverShift=true`) `driver-times` ve `shift`'i okur, uyandırma alarmını yeniden kurar;
+  bildirim göstermez. Dinlenme alarmı push değildir: telefonda kurulur (kanallar `rest_alarm`, `rest_reminder`).
 - Backend hazır olmadan deneme: Firebase konsolu → Messaging → yeni bildirim kampanyası → hedef uygulama `com.dynamictransport.driver`. Özel veri olarak `type` = `driver.message` ve `tripId` = sefer kimliği eklenirse bildirime dokununca o seferin sohbeti açılır.
 
 ## 7. Kurulum adımları (şirket hesabı sahibi)

@@ -40,6 +40,10 @@ listOf(developmentApiBaseUrl, productionApiBaseUrl).forEach { url ->
 fun mobileApiBaseUrl(driverApiBaseUrl: String) = driverApiBaseUrl.removeSuffix("/api/driver/v1/") + "/api/mobile/v1/"
 val mobileApiEnabled = providers.gradleProperty("app.mobileApi").getOrElse("false").toBoolean()
 
+// Driver daily shift (docs/16_DRIVER_SHIFT_REST_AND_VEHICLE_CHECK.md): tachograph rest, wake-up alarm, vehicle tag and
+// daily check. Until the backend serves the endpoints, `app.driverShift=false` keeps the shift "not connected".
+val driverShiftEnabled = providers.gradleProperty("app.driverShift").getOrElse("false").toBoolean()
+
 android {
     namespace = "com.dynamictransport.dynamicone"
     compileSdk {
@@ -56,6 +60,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("boolean", "PUSH_CONFIGURED", pushConfigured.toString())
         buildConfigField("boolean", "MOBILE_API_ENABLED", mobileApiEnabled.toString())
+        buildConfigField("boolean", "DRIVER_SHIFT_ENABLED", driverShiftEnabled.toString())
     }
 
     buildTypes {

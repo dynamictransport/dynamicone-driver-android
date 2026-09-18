@@ -164,6 +164,37 @@ interface DriverApi {
         @Path("messageId") messageId: String,
         @Body body: DriverMessageReadDto,
     ): Response<Unit>
+
+    // --- Daily shift, tachograph and vehicle check (docs/16_DRIVER_SHIFT_REST_AND_VEHICLE_CHECK.md) ---
+
+    @GET("driver-times")
+    suspend fun driverTimes(): DriverTimesResponseDto
+
+    @GET("shift")
+    suspend fun shift(): ShiftStateResponseDto
+
+    /** 404 `vehicle_tag_unknown` for a tag without an active vehicle. */
+    @GET("vehicle-tags/{tagUid}")
+    suspend fun vehicleTag(@Path("tagUid") tagUid: String): VehicleTagResponseDto
+
+    @GET("vehicle-check/template")
+    suspend fun vehicleCheckTemplate(): VehicleCheckTemplateDto
+
+    /** 201 for a new start, 200 with the first result when the same `commandId` is sent again. */
+    @POST("shift/start")
+    suspend fun startShift(@Body body: ShiftStartRequestDto): ShiftStartResponseDto
+
+    @POST("shift/end")
+    suspend fun endShift(@Body body: ShiftEndRequestDto): ShiftEndResponseDto
+
+    /** multipart/form-data: `photoId` (from the start request) and the `photo` file; idempotent by `photoId`. */
+    @Multipart
+    @POST("vehicle-checks/{checkId}/photos")
+    suspend fun uploadCheckPhoto(
+        @Path("checkId") checkId: String,
+        @Part("photoId") photoId: RequestBody,
+        @Part photo: MultipartBody.Part,
+    ): CheckPhotoResponseDto
 }
 
 /** Refresh runs on a client without the authenticator, so a failed refresh can never loop. */

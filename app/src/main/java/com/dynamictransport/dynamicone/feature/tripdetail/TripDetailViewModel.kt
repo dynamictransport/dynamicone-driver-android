@@ -70,7 +70,12 @@ data class TripDetailUiState(
     val receipts: List<ActionReceipt> = emptyList(),
     /** Incoming messages of this trip without a read receipt. */
     val unreadMessages: Int = 0,
+    /** Daily shift (docs/16): starting it opens the flow at the vehicle instead of a single tap. */
+    val shiftStartsAtVehicle: Boolean = false,
 ) {
+    /** Work on this trip waits for the daily shift; a stored action is still resolved first. */
+    val shiftStartRequired: Boolean get() = shiftStartsAtVehicle && plan.primary == PrimaryAction.StartShift && pendingAction == null
+
     /** The steps of this trip come from the server plan (everything after accepting). */
     val usesServerActions: Boolean
         get() = trip != null && trip.workflow.usesServerActions && trip.state != TripState.ASSIGNED
@@ -136,6 +141,7 @@ class TripDetailViewModel @Inject constructor(
             offlineActionsQueued = appInfo.isDemoMode,
             loadError = refresh?.takeIf { trip == null }?.messageRes(),
             refreshResult = refresh,
+            shiftStartsAtVehicle = shift.requiresVehicleCheck,
         )
     }
 

@@ -64,6 +64,10 @@ object NextActionResolver {
     private val planOrder = compareBy<Trip, Instant?>(nullsLast()) { it.plannedStartAt }.thenBy { it.tripNo }
 
     fun forTrip(trip: Trip, shift: Shift): ActionPlan {
+        // Daily shift (docs/16): after the rest the work on an accepted or running trip continues in a new shift.
+        if (shift.startRequired && (trip.state == TripState.ACCEPTED || trip.state.isInProgress)) {
+            return ActionPlan(primary = PrimaryAction.StartShift)
+        }
         if (trip.workflow.usesServerActions && trip.state != TripState.ASSIGNED) {
             // Accepting stays a local decision; every later step comes from the trip's execution plan.
             val open = trip.state == TripState.ACCEPTED || trip.state.isInProgress
@@ -97,6 +101,12 @@ object NextActionResolver {
         val inProgress = trips.filter { it.state.isInProgress }.sortedWith(planOrder).firstOrNull()
         val newTrip = trips.filter { it.state == TripState.ASSIGNED }.sortedWith(planOrder).firstOrNull()
         val accepted = trips.filter { it.state == TripState.ACCEPTED }.sortedWith(planOrder).firstOrNull()
+
+        // Daily shift not running (e.g. after the daily rest): starting it at the vehicle comes first; a new assignment
+        // stays visible as an alert.
+        if (shift.startRequired) {
+            return HomePlan(inProgress ?: accepted ?: newTrip, ActionPlan(primary = PrimaryAction.StartShift), newTrip)
+        }
 
         return when {
             inProgress != null -> HomePlan(inProgress, forTrip(inProgress, shift), newTrip)

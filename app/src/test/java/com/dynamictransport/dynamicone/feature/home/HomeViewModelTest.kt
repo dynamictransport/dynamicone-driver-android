@@ -15,15 +15,18 @@ import com.dynamictransport.dynamicone.domain.usecase.SubmitTripActionUseCase
 import com.dynamictransport.dynamicone.testing.ACTIVE_SHIFT
 import com.dynamictransport.dynamicone.testing.FakeAppInfo
 import com.dynamictransport.dynamicone.testing.FakeAuthRepository
+import com.dynamictransport.dynamicone.testing.FakeDriverTimesRepository
 import com.dynamictransport.dynamicone.testing.FakeNetworkMonitor
 import com.dynamictransport.dynamicone.testing.FakeShiftRepository
 import com.dynamictransport.dynamicone.testing.FakeSyncRepository
 import com.dynamictransport.dynamicone.testing.FakeTripRepository
 import com.dynamictransport.dynamicone.testing.MainDispatcherRule
+import com.dynamictransport.dynamicone.testing.RestAlarmHarness
 import com.dynamictransport.dynamicone.testing.TEST_NOW
 import com.dynamictransport.dynamicone.testing.keepCollecting
 import com.dynamictransport.dynamicone.testing.testTrip
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -43,6 +46,7 @@ class HomeViewModelTest {
     private val trips = FakeTripRepository()
     private val sync = FakeSyncRepository()
     private val network = FakeNetworkMonitor()
+    private val driverTimes = FakeDriverTimesRepository()
 
     private fun viewModel() = HomeViewModel(
         authRepository = auth,
@@ -52,6 +56,8 @@ class HomeViewModelTest {
         networkMonitor = network,
         appInfo = FakeAppInfo(isDemoMode = true),
         submitTripAction = SubmitTripActionUseCase(trips, shifts),
+        driverTimes = driverTimes,
+        restAlarm = RestAlarmHarness(driverTimes, shifts, scope = CoroutineScope(mainDispatcherRule.dispatcher)).controller,
     )
 
     @Test

@@ -5,13 +5,16 @@ import com.dynamictransport.dynamicone.domain.model.ActionResult
 import com.dynamictransport.dynamicone.domain.model.AttendanceDirection
 import com.dynamictransport.dynamicone.domain.model.AttendanceMonth
 import com.dynamictransport.dynamicone.domain.model.AttendanceStatus
+import com.dynamictransport.dynamicone.domain.model.CheckTemplate
 import com.dynamictransport.dynamicone.domain.model.Conversation
 import com.dynamictransport.dynamicone.domain.model.ConversationList
 import com.dynamictransport.dynamicone.domain.model.DocumentContentResult
 import com.dynamictransport.dynamicone.domain.model.DocumentSlot
+import com.dynamictransport.dynamicone.domain.model.DriverTimes
 import com.dynamictransport.dynamicone.domain.model.ExecutionAction
 import com.dynamictransport.dynamicone.domain.model.IncidentCategory
 import com.dynamictransport.dynamicone.domain.model.LocalPunch
+import com.dynamictransport.dynamicone.domain.model.LocalShiftCommand
 import com.dynamictransport.dynamicone.domain.model.LoginResult
 import com.dynamictransport.dynamicone.domain.model.MonthlyPayroll
 import com.dynamictransport.dynamicone.domain.model.PasswordChangeResult
@@ -21,6 +24,8 @@ import com.dynamictransport.dynamicone.domain.model.RefreshResult
 import com.dynamictransport.dynamicone.domain.model.RejectReason
 import com.dynamictransport.dynamicone.domain.model.SessionState
 import com.dynamictransport.dynamicone.domain.model.Shift
+import com.dynamictransport.dynamicone.domain.model.ShiftCommandResult
+import com.dynamictransport.dynamicone.domain.model.ShiftStartDraft
 import com.dynamictransport.dynamicone.domain.model.SignedDocument
 import com.dynamictransport.dynamicone.domain.model.SyncOverview
 import com.dynamictransport.dynamicone.domain.model.Trip
@@ -29,6 +34,9 @@ import com.dynamictransport.dynamicone.domain.model.TripActionType
 import com.dynamictransport.dynamicone.domain.model.TripDocument
 import com.dynamictransport.dynamicone.domain.model.TripExecution
 import com.dynamictransport.dynamicone.domain.model.UserProfile
+import com.dynamictransport.dynamicone.domain.model.VehicleInfo
+import com.dynamictransport.dynamicone.domain.model.VehicleLookup
+import com.dynamictransport.dynamicone.domain.rules.RestAlarmSettings
 import com.dynamictransport.dynamicone.domain.scan.ScanMode
 import com.dynamictransport.dynamicone.domain.scan.ScanOutcome
 import kotlinx.coroutines.flow.Flow
@@ -61,9 +69,76 @@ interface ShiftRepository {
 
     suspend fun currentShift(): Shift
 
+    /** Starts at once (demo backend). A daily shift is started with [DailyShiftRepository.startShift] instead. */
     suspend fun startShift(): ActionResult
 
     suspend fun endShift(): ActionResult
+
+    /** Driver API daily shift (docs/16): starting needs the vehicle tag and the daily check. */
+    val requiresVehicleCheck: Boolean get() = false
+}
+
+/** The driver's daily shift of the Driver API (docs/16_DRIVER_SHIFT_REST_AND_VEHICLE_CHECK.md §4, §7, §9). */
+interface DailyShiftRepository {
+    /** The vehicle of the driver's current or next assignment; null when there is none or it is unknown. */
+    fun observePlannedVehicle(): Flow<VehicleInfo?>
+
+    /** Starts and ends of the signed-in driver stored on the phone (waiting, recently confirmed or rejected), newest first. */
+    fun observeCommands(): Flow<List<LocalShiftCommand>>
+
+    suspend fun refresh(): RefreshResult
+
+    /** Stores the start with its check and photos first, then sends it. The same command id is never stored twice. */
+    suspend fun startShift(draft: ShiftStartDraft): ShiftCommandResult
+
+    /** Sends waiting starts, ends and defect photos. False: something must be tried again later. */
+    suspend fun sendPending(): Boolean
+
+    /** Sends a rejected command again, unchanged. */
+    suspend fun resend(commandId: String): ShiftCommandResult
+
+    /** Removes a rejected command and its photos from the phone. */
+    suspend fun discard(commandId: String)
+}
+
+/** Daily vehicle check list and the vehicle behind a tag (docs/16 §5, §6). */
+interface VehicleCheckRepository {
+    /** The server's list once read (also offline), the built-in default before. */
+    fun observeTemplate(): Flow<CheckTemplate>
+
+    suspend fun refreshTemplate(): RefreshResult
+
+    suspend fun lookupVehicle(tagUid: String): VehicleLookup
+}
+
+/** The driver's tachograph summary (docs/16 §3). */
+interface DriverTimesRepository {
+    /** Null until read or loaded from the phone. */
+    fun observeDriverTimes(): Flow<DriverTimes?>
+
+    /** The latest known summary, also from the phone's storage (alarm after a restart). */
+    suspend fun current(): DriverTimes?
+
+    suspend fun refresh(): RefreshResult
+}
+
+/** App-private files for defect photos; never in the gallery. */
+interface CheckPhotoStore {
+    fun hasEnoughSpace(): Boolean
+
+    /** New empty file the camera writes to; returns its path. */
+    suspend fun createPhotoFile(): String
+
+    suspend fun discard(filePath: String)
+}
+
+/** The wake-up alarm's settings and memory (docs/16 §1). */
+interface RestAlarmSettingsRepository {
+    val settings: Flow<RestAlarmSettings>
+
+    suspend fun current(): RestAlarmSettings
+
+    suspend fun update(transform: (RestAlarmSettings) -> RestAlarmSettings)
 }
 
 data class TripActionCommand(
@@ -257,6 +332,9 @@ interface AppInfo {
 
     /** The Firebase project configuration was present at build time (push notifications). */
     val isPushConfigured: Boolean get() = false
+
+    /** Driver daily shift with tachograph rest, wake-up alarm and vehicle check (`app.driverShift`, docs/16). */
+    val isDriverShiftEnabled: Boolean get() = false
 }
 
 /** Controls for the in-app fake backend. `isAvailable` is false against a real backend. */

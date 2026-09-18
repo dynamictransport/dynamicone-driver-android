@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.CloudUpload
+import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.LockReset
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Person
@@ -101,6 +102,8 @@ data class ProfileUiState(
     val busy: Boolean = false,
     val showLogoutConfirmation: Boolean = false,
     val isDemoMode: Boolean = false,
+    /** Driver daily shift: the wake-up alarm settings (docs/16). */
+    val restAlarmAvailable: Boolean = false,
 ) {
     val unsentCount: Int get() = overview.pendingCount + overview.failedCount
 }
@@ -138,6 +141,7 @@ class ProfileViewModel @Inject constructor(
             busy = busy,
             showLogoutConfirmation = confirmLogout,
             isDemoMode = appInfo.isDemoMode,
+            restAlarmAvailable = appInfo.isDriverShiftEnabled && AppModule.DRIVER in (session as? SessionState.LoggedIn)?.modules.orEmpty(),
         )
     }.stateIn(
         viewModelScope,
@@ -196,6 +200,7 @@ fun ProfileRoute(
     onOpenPayroll: () -> Unit,
     onOpenSignedDocuments: () -> Unit,
     onOpenChangePassword: () -> Unit,
+    onOpenRestAlarm: () -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -206,6 +211,7 @@ fun ProfileRoute(
         onOpenPayroll = onOpenPayroll,
         onOpenSignedDocuments = onOpenSignedDocuments,
         onOpenChangePassword = onOpenChangePassword,
+        onOpenRestAlarm = onOpenRestAlarm,
         onRetryAll = viewModel::onRetryAll,
         onAcknowledgeFailure = viewModel::onAcknowledgeFailure,
         onLogoutRequested = viewModel::onLogoutRequested,
@@ -232,6 +238,7 @@ fun ProfileScreen(
     onOpenChangePassword: () -> Unit = {},
     links: List<ProfileLink> = emptyList(),
     onOpenLink: (String) -> Unit = {},
+    onOpenRestAlarm: () -> Unit = {},
 ) {
     var language by remember { mutableStateOf(AppLanguage.current()) }
 
@@ -301,6 +308,14 @@ fun ProfileScreen(
                             icon = Icons.Filled.PictureAsPdf,
                             modifier = Modifier.testTag("profile_signed_documents"),
                         )
+                        if (state.restAlarmAvailable) {
+                            SecondaryActionButton(
+                                text = stringResource(R.string.rest_alarm_settings_title),
+                                onClick = onOpenRestAlarm,
+                                icon = Icons.Filled.Alarm,
+                                modifier = Modifier.testTag("profile_rest_alarm"),
+                            )
+                        }
                     }
                     SecondaryActionButton(
                         text = stringResource(R.string.profile_change_password),

@@ -5,4 +5,8 @@
     <cache-path
         name="document_view"
         path="document_view/" />
+    <!-- Defect photos of the daily vehicle check: one file at a time is handed to the camera app to write. -->
+    <files-path
+        name="check_photos"
+        path="vehicle_check_media/" />
 </paths>
