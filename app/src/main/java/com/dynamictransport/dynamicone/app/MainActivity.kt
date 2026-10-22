@@ -32,6 +32,8 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
+        // Phones stay upright; tablets turn freely (mounted landscape in the truck).
+        applyScreenOrientationPolicy()
         // Short splash: only until the local session check is done (no network wait).
         splashScreen.setKeepOnScreenCondition { appViewModel.sessionState.value is SessionState.Loading }
         enableEdgeToEdge()

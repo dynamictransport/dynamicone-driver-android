@@ -15,6 +15,7 @@ import com.dynamictransport.dynamicone.core.alarm.AndroidRestAlarmNotifier
 import com.dynamictransport.dynamicone.core.alarm.RestAlarmController
 import com.dynamictransport.dynamicone.core.alarm.RestAlarmIntents
 import com.dynamictransport.dynamicone.core.alarm.RestAlarmIntents.rest
+import com.dynamictransport.dynamicone.core.design.layout.applyScreenOrientationPolicy
 import com.dynamictransport.dynamicone.core.design.theme.DynamicOneTheme
 import com.dynamictransport.dynamicone.domain.model.RestWindow
 import com.dynamictransport.dynamicone.feature.restalarm.RestAlarmScreen
@@ -37,6 +38,7 @@ class RestAlarmActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        applyScreenOrientationPolicy()
         showOverLockScreen()
         enableEdgeToEdge()
         if (!show(intent)) return
