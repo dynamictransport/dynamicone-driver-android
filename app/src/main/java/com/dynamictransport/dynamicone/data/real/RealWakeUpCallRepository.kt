@@ -114,9 +114,10 @@ class RealWakeUpCallRepository @Inject constructor(
     }
 
     override suspend fun reportRinging(callId: String) {
+        val occurredAt = notBeforeRequest(dao.get(callId), clock.instant())
         try {
             tracker.call {
-                api.reportWakeUpRinging(callId, WakeUpRingingRequestDto(clock.instant().toString(), sessionPreferences.installationId()))
+                api.reportWakeUpRinging(callId, WakeUpRingingRequestDto(occurredAt.toString(), sessionPreferences.installationId()))
                     .requireSuccess()
             }
         } catch (e: CancellationException) {
@@ -156,7 +157,7 @@ class RealWakeUpCallRepository @Inject constructor(
         val acknowledged = row.state == WakeUpRowState.ACKNOWLEDGED_PENDING
         val status = if (acknowledged) WakeUpWireNames.STATUS_ACKNOWLEDGED else WakeUpWireNames.STATUS_EXPIRED
         val done = if (acknowledged) WakeUpRowState.ACKNOWLEDGED else WakeUpRowState.EXPIRED
-        val occurredAt = row.resultAt ?: clock.instant()
+        val occurredAt = notBeforeRequest(row, row.resultAt ?: clock.instant())
         val body = WakeUpResultRequestDto(
             status = status,
             occurredAt = occurredAt.toString(),
@@ -187,6 +188,13 @@ class RealWakeUpCallRepository @Inject constructor(
         val old = dao.olderThan(clock.instant().minus(KEEP_FOR))
         if (old.isNotEmpty()) dao.delete(old.map { it.callId })
     }
+
+    /**
+     * The server refuses a time before its own `requestedAt` (docs/25 §7); a device clock a few seconds behind the
+     * server must not lose the driver's answer for good, so the time never falls below the request's.
+     */
+    private fun notBeforeRequest(row: WakeUpCallEntity?, time: Instant): Instant =
+        if (row != null && time.isBefore(row.requestedAt)) row.requestedAt else time
 
     private suspend fun closeStored(callId: String) {
         val row = dao.get(callId) ?: return

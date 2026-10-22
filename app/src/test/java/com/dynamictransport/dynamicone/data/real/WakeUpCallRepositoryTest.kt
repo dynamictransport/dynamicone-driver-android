@@ -222,6 +222,25 @@ class WakeUpCallRepositoryTest {
     }
 
     @Test
+    fun `a device clock behind the server never reports a time before the call was requested`() = runBlocking {
+        h.clock.now = Instant.parse("2026-10-22T05:04:50Z")
+        h.routes.on("GET", route) { jsonResponse(call()) }
+        ring()
+        h.server.takeRequest()
+        h.routes.on("POST", "$route/ringing") { MockResponse().setResponseCode(204) }
+        h.routes.on("POST", "$route/result") { MockResponse().setResponseCode(204) }
+
+        h.wakeUps.reportRinging("call-1")
+        h.wakeUps.acknowledge("call-1")
+        assertTrue(h.wakeUps.sendPending())
+
+        assertTrue(h.server.takeRequest().body.readUtf8().contains("\"occurredAt\":\"2026-10-22T05:05:00Z\""))
+        assertTrue(h.server.takeRequest().body.readUtf8().contains("\"occurredAt\":\"2026-10-22T05:05:00Z\""))
+        // The device keeps its own time for the screen.
+        assertEquals(Instant.parse("2026-10-22T05:04:50Z"), h.wakeUpDao.get("call-1")!!.acknowledgedAt)
+    }
+
+    @Test
     fun `old calls leave the device after a week`() = runBlocking {
         h.routes.on("GET", route) { jsonResponse(call()) }
         ring()

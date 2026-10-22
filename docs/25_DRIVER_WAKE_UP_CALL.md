@@ -1,9 +1,14 @@
 # 25 — Şoförü sesli uyandırma (backend sözleşme önerisi)
 
-Durum: **öneri (22.10.2026), backend'de yoktur.** Codex görevi §10'dadır; uygulama planı §8'dedir. Sözleşme Driver API
-(`/api/driver/v1`) üzerindedir; `me/devices` kaydının docs/24 §3 eki (`deviceKind`) kullanılır. Farklılık olursa backend
-dokümanı geçerlidir. **Uygulama tarafı (aşama 1–3) 22.10.2026'da combined çalışma ağacında yazıldı** (ASSUMPTIONS U1–U9);
-yalnızca Robolectric/MockWebServer ile doğrulandı, cihaz doğrulaması (aşama 4) backend yayına girince yapılacaktır.
+Durum: **backend'de uygulandı (22.10.2026, TH-2026-0514, backend PR #596, `docs/DriverWakeUpCalls.md`), henüz yayına
+alınmadı** (migration `20261022094014_DriverWakeUpCalls` ayrı yayın akışıyla uygulanır). Alan, uç ve kod adları bu
+dokümanla aynı; backend'in eklediği kurallar: zaman damgaları UTC (`Z`), `requestedAt`'ten önce olamaz ve sunucu
+saatinden en fazla 30 sn ileride olabilir (`400 validation_failed`); `installationId` şoförün kayıtlı cihazı olmalı;
+`clientActionId` ≤ 128 karakter; kokpitte ayrıca `409 wake_up_call_driver_unavailable` (atama veya şoför modülü yok);
+dakikada 1 çağrı sınırı şoförün tüm seferleri için geçerlidir; süresi dolma sunucuya aittir (erken `Expired` sonucu yalnızca
+bilgidir). Codex görevi §10'dadır; uygulama planı §8'dedir. Sözleşme Driver API (`/api/driver/v1`) üzerindedir.
+**Uygulama tarafı (aşama 1–3) 22.10.2026'da combined çalışma ağacında yazıldı** (ASSUMPTIONS U1–U9); yalnızca
+Robolectric/MockWebServer ile doğrulandı, cihaz doğrulaması (aşama 4) backend yayına girince yapılacaktır.
 
 Kullanıcı isteği (22.10.2026): planlamacı, uyuyan veya telefona bakmayan şoförü kokpitten bir düğmeyle **tablet ve
 telefon üzerinden sesli** uyarabilsin; şoförün uyandığını görsün.
