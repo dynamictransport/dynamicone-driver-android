@@ -1,8 +1,13 @@
 package com.dynamictransport.dynamicone.data.real
 
+import com.dynamictransport.dynamicone.core.security.TokenPair
+import com.dynamictransport.dynamicone.domain.model.AppModule
+import com.dynamictransport.dynamicone.domain.model.UserProfile
 import com.dynamictransport.dynamicone.testing.FakeAppInfo
 import com.dynamictransport.dynamicone.testing.RealApiHarness
+import com.dynamictransport.dynamicone.testing.RoutingDispatcher.Companion.MOBILE_API
 import com.dynamictransport.dynamicone.testing.TEST_JSON
+import com.dynamictransport.dynamicone.testing.drainRequests
 import com.dynamictransport.dynamicone.testing.problemResponse
 import com.dynamictransport.dynamicone.testing.route
 import kotlinx.coroutines.runBlocking
@@ -55,6 +60,10 @@ class RealPushRegistrarTest {
         assertEquals("fcm-token_1:abc", body.getValue("pushToken").jsonPrimitive.content)
         assertEquals("0.1.0-test", body.getValue("appVersion").jsonPrimitive.content)
         assertEquals("tr", body.getValue("locale").jsonPrimitive.content)
+        // Only a vehicle tablet with a camera may receive road snapshot requests (docs/24 §3).
+        assertEquals("vehicleTablet", body.getValue("deviceKind").jsonPrimitive.content)
+        assertEquals("Bridgestone Mobility Solutions PRO_X", body.getValue("deviceModel").jsonPrimitive.content)
+        assertEquals("true", body.getValue("hasCamera").jsonPrimitive.content)
     }
 
     @Test
@@ -74,9 +83,37 @@ class RealPushRegistrarTest {
         h.pushRegistrar.unregister()
 
         h.signIn()
-        val demo = RealPushRegistrar(h.api, h.tokenManager, h.sessionPreferences, h.tracker, FakeAppInfo(isDemoMode = true))
+        val demo = RealPushRegistrar(h.api, h.tokenManager, h.sessionPreferences, h.tracker, FakeAppInfo(isDemoMode = true), h.mobileApi, h.deviceProfile)
         demo.register("fcm-token")
         demo.unregister()
+
+        assertEquals(0, h.server.requestCount)
+    }
+
+    @Test
+    fun `an office account with documents to sign registers through the Mobile API`() = runBlocking {
+        h.tokenManager.store(TokenPair("access-1", "refresh-1", h.clock.now.plusSeconds(900), null))
+        h.sessionPreferences.setLoggedInUser(
+            UserProfile("user-9", "Ayşe Yılmaz", null, null, setOf(AppModule.OFFICE_ATTENDANCE, AppModule.HR_DOCUMENTS), null),
+        )
+        val installationId = h.sessionPreferences.installationId()
+        h.routes.on("POST", "$MOBILE_API/me/devices") { MockResponse().setResponseCode(204) }
+        h.routes.on("DELETE", "$MOBILE_API/me/devices/$installationId") { MockResponse().setResponseCode(204) }
+
+        h.pushRegistrar.register("fcm-token")
+        h.pushRegistrar.unregister()
+
+        val requests = h.server.drainRequests()
+        assertEquals(listOf("POST /api/mobile/v1/me/devices", "DELETE /api/mobile/v1/me/devices/$installationId"), requests.map { it.route })
+        val body = TEST_JSON.parseToJsonElement(requests.first().body.readUtf8()).jsonObject
+        assertEquals("fcm-token", body.getValue("pushToken").jsonPrimitive.content)
+    }
+
+    @Test
+    fun `an office account without a module that sends pushes registers nowhere`() = runBlocking {
+        h.signInOffice()
+
+        h.pushRegistrar.register("fcm-token")
 
         assertEquals(0, h.server.requestCount)
     }

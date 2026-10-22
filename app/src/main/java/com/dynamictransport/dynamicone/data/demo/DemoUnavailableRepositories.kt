@@ -29,14 +29,25 @@ import com.dynamictransport.dynamicone.domain.model.RefreshResult
 import com.dynamictransport.dynamicone.domain.model.ShiftCommandResult
 import com.dynamictransport.dynamicone.domain.model.ShiftStartDraft
 import com.dynamictransport.dynamicone.domain.model.SignedDocument
+import com.dynamictransport.dynamicone.domain.model.SnapshotCamera
+import com.dynamictransport.dynamicone.domain.model.SnapshotDecision
+import com.dynamictransport.dynamicone.domain.model.SnapshotFailure
+import com.dynamictransport.dynamicone.domain.model.SnapshotOutcome
+import com.dynamictransport.dynamicone.domain.model.SnapshotRequest
 import com.dynamictransport.dynamicone.domain.model.TripExecution
+import com.dynamictransport.dynamicone.domain.model.TripTrailerState
+import com.dynamictransport.dynamicone.domain.model.VehicleDocumentsSnapshot
 import com.dynamictransport.dynamicone.domain.model.VehicleInfo
 import com.dynamictransport.dynamicone.domain.model.VehicleLookup
+import com.dynamictransport.dynamicone.domain.model.VehiclePositionState
 import com.dynamictransport.dynamicone.domain.repository.AttendanceRepository
 import com.dynamictransport.dynamicone.domain.repository.DailyShiftRepository
 import com.dynamictransport.dynamicone.domain.repository.DriverTimesRepository
+import com.dynamictransport.dynamicone.domain.repository.HrDocumentRepository
 import com.dynamictransport.dynamicone.domain.repository.MessageRepository
+import com.dynamictransport.dynamicone.domain.repository.MyDocumentRepository
 import com.dynamictransport.dynamicone.domain.repository.PayrollRepository
+import com.dynamictransport.dynamicone.domain.repository.RoadSnapshotRepository
 import com.dynamictransport.dynamicone.domain.repository.SignedDocumentRepository
 import com.dynamictransport.dynamicone.domain.repository.TripExecutionRepository
 import com.dynamictransport.dynamicone.domain.repository.VehicleCheckRepository
@@ -169,3 +180,12 @@ object UnavailableVehicleDocumentRepository : VehicleDocumentRepository {
         DocumentContentResult.Unavailable(ActionRejection.NOT_SUPPORTED)
 }
 
+/** The demo backend has no planner and no push: no road snapshot request ever reaches it (docs/24). */
+object UnavailableRoadSnapshotRepository : RoadSnapshotRepository {
+    override fun observeLatest(): Flow<SnapshotOutcome?> = flowOf(null)
+    override suspend fun onRequestSignal(tripId: String, requestId: String): SnapshotDecision = SnapshotDecision.Ignore
+    override suspend fun pendingRequest(requestId: String): SnapshotRequest? = null
+    override suspend fun storePhoto(requestId: String, source: File, capturedAt: Instant, camera: SnapshotCamera): Boolean = false
+    override suspend fun reportFailure(requestId: String, failure: SnapshotFailure) = Unit
+    override suspend fun sendPending(): Boolean = true
+}

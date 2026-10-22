@@ -3,12 +3,17 @@ package com.dynamictransport.dynamicone.feature.home
 import com.dynamictransport.dynamicone.R
 import com.dynamictransport.dynamicone.domain.model.ActionRejection
 import com.dynamictransport.dynamicone.domain.model.ActionResult
+import com.dynamictransport.dynamicone.domain.model.AssignedVehicle
+import com.dynamictransport.dynamicone.domain.model.AssignedVehicleState
 import com.dynamictransport.dynamicone.domain.model.FailedAction
+import com.dynamictransport.dynamicone.domain.model.GeoPoint
 import com.dynamictransport.dynamicone.domain.model.PendingActionType
 import com.dynamictransport.dynamicone.domain.model.SyncErrorCode
 import com.dynamictransport.dynamicone.domain.model.SyncOverview
 import com.dynamictransport.dynamicone.domain.model.TripActionType
 import com.dynamictransport.dynamicone.domain.model.TripState
+import com.dynamictransport.dynamicone.domain.model.VehiclePosition
+import com.dynamictransport.dynamicone.domain.model.VehiclePositionState
 import com.dynamictransport.dynamicone.domain.repository.TripActionCommand
 import com.dynamictransport.dynamicone.domain.statemachine.PrimaryAction
 import com.dynamictransport.dynamicone.domain.usecase.SubmitTripActionUseCase
@@ -19,7 +24,9 @@ import com.dynamictransport.dynamicone.testing.FakeDriverTimesRepository
 import com.dynamictransport.dynamicone.testing.FakeNetworkMonitor
 import com.dynamictransport.dynamicone.testing.FakeShiftRepository
 import com.dynamictransport.dynamicone.testing.FakeSyncRepository
+import com.dynamictransport.dynamicone.testing.FakePlaceNameResolver
 import com.dynamictransport.dynamicone.testing.FakeTripRepository
+import com.dynamictransport.dynamicone.testing.FakeVehiclePositionRepository
 import com.dynamictransport.dynamicone.testing.MainDispatcherRule
 import com.dynamictransport.dynamicone.testing.RestAlarmHarness
 import com.dynamictransport.dynamicone.testing.TEST_NOW
@@ -27,8 +34,13 @@ import com.dynamictransport.dynamicone.testing.keepCollecting
 import com.dynamictransport.dynamicone.testing.testTrip
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
+import com.dynamictransport.dynamicone.data.demo.UnavailableRoadSnapshotRepository
 import kotlinx.coroutines.test.runTest
+import java.time.Clock
+import java.time.ZoneOffset
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -47,6 +59,8 @@ class HomeViewModelTest {
     private val sync = FakeSyncRepository()
     private val network = FakeNetworkMonitor()
     private val driverTimes = FakeDriverTimesRepository()
+    private val positions = FakeVehiclePositionRepository()
+    private var places = FakePlaceNameResolver()
 
     private fun viewModel() = HomeViewModel(
         authRepository = auth,
@@ -58,7 +72,15 @@ class HomeViewModelTest {
         submitTripAction = SubmitTripActionUseCase(trips, shifts),
         driverTimes = driverTimes,
         restAlarm = RestAlarmHarness(driverTimes, shifts, scope = CoroutineScope(mainDispatcherRule.dispatcher)).controller,
+        vehiclePositions = positions,
+        placeNames = places,
+        roadSnapshots = UnavailableRoadSnapshotRepository,
+        clock = Clock.fixed(TEST_NOW, ZoneOffset.UTC),
     )
+
+    private val dyna042 = AssignedVehicleState.Assigned(AssignedVehicle("veh-42", "Dyna042", "WX 12345"))
+    private val gliwice = GeoPoint(50.2945, 18.6714)
+    private val position = VehiclePosition(gliwice, TEST_NOW, TEST_NOW)
 
     @Test
     fun `new assigned trip makes review the dominant action`() = runTest {
@@ -154,5 +176,133 @@ class HomeViewModelTest {
         viewModel.onRetrySync()
         advanceUntilIdle()
         assertEquals(1, sync.retryCalls)
+    }
+
+    @Test
+    fun `the assigned vehicle comes from the profile, never from the trip`() = runTest {
+        trips.trips.value = listOf(testTrip(state = TripState.STARTED).copy(vehicleCompanyCode = "Dyna007"))
+        auth.assignedVehicle.value = AssignedVehicleState.NotAssigned
+        val viewModel = viewModel()
+        keepCollecting(viewModel.uiState)
+
+        assertEquals(AssignedVehicleState.NotAssigned, viewModel.uiState.value.assignedVehicle)
+
+        val assigned = AssignedVehicleState.Assigned(AssignedVehicle("veh-42", "Dyna042", "WX 12345"))
+        auth.assignedVehicle.value = assigned
+        assertEquals(assigned, viewModel.uiState.value.assignedVehicle)
+
+        // Assignment ended on the server: the old vehicle is not kept.
+        auth.assignedVehicle.value = AssignedVehicleState.NotAssigned
+        assertEquals(AssignedVehicleState.NotAssigned, viewModel.uiState.value.assignedVehicle)
+    }
+
+    @Test
+    fun `coming back to home and retrying read the profile again`() = runTest {
+        auth.assignedVehicle.value = AssignedVehicleState.Unavailable
+        val viewModel = viewModel()
+        keepCollecting(viewModel.uiState)
+        assertEquals(AssignedVehicleState.Unavailable, viewModel.uiState.value.assignedVehicle)
+
+        viewModel.onResume()
+        runCurrent()
+        assertEquals(1, auth.profileRefreshes)
+        viewModel.onPause()
+
+        viewModel.onRetryAssignedVehicle()
+        advanceUntilIdle()
+        assertEquals(2, auth.profileRefreshes)
+    }
+
+    @Test
+    fun `the vehicle position is read on return and every minute until home leaves the screen`() = runTest {
+        auth.assignedVehicle.value = dyna042
+        positions.nextAnswer = VehiclePositionState.Known("veh-42", position)
+        val viewModel = viewModel()
+        keepCollecting(viewModel.uiState)
+
+        viewModel.onResume()
+        runCurrent()
+        assertEquals(1, positions.refreshes)
+        assertEquals(VehiclePositionState.Known("veh-42", position), viewModel.uiState.value.vehiclePosition)
+
+        advanceTimeBy(60_001)
+        assertEquals(2, positions.refreshes)
+
+        // Coming back again while reads run does not start a second loop.
+        viewModel.onResume()
+        runCurrent()
+        assertEquals(2, positions.refreshes)
+
+        viewModel.onPause()
+        advanceTimeBy(600_000)
+        assertEquals(2, positions.refreshes)
+    }
+
+    @Test
+    fun `reads stop when the server has no position endpoint, no vehicle or no tracking`() = runTest {
+        auth.assignedVehicle.value = dyna042
+        val viewModel = viewModel()
+        keepCollecting(viewModel.uiState)
+
+        listOf(VehiclePositionState.NotSupported, VehiclePositionState.NotAssigned, VehiclePositionState.NotLinked).forEach { answer ->
+            val before = positions.refreshes
+            positions.nextAnswer = answer
+            viewModel.onResume()
+            advanceTimeBy(600_000)
+            assertEquals("$answer", before + 1, positions.refreshes)
+            viewModel.onPause()
+        }
+    }
+
+    @Test
+    fun `only the position of the vehicle on screen is shown`() = runTest {
+        auth.assignedVehicle.value = dyna042
+        positions.position.value = VehiclePositionState.Known("veh-7", position)
+        val viewModel = viewModel()
+        keepCollecting(viewModel.uiState)
+
+        // Another vehicle's answer (the assignment changed between the two reads) waits for the next read.
+        assertEquals(VehiclePositionState.Loading, viewModel.uiState.value.vehiclePosition)
+
+        positions.position.value = VehiclePositionState.Known("veh-42", position)
+        assertEquals(VehiclePositionState.Known("veh-42", position), viewModel.uiState.value.vehiclePosition)
+
+        // Without an assigned vehicle there is no position row at all.
+        auth.assignedVehicle.value = AssignedVehicleState.NotAssigned
+        assertEquals(VehiclePositionState.NotAssigned, viewModel.uiState.value.vehiclePosition)
+    }
+
+    @Test
+    fun `the phone names the place and a point it cannot name has no name`() = runTest {
+        places = FakePlaceNameResolver(mapOf(gliwice to "Gliwice, PL"))
+        auth.assignedVehicle.value = dyna042
+        positions.position.value = VehiclePositionState.Known("veh-42", position)
+        val viewModel = viewModel()
+        keepCollecting(viewModel.uiState)
+
+        assertEquals("Gliwice, PL", viewModel.uiState.value.vehiclePlace)
+
+        val elsewhere = GeoPoint(52.4064, 16.9252)
+        positions.position.value = VehiclePositionState.Known("veh-42", position.copy(point = elsewhere))
+        assertNull(viewModel.uiState.value.vehiclePlace)
+
+        positions.position.value = VehiclePositionState.NoData
+        assertNull(viewModel.uiState.value.vehiclePlace)
+        assertEquals(listOf(gliwice, elsewhere), places.lookups)
+    }
+
+    @Test
+    fun `retrying the position reads it once and a missing map app is told`() = runTest {
+        auth.assignedVehicle.value = dyna042
+        positions.position.value = VehiclePositionState.Unavailable
+        val viewModel = viewModel()
+        keepCollecting(viewModel.uiState)
+
+        viewModel.onRetryVehiclePosition()
+        advanceUntilIdle()
+        assertEquals(1, positions.refreshes)
+
+        viewModel.onMapUnavailable()
+        assertEquals(R.string.navigation_unavailable, viewModel.uiState.value.message)
     }
 }

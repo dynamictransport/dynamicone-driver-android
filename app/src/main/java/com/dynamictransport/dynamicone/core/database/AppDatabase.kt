@@ -23,8 +23,11 @@ import java.time.Instant
         ShiftCommandEntity::class,
         CheckPhotoEntity::class,
         DriverCacheEntity::class,
+        HrSignatureEntity::class,
+        HrDocumentCacheEntity::class,
+        SnapshotRequestEntity::class,
     ],
-    version = 4,
+    version = 6,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 1, to = 2, spec = AppDatabase.Version1To2::class),
@@ -32,6 +35,10 @@ import java.time.Instant
         AutoMigration(from = 2, to = 3),
         // v4: driver daily shift commands, defect photos and the driver's cached server answers (docs/16).
         AutoMigration(from = 3, to = 4),
+        // v5: personnel document signatures waiting on the phone and the pending document list (docs/17).
+        AutoMigration(from = 4, to = 5),
+        // v6: remote road snapshot requests and the photos / failure reports waiting on the tablet (docs/24).
+        AutoMigration(from = 5, to = 6),
     ],
 )
 @TypeConverters(DatabaseConverters::class)
@@ -47,6 +54,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun shiftCommandDao(): ShiftCommandDao
     abstract fun checkPhotoDao(): CheckPhotoDao
     abstract fun driverCacheDao(): DriverCacheDao
+    abstract fun hrDocumentDao(): HrDocumentDao
+    abstract fun snapshotRequestDao(): SnapshotRequestDao
 
     /**
      * v2: Driver API command store added; the demo earnings cache is dropped (pay data is no longer cached

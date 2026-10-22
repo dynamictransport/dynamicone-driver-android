@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_channel_snapshots">Запросы фото дороги</string>
+    <string name="snapshot_notification_title">Запрошено фото дороги</string>
+    <string name="snapshot_notification_body">%1$s просит фото дороги. Откройте приложение, чтобы сделать его.</string>
+    <string name="snapshot_notification_body_office">Офис просит фото дороги. Откройте приложение, чтобы сделать его.</string>
+    <string name="snapshot_notification_take">Сделать фото</string>
+    <string name="snapshot_notification_dismiss">Не сейчас</string>
+    <string name="snapshot_office">Офис</string>
+    <string name="snapshot_banner_taken">%1$s сделал(а) фото дороги</string>
+    <string name="snapshot_banner_taken_office">Офис сделал фото дороги</string>
+    <string name="snapshot_banner_failed">Фото дороги не сделано: %1$s</string>
+    <string name="snapshot_home_waiting">%1$s запросил(а) фото дороги</string>
+    <string name="snapshot_home_pending_upload">Фото дороги · %1$s · %2$s · ожидает отправки</string>
+    <string name="snapshot_home_uploaded">Фото дороги отправлено · %1$s · %2$s</string>
+    <string name="snapshot_home_failed">Фото дороги не сделано: %1$s</string>
+    <string name="snapshot_reason_camera">камера недоступна</string>
+    <string name="snapshot_reason_permission">нет разрешения на камеру</string>
+    <string name="snapshot_reason_expired">срок запроса истёк</string>
+    <string name="snapshot_reason_dismissed">отклонено</string>
+</resources>

@@ -5,7 +5,9 @@ import com.dynamictransport.dynamicone.core.common.ApplicationScope
 import com.dynamictransport.dynamicone.core.push.PushSession
 import com.dynamictransport.dynamicone.core.sync.AttendanceSyncScheduler
 import com.dynamictransport.dynamicone.core.sync.DriverDayWorkScheduler
+import com.dynamictransport.dynamicone.core.sync.HrDocumentSyncScheduler
 import com.dynamictransport.dynamicone.core.sync.ShiftSyncScheduler
+import com.dynamictransport.dynamicone.core.sync.SnapshotSyncScheduler
 import com.dynamictransport.dynamicone.core.sync.SyncScheduler
 import com.dynamictransport.dynamicone.data.sync.SyncEngine
 import com.dynamictransport.dynamicone.domain.model.AppModule
@@ -42,6 +44,8 @@ class AppStartup @Inject constructor(
     private val shiftSyncScheduler: ShiftSyncScheduler,
     private val driverDayWork: DriverDayWorkScheduler,
     private val restAlarm: Provider<RestAlarmController>,
+    private val hrDocumentSyncScheduler: HrDocumentSyncScheduler,
+    private val snapshotSyncScheduler: SnapshotSyncScheduler,
 ) {
     /** Driver API daily shift with tachograph rest and wake-up alarm (docs/16). */
     private val dailyShift: Boolean get() = appInfo.isDriverShiftEnabled && !appInfo.isDemoMode
@@ -95,7 +99,8 @@ class AppStartup @Inject constructor(
 
     /**
      * Real API: the driver module reads the server state when a session starts and when the connection returns; its
-     * writes are never replayed. Office attendance punches waiting on the phone are sent at the same moments.
+     * writes are never replayed. Office attendance punches and document signatures waiting on the phone are sent at the
+     * same moments.
      */
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun startApiReads() {
@@ -106,23 +111,38 @@ class AppStartup @Inject constructor(
                 .filterNotNull()
                 .collectLatest { session ->
                     if (AppModule.OFFICE_ATTENDANCE in session.modules) attendanceSyncScheduler.requestSend()
-                    if (AppModule.DRIVER in session.modules) syncRepository.refreshFromServer()
+                    if (AppModule.HR_DOCUMENTS in session.modules) hrDocumentSyncScheduler.requestSend()
+                    if (AppModule.DRIVER in session.modules) {
+                        // Road snapshot photos taken before a restart or without network go out first (docs/24).
+                        snapshotSyncScheduler.requestSend()
+                        syncRepository.refreshFromServer()
+                    }
                 }
         }
         scope.launch {
-            // Push follows the session: a signed-in driver receives notifications, a signed-out device none.
+            // Push follows the session: an account with a module that sends pushes (driver messages, personnel documents)
+            // receives notifications, a signed-out device none.
             authRepository.sessionState
                 .filter { it !is SessionState.Loading }
-                .map { (it as? SessionState.LoggedIn)?.modules?.contains(AppModule.DRIVER) == true }
+                .map { state -> (state as? SessionState.LoggedIn)?.modules.orEmpty().any { it in PUSH_MODULES } }
                 .distinctUntilChanged()
-                .collect { driverSignedIn -> if (driverSignedIn) pushSession.onSignedIn() else pushSession.onSignedOut() }
+                .collect { receivesPush -> if (receivesPush) pushSession.onSignedIn() else pushSession.onSignedOut() }
         }
         scope.launch {
             networkMonitor.isOnline.drop(1).filter { it }.collect {
                 val session = authRepository.sessionState.value as? SessionState.LoggedIn ?: return@collect
                 if (AppModule.OFFICE_ATTENDANCE in session.modules) attendanceSyncScheduler.requestSend()
-                if (AppModule.DRIVER in session.modules) syncRepository.refreshFromServer()
+                if (AppModule.HR_DOCUMENTS in session.modules) hrDocumentSyncScheduler.requestSend()
+                if (AppModule.DRIVER in session.modules) {
+                    snapshotSyncScheduler.requestSend()
+                    syncRepository.refreshFromServer()
+                }
             }
         }
+    }
+
+    private companion object {
+        /** Modules whose server sends push notifications (docs/13, docs/17 §6). */
+        val PUSH_MODULES = setOf(AppModule.DRIVER, AppModule.HR_DOCUMENTS)
     }
 }

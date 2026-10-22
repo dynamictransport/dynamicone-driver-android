@@ -73,6 +73,11 @@
             android:name=".core.alarm.RestAlarmReceiver"
             android:exported="false" />
 
+        <!-- "Not now" on a road snapshot request notification (docs/24). -->
+        <receiver
+            android:name=".core.push.SnapshotDismissReceiver"
+            android:exported="false" />
+
         <!-- Sets the alarm again after a restart, an app update and clock or permission changes (system broadcasts). -->
         <receiver
             android:name=".core.alarm.RestAlarmRescheduleReceiver"

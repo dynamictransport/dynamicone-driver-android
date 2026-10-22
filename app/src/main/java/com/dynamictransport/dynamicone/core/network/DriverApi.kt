@@ -70,6 +70,19 @@ interface DriverApi {
         @Query("pageSize") pageSize: Int,
     ): DriverPageDto<DriverActionReceiptDto>
 
+    // --- Trailer confirmation after accepting (docs/20_DRIVER_TRAILER_CONFIRMATION.md) ---
+
+    /** The active trailers and this trip's confirmation. The client never creates a trailer. */
+    @GET("trips/{tripId}/trailers")
+    suspend fun trailers(@Path("tripId") tripId: String): DriverTrailerStateDto
+
+    /** 400 `invalid_trailer`, 404 `not_found`, 409 `conflict` (plan changed, or the trip already started). */
+    @POST("trips/{tripId}/trailer-confirmation")
+    suspend fun confirmTrailer(
+        @Path("tripId") tripId: String,
+        @Body body: DriverTrailerCommandDto,
+    ): DriverExecutionResultDto
+
     // --- Legacy status workflow (trips started before trip actions existed) ---
 
     @GET("trips/{tripId}/statuses")
@@ -165,6 +178,12 @@ interface DriverApi {
         @Body body: DriverMessageReadDto,
     ): Response<Unit>
 
+    // --- Assigned vehicle position (docs/19_ASSIGNED_VEHICLE_POSITION.md, proposed; 404 until the backend has it) ---
+
+    /** Always 200 with a `status`; the vehicle is the one of `me.assignedVehicle`. */
+    @GET("assigned-vehicle/position")
+    suspend fun assignedVehiclePosition(): AssignedVehiclePositionResponseDto
+
     // --- Daily shift, tachograph and vehicle check (docs/16_DRIVER_SHIFT_REST_AND_VEHICLE_CHECK.md) ---
 
     @GET("driver-times")
@@ -195,6 +214,31 @@ interface DriverApi {
         @Part("photoId") photoId: RequestBody,
         @Part photo: MultipartBody.Part,
     ): CheckPhotoResponseDto
+
+    // --- Remote road snapshots (docs/24) ---
+
+    /** 200 while pending; `409 snapshot_request_closed` afterwards, `404 snapshot_request_not_found` for another driver's. */
+    @GET("trips/{tripId}/snapshot-requests/{requestId}")
+    suspend fun snapshotRequest(@Path("tripId") tripId: String, @Path("requestId") requestId: String): SnapshotRequestDto
+
+    /** multipart/form-data: `capturedAt` (UTC), `camera` (`External`/`Back`) and the EXIF-free JPEG; idempotent by request. */
+    @Multipart
+    @POST("trips/{tripId}/snapshot-requests/{requestId}/photo")
+    suspend fun uploadSnapshotPhoto(
+        @Path("tripId") tripId: String,
+        @Path("requestId") requestId: String,
+        @Part("capturedAt") capturedAt: RequestBody,
+        @Part("camera") camera: RequestBody,
+        @Part photo: MultipartBody.Part,
+    ): SnapshotPhotoResponseDto
+
+    /** 204, also for an already closed request. */
+    @POST("trips/{tripId}/snapshot-requests/{requestId}/result")
+    suspend fun reportSnapshotResult(
+        @Path("tripId") tripId: String,
+        @Path("requestId") requestId: String,
+        @Body body: SnapshotResultRequestDto,
+    ): Response<Unit>
 }
 
 /** Refresh runs on a client without the authenticator, so a failed refresh can never loop. */

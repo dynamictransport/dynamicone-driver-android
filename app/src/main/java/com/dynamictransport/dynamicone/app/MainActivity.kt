@@ -11,8 +11,10 @@ import androidx.lifecycle.lifecycleScope
 import com.dynamictransport.dynamicone.app.navigation.DynamicOneApp
 import com.dynamictransport.dynamicone.core.alarm.RestAlarmController
 import com.dynamictransport.dynamicone.core.alarm.RestAlarmIntents.rest
+import com.dynamictransport.dynamicone.core.design.layout.applyScreenOrientationPolicy
 import com.dynamictransport.dynamicone.core.design.theme.DynamicOneTheme
 import com.dynamictransport.dynamicone.core.push.NotificationNavigation
+import com.dynamictransport.dynamicone.feature.snapshot.SnapshotCaptureHost
 import com.dynamictransport.dynamicone.domain.model.SessionState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -42,6 +44,8 @@ class MainActivity : AppCompatActivity() {
         setContent {
             DynamicOneTheme {
                 DynamicOneApp(appViewModel)
+                // Takes the planner's road photo over whatever screen is open (docs/24); nothing to show otherwise.
+                SnapshotCaptureHost()
             }
         }
     }

@@ -139,7 +139,7 @@ class FirebasePushSession @Inject constructor(
     }
 }
 
-/** Receives push signals: new messages and tachograph rest changes. Other push types are ignored. */
+/** Receives push signals: new messages, personnel documents and tachograph rest changes. Other push types are ignored. */
 @AndroidEntryPoint
 class DriverMessagingService : FirebaseMessagingService() {
 
@@ -155,13 +155,27 @@ class DriverMessagingService : FirebaseMessagingService() {
     @Inject
     lateinit var driverDaySync: DriverDaySync
 
+    @Inject
+    lateinit var hrDocumentSignals: HrDocumentSignalHandler
+
+    @Inject
+    lateinit var snapshotSignals: RoadSnapshotSignalHandler
+
     override fun onMessageReceived(message: RemoteMessage) {
         if (appInfo.isDemoMode) return
         when (message.data[EXTRA_TYPE]) {
+            // The planner asks the vehicle tablet for a photo of the road (docs/24 §4).
+            TYPE_TRIP_SNAPSHOT -> runBlocking {
+                withTimeoutOrNull(SIGNAL_TIMEOUT_MILLIS) { snapshotSignals.onSignal(message.data[EXTRA_TRIP_ID], message.data[EXTRA_REQUEST_ID]) }
+            }
             TYPE_DRIVER_MESSAGE -> {
                 // Called on a Firebase worker thread: finish the read before the process may be stopped.
                 val messageId = message.data[EXTRA_MESSAGE_ID]?.takeIf { it.isNotBlank() }
                 runBlocking { withTimeoutOrNull(SIGNAL_TIMEOUT_MILLIS) { handler.onMessageSignal(messageId) } }
+            }
+            // A personnel document to sign was sent, is due, overdue or withdrawn (docs/17 §6).
+            TYPE_HR_DOCUMENT -> runBlocking {
+                withTimeoutOrNull(SIGNAL_TIMEOUT_MILLIS) { hrDocumentSignals.onSignal(message.data[EXTRA_DOCUMENT_ID], message.data[EXTRA_REASON]) }
             }
             // The tachograph rest changed (docs/16 §11): read it and set the wake-up alarm again.
             TYPE_DRIVER_TIMES -> if (appInfo.isDriverShiftEnabled) {

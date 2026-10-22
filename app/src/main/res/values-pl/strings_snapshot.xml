@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_channel_snapshots">Prośby o zdjęcie drogi</string>
+    <string name="snapshot_notification_title">Prośba o zdjęcie drogi</string>
+    <string name="snapshot_notification_body">%1$s prosi o zdjęcie drogi. Otwórz aplikację, aby je zrobić.</string>
+    <string name="snapshot_notification_body_office">Biuro prosi o zdjęcie drogi. Otwórz aplikację, aby je zrobić.</string>
+    <string name="snapshot_notification_take">Zrób zdjęcie</string>
+    <string name="snapshot_notification_dismiss">Nie teraz</string>
+    <string name="snapshot_office">Biuro</string>
+    <string name="snapshot_banner_taken">%1$s zrobił(a) zdjęcie drogi</string>
+    <string name="snapshot_banner_taken_office">Biuro zrobiło zdjęcie drogi</string>
+    <string name="snapshot_banner_failed">Nie udało się zrobić zdjęcia drogi: %1$s</string>
+    <string name="snapshot_home_waiting">%1$s prosi o zdjęcie drogi</string>
+    <string name="snapshot_home_pending_upload">Zdjęcie drogi · %1$s · %2$s · czeka na wysłanie</string>
+    <string name="snapshot_home_uploaded">Zdjęcie drogi wysłane · %1$s · %2$s</string>
+    <string name="snapshot_home_failed">Nie udało się zrobić zdjęcia drogi: %1$s</string>
+    <string name="snapshot_reason_camera">aparat niedostępny</string>
+    <string name="snapshot_reason_permission">brak uprawnienia do aparatu</string>
+    <string name="snapshot_reason_expired">prośba wygasła</string>
+    <string name="snapshot_reason_dismissed">odrzucono</string>
+</resources>

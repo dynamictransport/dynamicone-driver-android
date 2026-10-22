@@ -17,12 +17,14 @@ import com.dynamictransport.dynamicone.core.alarm.RestAlarmNotifier
 import com.dynamictransport.dynamicone.core.alarm.RestAlarmPermissions
 import com.dynamictransport.dynamicone.core.alarm.RestAlarmScheduler
 import com.dynamictransport.dynamicone.core.common.AndroidAppLogger
+import com.dynamictransport.dynamicone.core.common.AndroidDeviceProfile
 import com.dynamictransport.dynamicone.core.common.AndroidDeviceUptime
 import com.dynamictransport.dynamicone.core.common.AppDirectories
 import com.dynamictransport.dynamicone.core.common.AppLogger
 import com.dynamictransport.dynamicone.core.common.ApplicationScope
 import com.dynamictransport.dynamicone.core.common.BackendMode
 import com.dynamictransport.dynamicone.core.common.BackendModeResolver
+import com.dynamictransport.dynamicone.core.common.DeviceProfile
 import com.dynamictransport.dynamicone.core.common.DeviceUptime
 import com.dynamictransport.dynamicone.core.common.IdGenerator
 import com.dynamictransport.dynamicone.core.common.IoDispatcher
@@ -38,19 +40,30 @@ import com.dynamictransport.dynamicone.core.database.PendingActionDao
 import com.dynamictransport.dynamicone.core.database.PendingCommandDao
 import com.dynamictransport.dynamicone.core.database.ShiftCommandDao
 import com.dynamictransport.dynamicone.core.database.ShiftDao
+import com.dynamictransport.dynamicone.core.database.SnapshotRequestDao
 import com.dynamictransport.dynamicone.core.database.SyncMetaDao
 import com.dynamictransport.dynamicone.core.database.TripDao
+import com.dynamictransport.dynamicone.core.location.GeocoderPlaceNameResolver
+import com.dynamictransport.dynamicone.core.location.PlaceNameResolver
+import com.dynamictransport.dynamicone.core.media.AndroidDocumentImageDecoder
+import com.dynamictransport.dynamicone.core.media.DocumentImageDecoder
 import com.dynamictransport.dynamicone.core.network.DriverApi
 import com.dynamictransport.dynamicone.core.network.DriverAuthApi
 import com.dynamictransport.dynamicone.core.network.DriverHttpClients
 import com.dynamictransport.dynamicone.core.network.MobileApi
 import com.dynamictransport.dynamicone.core.nfc.AndroidNfcStatusProvider
 import com.dynamictransport.dynamicone.core.nfc.NfcStatusProvider
+import com.dynamictransport.dynamicone.core.pdf.AndroidPdfDocumentOpener
+import com.dynamictransport.dynamicone.core.pdf.PdfDocumentOpener
+import com.dynamictransport.dynamicone.core.push.AndroidHrDocumentNotifier
 import com.dynamictransport.dynamicone.core.push.AndroidMessageNotifier
+import com.dynamictransport.dynamicone.core.push.AndroidRoadSnapshotNotifier
 import com.dynamictransport.dynamicone.core.push.FirebasePushSession
+import com.dynamictransport.dynamicone.core.push.HrDocumentNotifier
 import com.dynamictransport.dynamicone.core.push.MessageNotifier
 import com.dynamictransport.dynamicone.core.push.PushRegistrar
 import com.dynamictransport.dynamicone.core.push.PushSession
+import com.dynamictransport.dynamicone.core.push.RoadSnapshotNotifier
 import com.dynamictransport.dynamicone.core.security.CryptoBox
 import com.dynamictransport.dynamicone.core.security.EncryptedTokenStore
 import com.dynamictransport.dynamicone.core.security.KeystoreCryptoBox
@@ -61,13 +74,17 @@ import com.dynamictransport.dynamicone.core.security.TokenStore
 import com.dynamictransport.dynamicone.core.sync.AttendanceSyncScheduler
 import com.dynamictransport.dynamicone.core.sync.DriverDaySync
 import com.dynamictransport.dynamicone.core.sync.DriverDayWorkScheduler
+import com.dynamictransport.dynamicone.core.sync.HrDocumentSyncScheduler
 import com.dynamictransport.dynamicone.core.sync.NoOpDriverDaySync
 import com.dynamictransport.dynamicone.core.sync.ShiftSyncScheduler
+import com.dynamictransport.dynamicone.core.sync.SnapshotSyncScheduler
 import com.dynamictransport.dynamicone.core.sync.SyncRunner
 import com.dynamictransport.dynamicone.core.sync.SyncScheduler
 import com.dynamictransport.dynamicone.core.sync.WorkManagerAttendanceSyncScheduler
 import com.dynamictransport.dynamicone.core.sync.WorkManagerDriverDayWorkScheduler
+import com.dynamictransport.dynamicone.core.sync.WorkManagerHrDocumentSyncScheduler
 import com.dynamictransport.dynamicone.core.sync.WorkManagerShiftSyncScheduler
+import com.dynamictransport.dynamicone.core.sync.WorkManagerSnapshotSyncScheduler
 import com.dynamictransport.dynamicone.core.sync.WorkManagerSyncScheduler
 import com.dynamictransport.dynamicone.data.demo.AppNetworkMonitor
 import com.dynamictransport.dynamicone.data.demo.FakeDemoBackendControls
@@ -75,15 +92,25 @@ import com.dynamictransport.dynamicone.data.demo.UnavailableAttendanceRepository
 import com.dynamictransport.dynamicone.data.demo.UnavailableDailyShiftRepository
 import com.dynamictransport.dynamicone.data.demo.UnavailableDemoBackendControls
 import com.dynamictransport.dynamicone.data.demo.UnavailableDriverTimesRepository
+import com.dynamictransport.dynamicone.data.demo.UnavailableHrDocumentRepository
 import com.dynamictransport.dynamicone.data.demo.UnavailableMessageRepository
+import com.dynamictransport.dynamicone.data.demo.UnavailableMyDocumentRepository
 import com.dynamictransport.dynamicone.data.demo.UnavailablePayrollRepository
+import com.dynamictransport.dynamicone.data.demo.UnavailableRoadSnapshotRepository
 import com.dynamictransport.dynamicone.data.demo.UnavailableSignedDocumentRepository
 import com.dynamictransport.dynamicone.data.demo.UnavailableTripExecutionRepository
 import com.dynamictransport.dynamicone.data.demo.UnavailableVehicleCheckRepository
+import com.dynamictransport.dynamicone.data.demo.UnavailableVehicleDocumentRepository
+import com.dynamictransport.dynamicone.data.demo.UnavailableVehiclePositionRepository
+import com.dynamictransport.dynamicone.data.media.AndroidProfilePhotoImages
 import com.dynamictransport.dynamicone.data.media.BitmapDocumentScanner
+import com.dynamictransport.dynamicone.data.media.BitmapSnapshotPhotoPreparer
 import com.dynamictransport.dynamicone.data.media.FileCheckPhotoStore
 import com.dynamictransport.dynamicone.data.media.FileDocumentMediaStore
+import com.dynamictransport.dynamicone.data.media.ProfilePhotoImages
+import com.dynamictransport.dynamicone.data.media.SnapshotPhotoPreparer
 import com.dynamictransport.dynamicone.data.real.AccountRemote
+import com.dynamictransport.dynamicone.data.real.AndroidFreeSpace
 import com.dynamictransport.dynamicone.data.real.ApiDriverDaySessionData
 import com.dynamictransport.dynamicone.data.real.ApiDriverTimesRepository
 import com.dynamictransport.dynamicone.data.real.ApiShiftRepository
@@ -106,6 +133,7 @@ import com.dynamictransport.dynamicone.data.real.RealMyDocumentRepository
 import com.dynamictransport.dynamicone.data.real.RealNetworkMonitor
 import com.dynamictransport.dynamicone.data.real.RealPayrollRepository
 import com.dynamictransport.dynamicone.data.real.RealPushRegistrar
+import com.dynamictransport.dynamicone.data.real.RealRoadSnapshotRepository
 import com.dynamictransport.dynamicone.data.real.RealShiftRepository
 import com.dynamictransport.dynamicone.data.real.RealSignedDocumentRepository
 import com.dynamictransport.dynamicone.data.real.RealSyncRepository
@@ -140,6 +168,7 @@ import com.dynamictransport.dynamicone.domain.repository.MyDocumentRepository
 import com.dynamictransport.dynamicone.domain.repository.NetworkMonitor
 import com.dynamictransport.dynamicone.domain.repository.PayrollRepository
 import com.dynamictransport.dynamicone.domain.repository.RestAlarmSettingsRepository
+import com.dynamictransport.dynamicone.domain.repository.RoadSnapshotRepository
 import com.dynamictransport.dynamicone.domain.repository.ShiftRepository
 import com.dynamictransport.dynamicone.domain.repository.SignedDocumentRepository
 import com.dynamictransport.dynamicone.domain.repository.SyncRepository
@@ -264,6 +293,8 @@ object DatabaseModule {
     @Provides
     fun provideHrDocumentDao(database: AppDatabase): HrDocumentDao = database.hrDocumentDao()
 
+    @Provides
+    fun provideSnapshotRequestDao(database: AppDatabase): SnapshotRequestDao = database.snapshotRequestDao()
 }
 
 @Module
@@ -415,6 +446,20 @@ object RepositoryModule {
     fun provideDriverTimesRepository(real: Provider<ApiDriverTimesRepository>): DriverTimesRepository =
         if (isDriverShift()) real.get() else UnavailableDriverTimesRepository
 
+    /** No flag: until the backend has docs/19 the endpoint answers 404 and the app shows no position. */
+    @Provides
+    fun provideVehiclePositionRepository(real: Provider<ApiVehiclePositionRepository>): VehiclePositionRepository =
+        if (isDemoMode()) UnavailableVehiclePositionRepository else real.get()
+
+    @Provides
+    @Singleton
+    fun providePlaceNameResolver(@ApplicationContext context: Context): PlaceNameResolver = GeocoderPlaceNameResolver(context)
+
+    /** Road snapshot requests come only from the real planner (docs/24); the demo has none. */
+    @Provides
+    fun provideRoadSnapshotRepository(real: Provider<RealRoadSnapshotRepository>): RoadSnapshotRepository =
+        if (isDemoMode()) UnavailableRoadSnapshotRepository else real.get()
+
     @Provides
     fun provideDriverDaySync(real: Provider<ApiDriverDaySync>): DriverDaySync = if (isDriverShift()) real.get() else NoOpDriverDaySync
 
@@ -446,15 +491,6 @@ object RepositoryModule {
     fun providePayrollRepository(real: Provider<RealPayrollRepository>): PayrollRepository =
         if (isDemoMode()) UnavailablePayrollRepository else real.get()
 
-    /** No flag: until the backend has docs/19 the endpoint answers 404 and the app shows no position. */
-    @Provides
-    fun provideVehiclePositionRepository(real: Provider<ApiVehiclePositionRepository>): VehiclePositionRepository =
-        if (isDemoMode()) UnavailableVehiclePositionRepository else real.get()
-
-    @Provides
-    @Singleton
-    fun providePlaceNameResolver(@ApplicationContext context: Context): PlaceNameResolver = GeocoderPlaceNameResolver(context)
-
     @Provides
     fun provideAttendanceRepository(real: Provider<RealAttendanceRepository>): AttendanceRepository =
         if (isDemoMode()) UnavailableAttendanceRepository else real.get()
@@ -462,18 +498,6 @@ object RepositoryModule {
     @Provides
     fun provideSignedDocumentRepository(real: Provider<RealSignedDocumentRepository>): SignedDocumentRepository =
         if (isDemoMode()) UnavailableSignedDocumentRepository else real.get()
-
-    @Provides
-    fun provideMessageRepository(real: Provider<RealMessageRepository>): MessageRepository =
-        if (isDemoMode()) UnavailableMessageRepository else real.get()
-
-    @Provides
-    fun provideSyncRepository(demo: Provider<SyncRepositoryImpl>, real: Provider<RealSyncRepository>): SyncRepository =
-        if (isDemoMode()) demo.get() else real.get()
-
-    @Provides
-    fun provideNetworkMonitor(demo: Provider<AppNetworkMonitor>, real: Provider<RealNetworkMonitor>): NetworkMonitor =
-        if (isDemoMode()) demo.get() else real.get()
 
     /** Personnel documents to sign come from the Mobile API only (docs/17); screens appear with the `hrDocuments` module. */
     @Provides
@@ -494,6 +518,18 @@ object RepositoryModule {
         if (isDemoMode()) UnavailableVehicleDocumentRepository else real.get()
 
     @Provides
+    fun provideMessageRepository(real: Provider<RealMessageRepository>): MessageRepository =
+        if (isDemoMode()) UnavailableMessageRepository else real.get()
+
+    @Provides
+    fun provideSyncRepository(demo: Provider<SyncRepositoryImpl>, real: Provider<RealSyncRepository>): SyncRepository =
+        if (isDemoMode()) demo.get() else real.get()
+
+    @Provides
+    fun provideNetworkMonitor(demo: Provider<AppNetworkMonitor>, real: Provider<RealNetworkMonitor>): NetworkMonitor =
+        if (isDemoMode()) demo.get() else real.get()
+
+    @Provides
     fun provideSyncRunner(demo: Provider<SyncEngine>): SyncRunner = if (isDemoMode()) demo.get() else NoOpSyncRunner
 }
 
@@ -511,6 +547,9 @@ abstract class BindingsModule {
     abstract fun bindDocumentScanner(impl: BitmapDocumentScanner): DocumentScanner
 
     @Binds
+    abstract fun bindProfilePhotoImages(impl: AndroidProfilePhotoImages): ProfilePhotoImages
+
+    @Binds
     abstract fun bindSyncScheduler(impl: WorkManagerSyncScheduler): SyncScheduler
 
     @Binds
@@ -524,6 +563,18 @@ abstract class BindingsModule {
 
     @Binds
     abstract fun bindAttendanceSyncScheduler(impl: WorkManagerAttendanceSyncScheduler): AttendanceSyncScheduler
+
+    @Binds
+    abstract fun bindSnapshotSyncScheduler(impl: WorkManagerSnapshotSyncScheduler): SnapshotSyncScheduler
+
+    @Binds
+    abstract fun bindRoadSnapshotNotifier(impl: AndroidRoadSnapshotNotifier): RoadSnapshotNotifier
+
+    @Binds
+    abstract fun bindDeviceProfile(impl: AndroidDeviceProfile): DeviceProfile
+
+    @Binds
+    abstract fun bindSnapshotPhotoPreparer(impl: BitmapSnapshotPhotoPreparer): SnapshotPhotoPreparer
 
     @Binds
     abstract fun bindDeviceUptime(impl: AndroidDeviceUptime): DeviceUptime
@@ -545,9 +596,6 @@ abstract class BindingsModule {
 
     @Binds
     abstract fun bindRestAlarmNotifier(impl: AndroidRestAlarmNotifier): RestAlarmNotifier
-
-    @Binds
-    abstract fun bindProfilePhotoImages(impl: AndroidProfilePhotoImages): ProfilePhotoImages
 
     @Binds
     abstract fun bindRestAlarmPermissions(impl: AndroidRestAlarmPermissions): RestAlarmPermissions

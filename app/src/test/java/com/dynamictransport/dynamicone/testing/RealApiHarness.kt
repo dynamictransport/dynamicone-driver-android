@@ -28,6 +28,7 @@ import com.dynamictransport.dynamicone.data.real.RealIncidentRepository
 import com.dynamictransport.dynamicone.data.real.RealMessageRepository
 import com.dynamictransport.dynamicone.data.real.RealPayrollRepository
 import com.dynamictransport.dynamicone.data.real.RealPushRegistrar
+import com.dynamictransport.dynamicone.data.real.RealRoadSnapshotRepository
 import com.dynamictransport.dynamicone.data.real.RealSessionData
 import com.dynamictransport.dynamicone.data.real.RealSignedDocumentRepository
 import com.dynamictransport.dynamicone.data.real.RealSyncRepository
@@ -61,9 +62,18 @@ class RealApiHarness(folder: TemporaryFolder, mobileAccount: Boolean = false) {
     val attendanceDao = InMemoryAttendancePunchDao()
     val uptime = FakeDeviceUptime()
     val attendanceScheduler = RecordingAttendanceSyncScheduler()
+    val hrDao = InMemoryHrDocumentDao()
+    val hrScheduler = RecordingHrDocumentSyncScheduler()
+    val freeSpace = FakeFreeSpace()
+    val photoImages = FakeProfilePhotoImages()
+    val snapshotDao = InMemorySnapshotRequestDao()
+    val snapshotScheduler = RecordingSnapshotSyncScheduler()
+    val snapshotPreparer = FakeSnapshotPhotoPreparer()
+    val deviceProfile = FakeDeviceProfile()
 
     /** In-memory DataStore: the JVM file rename DataStore relies on cannot replace files on Windows. */
-    val sessionPreferences = SessionPreferences(InMemoryPreferencesDataStore())
+    val sessionStore = InMemoryPreferencesDataStore()
+    val sessionPreferences = SessionPreferences(sessionStore)
     val directories: AppDirectories = AppDirectories(folder.newFolder("files"), folder.newFolder("cache"))
     val tracker = ApiActivityTracker(clock, NoOpLogger)
     val api: DriverApi
@@ -80,7 +90,16 @@ class RealApiHarness(folder: TemporaryFolder, mobileAccount: Boolean = false) {
     val incidents: RealIncidentRepository
     val pushRegistrar: RealPushRegistrar
     val attendance: RealAttendanceRepository
+    val hrFiles: HrDocumentFileStore
+    val hrDocuments: RealHrDocumentRepository
+    val vehiclePosition: ApiVehiclePositionRepository
+    val snapshots: RealRoadSnapshotRepository
+    val myDocuments: RealMyDocumentRepository
+    val vehicleDocuments: RealVehicleDocumentRepository
+    val photos: EmployeePhotoStore
     val auth: RealAuthRepository
+    private val account: AccountRemote
+    private val sessionData: RealSessionData
 
     init {
         server.dispatcher = routes
@@ -101,11 +120,30 @@ class RealApiHarness(folder: TemporaryFolder, mobileAccount: Boolean = false) {
         attendance = RealAttendanceRepository(
             mobileApi, tracker, attendanceDao, sessionPreferences, attendanceScheduler, SequenceIdGenerator("punch"), clock, uptime,
         )
-        val sessionData = RealSessionData(trips, executions, documents, payroll, signedDocuments, messages, sync, downloader, store, attendance)
-        pushRegistrar = RealPushRegistrar(api, tokenManager, sessionPreferences, tracker, FakeAppInfo())
-        val account = if (mobileAccount) MobileAccountRemote(mobileApi) else DriverAccountRemote(api)
-        auth = RealAuthRepository(account, tokenManager, sessionPreferences, tracker, sessionData, pushRegistrar, clock, scope)
+        hrFiles = HrDocumentFileStore(directories, freeSpace, Dispatchers.IO)
+        hrDocuments = RealHrDocumentRepository(
+            mobileApi, tracker, hrDao, hrFiles, downloader, sessionPreferences, hrScheduler, SequenceIdGenerator("sig"), clock, uptime, TEST_JSON,
+        )
+        vehiclePosition = ApiVehiclePositionRepository(api, tracker, sessionPreferences)
+        snapshots = RealRoadSnapshotRepository(api, tracker, snapshotDao, sessionPreferences, snapshotScheduler, snapshotPreparer, directories, clock, Dispatchers.IO)
+        myDocuments = RealMyDocumentRepository(mobileApi, tracker, downloader, sessionPreferences)
+        vehicleDocuments = RealVehicleDocumentRepository(mobileApi, tracker, downloader, sessionPreferences)
+        sessionData = RealSessionData(
+            trips, executions, documents, payroll, signedDocuments, messages, sync, downloader, store, attendance, vehiclePosition,
+            myDocuments, vehicleDocuments,
+            hrDocuments = hrDocuments,
+        )
+        pushRegistrar = RealPushRegistrar(api, tokenManager, sessionPreferences, tracker, FakeAppInfo(), mobileApi, deviceProfile)
+        account = if (mobileAccount) MobileAccountRemote(mobileApi) else DriverAccountRemote(api)
+        photos = EmployeePhotoStore(account, tracker, directories, photoImages, Dispatchers.IO)
+        auth = RealAuthRepository(account, tokenManager, sessionPreferences, tracker, sessionData, pushRegistrar, clock, scope, photos)
     }
+
+    /** The app started again: new repositories over the same stored session and files. */
+    fun restartedAuth(): RealAuthRepository = RealAuthRepository(
+        account, tokenManager, sessionPreferences, tracker, sessionData, pushRegistrar, clock, scope,
+        EmployeePhotoStore(account, tracker, directories, photoImages, Dispatchers.IO),
+    )
 
     /** Stored tokens and the linked driver, as after a successful Driver API sign-in. */
     fun signIn(driverId: String = "driver-1") = runBlocking {

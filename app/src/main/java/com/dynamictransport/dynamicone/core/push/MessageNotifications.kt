@@ -137,10 +137,20 @@ class NotificationNavigation @Inject constructor() {
     private val requests = MutableStateFlow<ConversationOpenRequest?>(null)
     val pending: StateFlow<ConversationOpenRequest?> = requests.asStateFlow()
 
+    private val documents = MutableStateFlow<String?>(null)
+
+    /** A tapped personnel document notification asks to open this document (docs/17). */
+    val documentRequest: StateFlow<String?> = documents.asStateFlow()
+
     private val startShift = MutableStateFlow(false)
 
     /** The wake-up alarm asked to open the daily shift start (docs/16). */
     val startShiftRequested: StateFlow<Boolean> = startShift.asStateFlow()
+
+    private val snapshots = MutableStateFlow<String?>(null)
+
+    /** A tapped road snapshot notification asks to take the photo of this request now (docs/24). */
+    val snapshotRequest: StateFlow<String?> = snapshots.asStateFlow()
 
     /** The notification permission is asked at most once per app process. */
     @Volatile
@@ -151,6 +161,8 @@ class NotificationNavigation @Inject constructor() {
         val tapped = intent ?: return false
         when (tapped.getStringExtra(EXTRA_TYPE)) {
             TYPE_DRIVER_MESSAGE -> requests.value = ConversationOpenRequest(tapped.getStringExtra(EXTRA_TRIP_ID)?.takeIf { it.isNotBlank() })
+            TYPE_HR_DOCUMENT -> tapped.getStringExtra(EXTRA_DOCUMENT_ID)?.takeIf { it.isNotBlank() }?.let { documents.value = it }
+            TYPE_TRIP_SNAPSHOT -> tapped.getStringExtra(EXTRA_REQUEST_ID)?.takeIf { it.isNotBlank() }?.let { snapshots.value = it }
             TYPE_START_SHIFT -> {
                 startShift.value = true
                 return true
@@ -163,7 +175,15 @@ class NotificationNavigation @Inject constructor() {
         requests.value = null
     }
 
+    fun consumeDocument() {
+        documents.value = null
+    }
+
     fun consumeStartShift() {
         startShift.value = false
+    }
+
+    fun consumeSnapshot(requestId: String) {
+        if (snapshots.value == requestId) snapshots.value = null
     }
 }

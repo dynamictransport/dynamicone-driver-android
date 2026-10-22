@@ -74,7 +74,9 @@ import com.dynamictransport.dynamicone.feature.common.currentLocale
 import com.dynamictransport.dynamicone.feature.common.formatDuration
 import com.dynamictransport.dynamicone.feature.common.rememberCurrentInstant
 import com.dynamictransport.dynamicone.feature.common.toActionUi
+import com.dynamictransport.dynamicone.feature.common.vehicleLabel
 import com.dynamictransport.dynamicone.feature.shift.DriverDayCard
+import com.dynamictransport.dynamicone.feature.snapshot.SnapshotBanner
 import java.time.Duration
 import java.time.Instant
 
@@ -201,6 +203,7 @@ fun HomeScreen(
                 onRetry = onRetrySync,
                 offlineMessage = if (state.isDemoMode) R.string.sync_offline else R.string.sync_offline_real,
             )
+            state.snapshot?.let { SnapshotBanner(it) }
             state.refreshError?.let { error ->
                 StatusBanner(
                     message = stringResource(error),

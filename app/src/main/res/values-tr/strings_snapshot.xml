@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_channel_snapshots">Yol görüntüsü istekleri</string>
+    <string name="snapshot_notification_title">Yol görüntüsü istendi</string>
+    <string name="snapshot_notification_body">%1$s yol fotoğrafı istiyor. Çekmek için uygulamayı açın.</string>
+    <string name="snapshot_notification_body_office">Ofis yol fotoğrafı istiyor. Çekmek için uygulamayı açın.</string>
+    <string name="snapshot_notification_take">Fotoğrafı çek</string>
+    <string name="snapshot_notification_dismiss">Şimdi değil</string>
+    <string name="snapshot_office">Ofis</string>
+    <string name="snapshot_banner_taken">%1$s yol görüntüsü aldı</string>
+    <string name="snapshot_banner_taken_office">Ofis yol görüntüsü aldı</string>
+    <string name="snapshot_banner_failed">Yol görüntüsü çekilemedi: %1$s</string>
+    <string name="snapshot_home_waiting">%1$s yol görüntüsü istedi</string>
+    <string name="snapshot_home_pending_upload">Yol görüntüsü · %1$s · %2$s · gönderilmeyi bekliyor</string>
+    <string name="snapshot_home_uploaded">Yol görüntüsü gönderildi · %1$s · %2$s</string>
+    <string name="snapshot_home_failed">Yol görüntüsü çekilemedi: %1$s</string>
+    <string name="snapshot_reason_camera">kamera kullanılamadı</string>
+    <string name="snapshot_reason_permission">kamera izni yok</string>
+    <string name="snapshot_reason_expired">isteğin süresi doldu</string>
+    <string name="snapshot_reason_dismissed">reddedildi</string>
+</resources>

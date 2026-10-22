@@ -34,6 +34,12 @@ data class DriverAvailableActionDto(
     val label: String? = null,
     val stopId: String? = null,
     val containerId: String? = null,
+    /** docs/18 (backend PR #130): false while required evidence of this step is missing or rejected. */
+    val canExecute: Boolean? = null,
+    /** Keys of `documents[].slot` that block this action. */
+    val blockingDocumentSlots: List<String>? = null,
+    /** docs/20: a stated reason, e.g. `trailer_confirmation_required`; documents use the list above. */
+    val blockingReason: String? = null,
 )
 
 @Serializable
@@ -44,6 +50,38 @@ data class DriverExecutionResponseDto(
     val workflow: String? = null,
     val availableActions: List<DriverAvailableActionDto>? = null,
     val documents: List<DriverDocumentSlotDto>? = null,
+    /** The trailer under the truck still has to be confirmed before the trip can start (docs/20). */
+    val trailerConfirmationRequired: Boolean = false,
+)
+
+/** One option of `GET trips/{tripId}/trailers`: an active trailer of the master list. */
+@Serializable
+data class DriverTrailerOptionDto(
+    val id: String,
+    val registrationNumber: String? = null,
+    val companyCode: String? = null,
+)
+
+/** GET trips/{tripId}/trailers: the planned trailer, the driver's confirmation and the options. */
+@Serializable
+data class DriverTrailerStateDto(
+    val tripId: String? = null,
+    val version: String? = null,
+    val plannedTrailerId: String? = null,
+    val confirmedTrailerId: String? = null,
+    val confirmedAtUtc: String? = null,
+    val canConfirm: Boolean = false,
+    val trailers: List<DriverTrailerOptionDto>? = null,
+)
+
+/**
+ * POST trips/{tripId}/trailer-confirmation: an id of the list that was read, with the version of the
+ * same read. The server records the same choice again without writing a second history entry.
+ */
+@Serializable
+data class DriverTrailerCommandDto(
+    val trailerId: String,
+    val expectedVersion: String,
 )
 
 /**
@@ -170,7 +208,10 @@ data class DriverSendMessageDto(
 @Serializable
 data object DriverMessageReadDto
 
-/** POST me/devices (TH-2026-0444). `appVersion` and `locale` are optional. */
+/**
+ * POST me/devices (TH-2026-0444). `appVersion` and `locale` are optional. `deviceKind` (`vehicleTablet` / `phone`),
+ * `deviceModel` and `hasCamera` tell the server which registrations may receive road snapshot requests (docs/24 §3).
+ */
 @Serializable
 data class DriverDeviceRequestDto(
     val installationId: String,
@@ -178,6 +219,9 @@ data class DriverDeviceRequestDto(
     val pushToken: String,
     val appVersion: String?,
     val locale: String?,
+    val deviceKind: String? = null,
+    val deviceModel: String? = null,
+    val hasCamera: Boolean? = null,
 )
 
 /**
@@ -211,6 +255,9 @@ object DriverExecutionNames {
     const val ACTION_PROBLEM = "Problem"
     const val COORDINATES_AVAILABLE = "Available"
     const val COORDINATES_MISSING = "Missing"
+
+    /** `blockingReason` of Start while the trailer under the truck is not confirmed (docs/20). */
+    const val BLOCKED_TRAILER_CONFIRMATION = "trailer_confirmation_required"
 }
 
 object DriverSlotStateNames {

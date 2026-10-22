@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Remote road snapshots (docs/24): the planner asks the vehicle tablet for a photo of the road. -->
+<resources>
+    <string name="notification_channel_snapshots">Road photo requests</string>
+    <string name="snapshot_notification_title">Road photo requested</string>
+    <string name="snapshot_notification_body">%1$s asks for a photo of the road. Open the app to take it.</string>
+    <string name="snapshot_notification_body_office">The office asks for a photo of the road. Open the app to take it.</string>
+    <string name="snapshot_notification_take">Take photo</string>
+    <string name="snapshot_notification_dismiss">Not now</string>
+    <string name="snapshot_office">The office</string>
+    <string name="snapshot_banner_taken">%1$s took a road photo</string>
+    <string name="snapshot_banner_taken_office">The office took a road photo</string>
+    <string name="snapshot_banner_failed">Road photo not taken: %1$s</string>
+    <string name="snapshot_home_waiting">%1$s asked for a road photo</string>
+    <string name="snapshot_home_pending_upload">Road photo for %1$s · %2$s · waiting to be sent</string>
+    <string name="snapshot_home_uploaded">Road photo sent to %1$s · %2$s</string>
+    <string name="snapshot_home_failed">Road photo not taken: %1$s</string>
+    <string name="snapshot_reason_camera">camera unavailable</string>
+    <string name="snapshot_reason_permission">camera permission missing</string>
+    <string name="snapshot_reason_expired">request expired</string>
+    <string name="snapshot_reason_dismissed">declined</string>
+</resources>

@@ -51,6 +51,14 @@ import javax.inject.Inject
 
 const val TRIP_ID_ARG = "tripId"
 
+/** What the trip action workflow knows about one trip right now. */
+private data class ExecutionSnapshot(
+    val plan: TripExecution?,
+    val pending: PendingTripAction?,
+    val receipts: List<ActionReceipt>,
+    val trailers: TripTrailerState?,
+)
+
 data class TripDetailUiState(
     val loading: Boolean = true,
     val trip: Trip? = null,
@@ -173,18 +181,20 @@ class TripDetailViewModel @Inject constructor(
         executionRepository.observeExecution(tripId),
         executionRepository.observePendingAction(tripId),
         executionRepository.observeReceipts(tripId),
-        ::Triple,
+        executionRepository.observeTrailers(tripId),
+        ::ExecutionSnapshot,
     )
 
     private val unreadMessages = messageRepository.observeConversations().map { it.unreadFor(tripId) }
 
     val uiState: StateFlow<TripDetailUiState> =
-        combine(content, execution, singleFlight.busy, message, unreadMessages) { state, (plan, pending, receipts), busy, currentMessage, unread ->
+        combine(content, execution, singleFlight.busy, message, unreadMessages) { state, snapshot, busy, currentMessage, unread ->
             state.copy(
-                execution = plan,
-                pendingAction = pending,
-                receipts = receipts,
-                submitting = busy || pending?.state == PendingCommandState.SENDING,
+                execution = snapshot.plan,
+                pendingAction = snapshot.pending,
+                receipts = snapshot.receipts,
+                trailers = snapshot.trailers,
+                submitting = busy || snapshot.pending?.state == PendingCommandState.SENDING,
                 message = currentMessage,
                 unreadMessages = unread,
             )

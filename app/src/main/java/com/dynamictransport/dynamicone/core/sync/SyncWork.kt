@@ -15,6 +15,8 @@ import androidx.work.WorkerParameters
 import com.dynamictransport.dynamicone.domain.model.RefreshResult
 import com.dynamictransport.dynamicone.domain.repository.AttendanceRepository
 import com.dynamictransport.dynamicone.domain.repository.DailyShiftRepository
+import com.dynamictransport.dynamicone.domain.repository.HrDocumentRepository
+import com.dynamictransport.dynamicone.domain.repository.RoadSnapshotRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -261,3 +263,39 @@ class HrDocumentSyncWorker @AssistedInject constructor(
     override suspend fun doWork(): Result = if (hrDocumentRepository.sendPending()) Result.success() else Result.retry()
 }
 
+/** Sends road snapshot photos and failure reports waiting on the tablet (docs/24 §8, S5). */
+interface SnapshotSyncScheduler {
+    fun requestSend(delaySeconds: Long = 0)
+}
+
+@Singleton
+class WorkManagerSnapshotSyncScheduler @Inject constructor(
+    @param:ApplicationContext private val context: Context,
+) : SnapshotSyncScheduler {
+
+    override fun requestSend(delaySeconds: Long) {
+        val request = OneTimeWorkRequestBuilder<SnapshotSyncWorker>()
+            .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, SNAPSHOT_BACKOFF_SECONDS, TimeUnit.SECONDS)
+            .setInitialDelay(delaySeconds.coerceIn(0, MAX_SNAPSHOT_DELAY_SECONDS), TimeUnit.SECONDS)
+            .build()
+        // Every send is idempotent by request id: restarting a running send is safe.
+        WorkManager.getInstance(context).enqueueUniqueWork(UNIQUE_WORK_NAME, ExistingWorkPolicy.REPLACE, request)
+    }
+
+    companion object {
+        const val UNIQUE_WORK_NAME = "road-snapshot-sync"
+        private const val SNAPSHOT_BACKOFF_SECONDS = 20L
+        private const val MAX_SNAPSHOT_DELAY_SECONDS = 10 * 60L
+    }
+}
+
+@HiltWorker
+class SnapshotSyncWorker @AssistedInject constructor(
+    @Assisted context: Context,
+    @Assisted params: WorkerParameters,
+    private val roadSnapshotRepository: RoadSnapshotRepository,
+) : CoroutineWorker(context, params) {
+
+    override suspend fun doWork(): Result = if (roadSnapshotRepository.sendPending()) Result.success() else Result.retry()
+}

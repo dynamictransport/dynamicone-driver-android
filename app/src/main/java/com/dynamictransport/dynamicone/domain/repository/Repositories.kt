@@ -35,6 +35,11 @@ import com.dynamictransport.dynamicone.domain.model.Shift
 import com.dynamictransport.dynamicone.domain.model.ShiftCommandResult
 import com.dynamictransport.dynamicone.domain.model.ShiftStartDraft
 import com.dynamictransport.dynamicone.domain.model.SignedDocument
+import com.dynamictransport.dynamicone.domain.model.SnapshotCamera
+import com.dynamictransport.dynamicone.domain.model.SnapshotDecision
+import com.dynamictransport.dynamicone.domain.model.SnapshotFailure
+import com.dynamictransport.dynamicone.domain.model.SnapshotOutcome
+import com.dynamictransport.dynamicone.domain.model.SnapshotRequest
 import com.dynamictransport.dynamicone.domain.model.SyncOverview
 import com.dynamictransport.dynamicone.domain.model.Trip
 import com.dynamictransport.dynamicone.domain.model.TripActionRecord
@@ -452,6 +457,26 @@ interface DemoBackendControls {
 
     suspend fun resetDemoData()
 }
+
+/**
+ * Remote road snapshots (docs/24): the planner's request read after a push, the photo or failure of this tablet,
+ * and the queue that carries them to the server. Only the vehicle tablet handles requests.
+ */
+interface RoadSnapshotRepository {
+    /** The latest request of the signed-in driver, for the banners on the screens; null without one. */
+    fun observeLatest(): Flow<SnapshotOutcome?>
+
+    /** A push arrived: the request is read from the server and stored. */
+    suspend fun onRequestSignal(tripId: String, requestId: String): SnapshotDecision
+
+    /** The request the driver opened from the notification; null when it is closed or unknown. */
+    suspend fun pendingRequest(requestId: String): SnapshotRequest?
+
+    /** The photo was taken: it is prepared, stored and queued for the upload. False when it cannot be used. */
+    suspend fun storePhoto(requestId: String, source: File, capturedAt: Instant, camera: SnapshotCamera): Boolean
+
+    /** The photo could not be taken; the reason is queued for the server. */
+    suspend fun reportFailure(requestId: String, failure: SnapshotFailure)
 
     /** Sends photos and failure reports waiting on the tablet. False when something must be tried again later. */
     suspend fun sendPending(): Boolean
