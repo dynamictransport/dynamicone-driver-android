@@ -256,3 +256,12 @@ Kullanıcı isteği: Araçlardaki Webfleet PRO X tableti (Android 13, 1280×800 
 - **W3 — Baskın aksiyon:** Ana sayfa ve sefer detayı `ActionScaffold` kullanır: telefonda eski `ActionBar` (altta), geniş ekranda sağda 360 dp genişliğinde `ActionPane` (dikeyde ortalı, sığmazsa kayar). Aksiyon paneli yokken (bitmiş sefer, yükleniyor) içerik tüm genişliği kullanır. Diğer ekranların alt aksiyon çubuğu yerinde kalır ama butonları en fazla 560 dp genişliğinde ortalanır.
 - **W4 — İçerik genişliği:** Kaydırılan ekran kökleri `readableWidth()` ile en fazla 720 dp genişlikte ve ortalanmıştır (üst bar tam genişlikte kalır). Kamera/tarayıcı ve belge görüntüleyici gibi tam ekran görünümler sınırlanmaz. Liste ekranlarında iki sütunlu ızgara yapılmadı (istenmedi).
 - **W5 — Giriş ekranı:** Geniş ekranda solda marka, sağda 480 dp genişliğinde form; klavye açıkken kullanıcı adı, şifre ve giriş düğmesi birlikte kalır. Telefonda tek sütun aynen.
+
+## Duraktan TomTom navigasyonu (21.10.2026)
+
+Kullanıcı isteği: Atanmış seferdeki durağın yanındaki düğme tabletteki TomTom'da koordinata rotayı başlatsın. Yalnızca Robolectric ile ve tablette `am start` denemesiyle doğrulandı; TomTom GO Fleet tablette henüz Partner app girişi yapılmadığı için gerçek rota görülmedi.
+
+- **N1 — Hedef uygulama:** `NavigationLinks.TRUCK_NAVIGATION_PACKAGES` sırasıyla TomTom GO Fleet (`com.tomtom.gplay.navapp.gofleet`, Webfleet PRO X) ve TomTom GO Navigation denenir; kuruluysa `google.navigation:q=enlem,boylam` bağlantısı doğrudan o pakete gönderilir, rota ek dokunuş olmadan başlar. İkisi de yoksa eski davranış: `geo:` bağlantısı, telefon harita uygulamasını kendi seçer. Hiç uygulama yoksa "Navigasyon uygulaması bulunamadı".
+- **N2 — Ne gönderilir:** Yalnızca koordinat; durak adı TomTom'a geçmez (google.navigation şeması etiket taşımaz). Koordinatsız durakta düğme çizilmez (docs/18 kuralı sürer). Paket görünürlüğü için manifest `<queries>` iki TomTom paketini bildirir.
+- **N3 — Düğme:** Sefer detayındaki durak listesinde ikon düğmesi yerine durağın altında yazılı *Navigasyon* düğmesi (ikon + metin, 56 dp, `stop_navigate_<id>`); *Sonraki durak* kartındaki düğme aynen. Telefonlarda da aynı görünüm.
+- **N4 — Tablet ön koşulu:** TomTom GO Fleet'in rota başlatabilmesi için Webfleet Partner app (PRO/Work App) girişi yapılmış olmalı; aksi halde TomTom kendi giriş ekranını açar. Bu uygulamadan bağımsızdır.

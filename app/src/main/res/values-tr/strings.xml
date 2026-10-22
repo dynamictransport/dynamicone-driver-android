@@ -366,10 +366,9 @@
     <string name="receipt_rest">Mola bildirildi</string>
     <string name="receipt_problem">Sorun bildirildi</string>
     <string name="receipt_unknown">Diğer işlem</string>
-    <string name="location_missing">Konum bilgisi eksik</string>
+    <string name="location_missing">Koordinat eksik — planlamacıyla iletişime geçin</string>
     <string name="trip_next_stop">Sıradaki durak</string>
     <string name="trip_next_stop_value">Sıradaki: %1$s</string>
-    <string name="stop_navigate">Bu durağa yol tarifi al</string>
     <string name="trip_messages">Sefer mesajları</string>
     <string name="slot_stop_unknown">Planda olmayan durak</string>
     <string name="document_type_customs">Gümrük evrağı (A1)</string>

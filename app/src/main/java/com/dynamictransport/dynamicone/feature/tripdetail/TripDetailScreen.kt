@@ -42,11 +42,10 @@ import androidx.compose.material.icons.filled.RvHookup
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material.icons.filled.SyncProblem
+import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -773,15 +772,20 @@ private fun StopsCard(
                     }
                     if (stop.coordinates == null) LocationMissing(Modifier.testTag("stop_location_missing_${stop.id}"))
                 }
-                stop.coordinates?.let { point ->
-                    IconButton(
+            }
+            // Below the row, aligned with the stop text: a labelled navigation button the driver can hit at a
+            // glance, then the coordinates with their copy button on one line.
+            stop.coordinates?.let { point ->
+                Spacer(Modifier.height(8.dp))
+                Column(modifier = Modifier.padding(start = 42.dp)) {
+                    SecondaryActionButton(
+                        text = stringResource(R.string.trip_navigation),
                         onClick = { onOpenNavigation(point, stop.locationName) },
-                        modifier = Modifier
-                            .size(56.dp)
-                            .testTag("stop_navigate_${stop.id}"),
-                    ) {
-                        Icon(Icons.Filled.Navigation, contentDescription = stringResource(R.string.stop_navigate), tint = colors.brand)
-                    }
+                        icon = Icons.Filled.Navigation,
+                        modifier = Modifier.testTag("stop_navigate_${stop.id}"),
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    CoordinateBlock(point, stop.locationName, onCopyCoordinates, "stop_coordinates_${stop.id}")
                 }
             }
         }

@@ -379,10 +379,9 @@
     <string name="receipt_rest">Break reported</string>
     <string name="receipt_problem">Problem reported</string>
     <string name="receipt_unknown">Other action</string>
-    <string name="location_missing">Location missing</string>
+    <string name="location_missing">Coordinates missing — contact your planner</string>
     <string name="trip_next_stop">Next stop</string>
     <string name="trip_next_stop_value">Next: %1$s</string>
-    <string name="stop_navigate">Navigate to this stop</string>
     <string name="trip_messages">Trip messages</string>
     <string name="slot_stop_unknown">Stop not in the plan</string>
     <string name="document_type_customs">Customs document (A1)</string>

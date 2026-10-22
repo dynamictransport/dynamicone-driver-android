@@ -29,6 +29,9 @@
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="geo" />
         </intent>
+        <!-- Truck navigation apps addressed directly for guidance (NavigationLinks.TRUCK_NAVIGATION_PACKAGES). -->
+        <package android:name="com.tomtom.gplay.navapp.gofleet" />
+        <package android:name="com.tomtom.gplay.navapp" />
     </queries>
 
     <application

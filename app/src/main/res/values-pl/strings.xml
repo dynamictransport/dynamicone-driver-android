@@ -372,10 +372,9 @@
     <string name="receipt_rest">Zgłoszono przerwę</string>
     <string name="receipt_problem">Zgłoszono problem</string>
     <string name="receipt_unknown">Inna czynność</string>
-    <string name="location_missing">Brak lokalizacji</string>
+    <string name="location_missing">Brak współrzędnych — skontaktuj się z planistą</string>
     <string name="trip_next_stop">Następny postój</string>
     <string name="trip_next_stop_value">Następny: %1$s</string>
-    <string name="stop_navigate">Nawiguj do tego postoju</string>
     <string name="trip_messages">Wiadomości kursu</string>
     <string name="slot_stop_unknown">Postój spoza planu</string>
     <string name="document_type_customs">Dokument celny (A1)</string>
