@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Kod TAR na przystankach w terminalach portowych (docs/26_TERMINAL_APPOINTMENT_TAR.md) -->
+    <string name="tar_phase_upcoming">TAR jeszcze się nie rozpoczął</string>
+    <string name="tar_phase_active">TAR ważny</string>
+    <string name="tar_phase_ending_soon">TAR wkrótce się kończy</string>
+    <string name="tar_phase_expired">TAR wygasł</string>
+    <string name="tar_phase_past">Miniony TAR</string>
+    <string name="tar_until_start">Do początku TAR</string>
+    <string name="tar_until_end">Do końca TAR</string>
+    <string name="tar_terminal_time">Czas terminalu · %1$s</string>
+    <string name="tar_copy">Skopiuj kod TAR</string>
+    <string name="tar_copied">Skopiowano kod TAR</string>
+    <string name="trip_stale_offline">Brak połączenia · ostatnia aktualizacja %1$s</string>
+    <string name="trip_stale_failed">Nie udało się odświeżyć · ostatnia aktualizacja %1$s</string>
+    <string name="trip_stale_no_details">Nie udało się odświeżyć · szczegóły kursu jeszcze nie wczytane</string>
+</resources>

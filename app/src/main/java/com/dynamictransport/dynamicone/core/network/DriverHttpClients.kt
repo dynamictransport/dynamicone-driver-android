@@ -16,7 +16,7 @@ object DriverHttpClients {
      * rotation whose outcome is unknown must not be sent a second time. Idle connections are dropped
      * before typical server keep-alive limits so a stale connection is not reused.
      */
-    fun base(appVersion: String, logRequests: Boolean): OkHttpClient = OkHttpClient.Builder()
+    fun base(appVersion: String, logRequests: Boolean, serverTime: ServerTimeSync? = null): OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
         .writeTimeout(60, TimeUnit.SECONDS)
@@ -24,6 +24,8 @@ object DriverHttpClients {
         .connectionPool(ConnectionPool(MAX_IDLE_CONNECTIONS, KEEP_ALIVE_SECONDS, TimeUnit.SECONDS))
         .addInterceptor(DriverHeadersInterceptor(appVersion))
         .apply {
+            // The server's `Date` corrects the device clock for countdowns (docs/26).
+            if (serverTime != null) addInterceptor(ServerDateInterceptor(serverTime))
             if (logRequests) {
                 // Method, URL and status only: never headers or bodies (tokens, passwords, documents).
                 addInterceptor(

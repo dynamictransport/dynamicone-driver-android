@@ -9,6 +9,8 @@ import com.dynamictransport.dynamicone.core.network.DriverPayrollResponseDto
 import com.dynamictransport.dynamicone.core.network.DriverProfileResponseDto
 import com.dynamictransport.dynamicone.core.network.DriverStatusNames
 import com.dynamictransport.dynamicone.core.network.DriverStatusResponseDto
+import com.dynamictransport.dynamicone.core.network.DriverStopResponseDto
+import com.dynamictransport.dynamicone.core.network.DriverStopTarDto
 import com.dynamictransport.dynamicone.core.network.RemoteException
 import com.dynamictransport.dynamicone.domain.model.DocumentSlotState
 import com.dynamictransport.dynamicone.domain.model.DocumentType
@@ -26,6 +28,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.Instant
 import java.time.YearMonth
+import java.time.ZoneId
 
 class DriverApiMappingTest {
 
@@ -212,6 +215,27 @@ class DriverApiMappingTest {
         assertEquals("Ayşe Yılmaz", DriverApiMapping.message(named)?.senderName)
         assertNull(DriverApiMapping.message(named.copy(senderDisplayName = " "))?.senderName)
         assertNull(DriverApiMapping.message(named.copy(senderDisplayName = null))?.senderName)
+    }
+
+    @Test
+    fun `a TAR is mapped as text with its UTC window and terminal zone, or not at all`() {
+        val complete = DriverStopTarDto(code = "001234", startUtc = "2026-10-22T08:00:00Z", endUtc = "2026-10-22T10:00:00Z", timeZone = "Europe/Amsterdam")
+        val tar = DriverApiMapping.terminalAppointment(complete)
+        assertEquals("001234", tar?.code)
+        assertEquals(Instant.parse("2026-10-22T08:00:00Z"), tar?.startAt)
+        assertEquals(Instant.parse("2026-10-22T10:00:00Z"), tar?.endAt)
+        assertEquals(ZoneId.of("Europe/Amsterdam"), tar?.timeZone)
+
+        // An incomplete record is no TAR: nothing is invented for the missing part.
+        assertNull(DriverApiMapping.terminalAppointment(complete.copy(code = " ")))
+        assertNull(DriverApiMapping.terminalAppointment(complete.copy(startUtc = null)))
+        assertNull(DriverApiMapping.terminalAppointment(complete.copy(endUtc = "soon")))
+        assertNull(DriverApiMapping.terminalAppointment(complete.copy(timeZone = "Mars/Olympus")))
+        assertNull(DriverApiMapping.terminalAppointment(complete.copy(timeZone = null)))
+
+        val stop = DriverApiMapping.stop(DriverStopResponseDto(id = "s1", tar = complete))
+        assertEquals("001234", stop.tar?.code)
+        assertNull(DriverApiMapping.stop(DriverStopResponseDto(id = "s1")).tar)
     }
 
     @Test

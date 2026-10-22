@@ -176,6 +176,8 @@ data class TripStop(
     val actualArrivalAt: Instant?,
     val actualDepartureAt: Instant?,
     val reference: String?,
+    /** Terminal appointment the planner recorded for this stop (docs/26); null when there is none. */
+    val tar: TerminalAppointment? = null,
 ) {
     /** Both coordinates of the planned location, or null when the master data has none. */
     val coordinates: GeoPoint?

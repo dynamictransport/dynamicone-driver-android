@@ -38,6 +38,7 @@ import com.dynamictransport.dynamicone.domain.repository.DocumentScanner
 import com.dynamictransport.dynamicone.domain.repository.IncidentRepository
 import com.dynamictransport.dynamicone.domain.repository.MessageRepository
 import com.dynamictransport.dynamicone.domain.repository.NetworkMonitor
+import com.dynamictransport.dynamicone.domain.repository.ServerClock
 import com.dynamictransport.dynamicone.domain.repository.PayrollRepository
 import com.dynamictransport.dynamicone.domain.repository.ShiftRepository
 import com.dynamictransport.dynamicone.domain.repository.SignedDocumentRepository
@@ -55,6 +56,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import java.time.Clock
+import java.time.Duration
 import java.time.Instant
 import java.time.YearMonth
 import java.util.Locale
@@ -260,6 +263,11 @@ class FakeSyncRepository : SyncRepository {
 class FakeNetworkMonitor(initiallyOnline: Boolean = true) : NetworkMonitor {
     val online = MutableStateFlow(initiallyOnline)
     override val isOnline: Flow<Boolean> = online
+}
+
+class FakeServerClock(private val clock: Clock = Clock.systemUTC()) : ServerClock {
+    override val offset = MutableStateFlow(Duration.ZERO)
+    override fun now(): Instant = clock.instant().plus(offset.value)
 }
 
 class FakeVehiclePositionRepository : VehiclePositionRepository {

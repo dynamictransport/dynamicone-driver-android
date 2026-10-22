@@ -64,6 +64,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dynamictransport.dynamicone.R
 import com.dynamictransport.dynamicone.core.design.component.ActionTone
@@ -89,6 +90,7 @@ import com.dynamictransport.dynamicone.domain.model.ExecutionActionCode
 import com.dynamictransport.dynamicone.domain.model.GeoPoint
 import com.dynamictransport.dynamicone.domain.model.PendingCommandState
 import com.dynamictransport.dynamicone.domain.model.PendingTripAction
+import com.dynamictransport.dynamicone.domain.model.RefreshResult
 import com.dynamictransport.dynamicone.domain.model.StopStatus
 import com.dynamictransport.dynamicone.domain.model.SyncState
 import com.dynamictransport.dynamicone.domain.model.Trip
@@ -109,6 +111,7 @@ import com.dynamictransport.dynamicone.feature.common.NavigationLinks
 import com.dynamictransport.dynamicone.feature.common.PRIMARY_ACTION_TAG
 import com.dynamictransport.dynamicone.feature.common.StatusUiBadge
 import com.dynamictransport.dynamicone.feature.common.SyncStateBadge
+import com.dynamictransport.dynamicone.feature.common.TextClipboard
 import com.dynamictransport.dynamicone.feature.common.currentLocale
 import com.dynamictransport.dynamicone.feature.common.documentLabel
 import com.dynamictransport.dynamicone.feature.common.executionActionLabel
@@ -116,10 +119,13 @@ import com.dynamictransport.dynamicone.feature.common.icon
 import com.dynamictransport.dynamicone.feature.common.labelRes
 import com.dynamictransport.dynamicone.feature.common.messageRes
 import com.dynamictransport.dynamicone.feature.common.receiptLabelRes
+import com.dynamictransport.dynamicone.feature.common.rememberCurrentInstant
 import com.dynamictransport.dynamicone.feature.common.toActionUi
 import com.dynamictransport.dynamicone.feature.common.toStatusUi
 import com.dynamictransport.dynamicone.feature.common.tripContextLabel
 import com.dynamictransport.dynamicone.feature.common.vehicleLabel
+import java.time.Duration
+import java.time.Instant
 
 @Composable
 fun TripDetailRoute(
@@ -135,6 +141,11 @@ fun TripDetailRoute(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val tarLabel = stringResource(R.string.tar_title)
+    LifecycleResumeEffect(viewModel) {
+        viewModel.onResume()
+        onPauseOrDispose { viewModel.onPause() }
+    }
     TripDetailScreen(
         state = state,
         onBack = onBack,
@@ -165,6 +176,11 @@ fun TripDetailRoute(
                 viewModel.showMessage(R.string.coordinates_copied)
             }
         },
+        onCopyTar = { code ->
+            if (TextClipboard.copy(context, tarLabel, code) && !CoordinateClipboard.systemConfirmsCopy) {
+                viewModel.showMessage(R.string.tar_copied)
+            }
+        },
         onReportIncident = { state.trip?.let { onReportIncident(it.id) } },
         onConfirmTrailer = { state.trip?.let { onConfirmTrailer(it.id) } },
         onMessageShown = viewModel::onMessageShown,
@@ -190,6 +206,7 @@ fun TripDetailScreen(
     onOpenMessages: () -> Unit = {},
     onCopyCoordinates: (GeoPoint, String?) -> Unit = { _, _ -> },
     onConfirmTrailer: () -> Unit = {},
+    onCopyTar: (String) -> Unit = {},
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     MessageEffect(state.message, snackbarHostState, onMessageShown)
@@ -230,7 +247,9 @@ fun TripDetailScreen(
         ) {
             val loadError = state.loadError
             when {
-                trip != null -> TripDetailContent(trip, state, onOpenDocuments, onOpenMessages, onOpenNavigation, onCopyCoordinates, onReportIncident)
+                trip != null -> TripDetailContent(
+                    trip, state, onOpenDocuments, onOpenMessages, onOpenNavigation, onCopyCoordinates, onReportIncident, onCopyTar, onRetry,
+                )
 
                 state.loading -> LinearProgressIndicator(
                     modifier = Modifier
@@ -464,6 +483,8 @@ private fun TripDetailContent(
     onOpenNavigation: (GeoPoint, String?) -> Unit,
     onCopyCoordinates: (GeoPoint, String?) -> Unit,
     onReportIncident: () -> Unit,
+    onCopyTar: (String) -> Unit,
+    onRetry: () -> Unit,
 ) {
     val locale = currentLocale()
 
@@ -471,6 +492,7 @@ private fun TripDetailContent(
         StatusUiBadge(trip.toStatusUi())
         SyncStateBadge(trip.syncState)
     }
+    if (state.stale) StaleBanner(state.refreshResult, state.lastUpdatedAt, onRetry)
     if (!state.isOnline) {
         StatusBanner(
             message = stringResource(if (state.offlineActionsQueued) R.string.sync_offline else R.string.sync_offline_real),
@@ -562,7 +584,7 @@ private fun TripDetailContent(
         }
     }
 
-    if (trip.stops.isNotEmpty()) StopsCard(trip.stops, onOpenNavigation, onCopyCoordinates)
+    if (trip.stops.isNotEmpty()) StopsCard(trip.stops, state.clockOffset, onOpenNavigation, onCopyCoordinates, onCopyTar)
 
     if (state.timeline.isNotEmpty()) TimelineCard(state.timeline)
 
@@ -727,11 +749,16 @@ private fun StopBlock(label: String, name: String?, address: String?, icon: Imag
 @Composable
 private fun StopsCard(
     stops: List<TripStop>,
+    clockOffset: Duration,
     onOpenNavigation: (GeoPoint, String?) -> Unit,
     onCopyCoordinates: (GeoPoint, String?) -> Unit,
+    onCopyTar: (String) -> Unit,
 ) {
     val locale = currentLocale()
     val colors = DriverTheme.colors
+    // A TAR countdown ticks every second on the device (no request per tick); otherwise the clock is read rarely.
+    val tick = rememberCurrentInstant(if (stops.any { it.tar != null }) 1_000L else 30_000L)
+    val now = tick.plus(clockOffset)
     SectionCard(modifier = Modifier.testTag("trip_stops")) {
         Text(stringResource(R.string.trip_stops), style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(8.dp))
@@ -766,6 +793,10 @@ private fun StopsCard(
                         StopDetail(stringResource(R.string.stop_actual_departure, DriverFormats.dayTime(it, locale)))
                     }
                     stop.reference?.let { StopDetail(stringResource(R.string.stop_reference, it)) }
+                    stop.tar?.let {
+                        Spacer(Modifier.height(8.dp))
+                        TarBlock(it, stop.status, now, onCopyTar, "stop_tar_${stop.id}")
+                    }
                     stop.status.toStatusUi()?.let {
                         Spacer(Modifier.height(4.dp))
                         StatusUiBadge(it)
@@ -822,6 +853,24 @@ private fun CoordinateLine(label: String, value: String, tag: String) {
         Spacer(Modifier.width(8.dp))
         Text(value, style = MaterialTheme.typography.titleSmall, fontFamily = FontFamily.Monospace, modifier = Modifier.testTag(tag))
     }
+}
+
+/** The reload failed: the screen keeps the last successful read and says how old it is (docs/26). */
+@Composable
+private fun StaleBanner(result: RefreshResult?, lastUpdatedAt: Instant?, onRetry: () -> Unit) {
+    val message = when {
+        lastUpdatedAt == null -> stringResource(R.string.trip_stale_no_details)
+        result == RefreshResult.OFFLINE -> stringResource(R.string.trip_stale_offline, DriverFormats.time(lastUpdatedAt))
+        else -> stringResource(R.string.trip_stale_failed, DriverFormats.time(lastUpdatedAt))
+    }
+    StatusBanner(
+        message = message,
+        icon = Icons.Filled.CloudOff,
+        tone = StatusTone.Warning,
+        actionLabel = stringResource(R.string.common_retry),
+        onAction = onRetry,
+        modifier = Modifier.testTag("trip_stale"),
+    )
 }
 
 @Composable

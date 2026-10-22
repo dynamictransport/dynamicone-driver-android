@@ -28,10 +28,12 @@ import com.dynamictransport.dynamicone.testing.ACTIVE_SHIFT
 import com.dynamictransport.dynamicone.testing.FakeAppInfo
 import com.dynamictransport.dynamicone.testing.FakeMessageRepository
 import com.dynamictransport.dynamicone.testing.FakeNetworkMonitor
+import com.dynamictransport.dynamicone.testing.FakeServerClock
 import com.dynamictransport.dynamicone.testing.FakeShiftRepository
 import com.dynamictransport.dynamicone.testing.FakeTripExecutionRepository
 import com.dynamictransport.dynamicone.testing.FakeTripRepository
 import com.dynamictransport.dynamicone.testing.MainDispatcherRule
+import com.dynamictransport.dynamicone.testing.MutableClock
 import com.dynamictransport.dynamicone.testing.TEST_NOW
 import com.dynamictransport.dynamicone.testing.keepCollecting
 import com.dynamictransport.dynamicone.testing.testAction
@@ -39,7 +41,9 @@ import com.dynamictransport.dynamicone.testing.testExecution
 import com.dynamictransport.dynamicone.testing.testSlot
 import com.dynamictransport.dynamicone.testing.testTrip
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -58,6 +62,8 @@ class TripDetailViewModelTest {
     private val network = FakeNetworkMonitor()
     private val executions = FakeTripExecutionRepository()
     private val messages = FakeMessageRepository()
+    private val clock = MutableClock()
+    private val serverClock = FakeServerClock(clock)
 
     private fun viewModel(demo: Boolean = true) = TripDetailViewModel(
         savedStateHandle = SavedStateHandle(mapOf(TRIP_ID_ARG to "trip-1")),
@@ -68,6 +74,8 @@ class TripDetailViewModelTest {
         submitTripAction = SubmitTripActionUseCase(trips, shifts),
         executionRepository = executions,
         messageRepository = messages,
+        serverClock = serverClock,
+        clock = clock,
     )
 
     @Test
@@ -181,6 +189,77 @@ class TripDetailViewModelTest {
         assertEquals(listOf("trip-1", "trip-1"), trips.refreshedTrips)
         assertNull(viewModel.uiState.value.loadError)
         assertEquals("trip-1", viewModel.uiState.value.trip?.id)
+    }
+
+    // --- Reloads while on screen (docs/26) ---
+
+    @Test
+    fun `the trip is read again every minute while the screen is in the foreground`() = runTest {
+        trips.trips.value = listOf(testTrip(state = TripState.STARTED))
+        val viewModel = viewModel(demo = false)
+        keepCollecting(viewModel.uiState)
+        viewModel.onResume()
+        runCurrent()
+        // The reload of the opening covers the first resume: no second read at once.
+        assertEquals(listOf("trip-1"), trips.refreshedTrips)
+        assertEquals(TEST_NOW, viewModel.uiState.value.lastUpdatedAt)
+
+        advanceTimeBy(TripDetailViewModel.POLL_INTERVAL_MILLIS + 1)
+        assertEquals(2, trips.refreshedTrips.size)
+        advanceTimeBy(TripDetailViewModel.POLL_INTERVAL_MILLIS)
+        assertEquals(3, trips.refreshedTrips.size)
+
+        // Leaving the screen stops the loop; a second resume runs one loop, not two.
+        viewModel.onPause()
+        advanceTimeBy(TripDetailViewModel.POLL_INTERVAL_MILLIS * 3)
+        assertEquals(3, trips.refreshedTrips.size)
+        clock.now = TEST_NOW.plusSeconds(500)
+        viewModel.onResume()
+        viewModel.onResume()
+        runCurrent()
+        assertEquals(4, trips.refreshedTrips.size)
+        assertEquals(TEST_NOW.plusSeconds(500), viewModel.uiState.value.lastUpdatedAt)
+        advanceTimeBy(TripDetailViewModel.POLL_INTERVAL_MILLIS + 1)
+        assertEquals(5, trips.refreshedTrips.size)
+        viewModel.onPause()
+    }
+
+    @Test
+    fun `a failed reload keeps the trip, its last update time and marks the screen stale without a message`() = runTest {
+        trips.trips.value = listOf(testTrip(state = TripState.STARTED))
+        val viewModel = viewModel(demo = false)
+        keepCollecting(viewModel.uiState)
+        viewModel.onResume()
+        runCurrent()
+        assertFalse(viewModel.uiState.value.stale)
+
+        trips.refreshResult = RefreshResult.OFFLINE
+        clock.now = TEST_NOW.plusSeconds(120)
+        advanceTimeBy(TripDetailViewModel.POLL_INTERVAL_MILLIS + 1)
+
+        val state = viewModel.uiState.value
+        assertEquals("trip-1", state.trip?.id)
+        assertTrue(state.stale)
+        assertEquals(RefreshResult.OFFLINE, state.refreshResult)
+        assertEquals(TEST_NOW, state.lastUpdatedAt)
+        assertNull(state.message)
+        assertNull(state.loadError)
+
+        trips.refreshResult = RefreshResult.SUCCESS
+        advanceTimeBy(TripDetailViewModel.POLL_INTERVAL_MILLIS)
+        assertFalse(viewModel.uiState.value.stale)
+        assertEquals(TEST_NOW.plusSeconds(120), viewModel.uiState.value.lastUpdatedAt)
+        viewModel.onPause()
+    }
+
+    @Test
+    fun `the server clock offset reaches the screen for the countdowns`() = runTest {
+        trips.trips.value = listOf(testTrip(state = TripState.STARTED))
+        val viewModel = viewModel(demo = false)
+        keepCollecting(viewModel.uiState)
+
+        serverClock.offset.value = java.time.Duration.ofSeconds(-42)
+        assertEquals(java.time.Duration.ofSeconds(-42), viewModel.uiState.value.clockOffset)
     }
 
     // --- Trip action workflow ---

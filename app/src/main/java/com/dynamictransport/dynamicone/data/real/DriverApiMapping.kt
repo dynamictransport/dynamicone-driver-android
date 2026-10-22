@@ -22,6 +22,7 @@ import com.dynamictransport.dynamicone.core.network.DriverSlotStateNames
 import com.dynamictransport.dynamicone.core.network.DriverStatusNames
 import com.dynamictransport.dynamicone.core.network.DriverStatusResponseDto
 import com.dynamictransport.dynamicone.core.network.DriverStopResponseDto
+import com.dynamictransport.dynamicone.core.network.DriverStopTarDto
 import com.dynamictransport.dynamicone.core.network.DriverTrailerOptionDto
 import com.dynamictransport.dynamicone.core.network.DriverTrailerStateDto
 import com.dynamictransport.dynamicone.core.network.DriverTripSummaryResponseDto
@@ -44,6 +45,7 @@ import com.dynamictransport.dynamicone.domain.model.SignedDocument
 import com.dynamictransport.dynamicone.domain.model.SignedDocumentType
 import com.dynamictransport.dynamicone.domain.model.StopActivity
 import com.dynamictransport.dynamicone.domain.model.StopStatus
+import com.dynamictransport.dynamicone.domain.model.TerminalAppointment
 import com.dynamictransport.dynamicone.domain.model.SyncState
 import com.dynamictransport.dynamicone.domain.model.TrailerOption
 import com.dynamictransport.dynamicone.domain.model.Trip
@@ -58,6 +60,7 @@ import com.dynamictransport.dynamicone.domain.model.TripStop
 import com.dynamictransport.dynamicone.domain.model.TripTrailerState
 import com.dynamictransport.dynamicone.domain.model.TripWorkflow
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.YearMonth
 
 /**
@@ -286,7 +289,20 @@ internal object DriverApiMapping {
             actualArrivalAt = dto.actualArrivalUtc?.toInstantOrNull(),
             actualDepartureAt = dto.actualDepartureUtc?.toInstantOrNull(),
             reference = dto.reference?.takeIf { it.isNotBlank() },
+            tar = dto.tar?.let(::terminalAppointment),
         )
+    }
+
+    /**
+     * A TAR is shown only when the record is complete: code, a parsable window and a known time zone. Anything
+     * else is treated as "no TAR" rather than shown with invented parts. The code is kept exactly as sent.
+     */
+    fun terminalAppointment(dto: DriverStopTarDto): TerminalAppointment? {
+        val code = dto.code?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+        val start = dto.startUtc?.toInstantOrNull() ?: return null
+        val end = dto.endUtc?.toInstantOrNull() ?: return null
+        val zone = dto.timeZone?.takeIf { it.isNotBlank() }?.let { runCatching { ZoneId.of(it) }.getOrNull() } ?: return null
+        return TerminalAppointment(code = code, startAt = start, endAt = end, timeZone = zone)
     }
 
     fun stopActivity(wire: String?): StopActivity = when (wire) {

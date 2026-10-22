@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Liman terminali duraklarında TAR kodu (docs/26_TERMINAL_APPOINTMENT_TAR.md) -->
+    <string name="tar_phase_upcoming">TAR henüz başlamadı</string>
+    <string name="tar_phase_active">TAR geçerli</string>
+    <string name="tar_phase_ending_soon">TAR bitmek üzere</string>
+    <string name="tar_phase_expired">TAR süresi doldu</string>
+    <string name="tar_phase_past">Geçmiş TAR</string>
+    <string name="tar_until_start">TAR başlangıcına kalan</string>
+    <string name="tar_until_end">TAR bitişine kalan</string>
+    <string name="tar_terminal_time">Terminal saati · %1$s</string>
+    <string name="tar_copy">TAR kodunu kopyala</string>
+    <string name="tar_copied">TAR kodu kopyalandı</string>
+    <string name="trip_stale_offline">Bağlantı yok · son güncelleme %1$s</string>
+    <string name="trip_stale_failed">Güncellenemedi · son güncelleme %1$s</string>
+    <string name="trip_stale_no_details">Güncellenemedi · sefer ayrıntıları henüz yüklenmedi</string>
+</resources>

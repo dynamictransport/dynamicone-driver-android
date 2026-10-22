@@ -332,6 +332,40 @@ class RealApiRepositoriesTest {
     }
 
     @Test
+    fun `a stop's TAR is read with the trip and follows later reads, including its removal`() = runBlocking {
+        h.signIn()
+        var stops = """[
+            {"id":"s1","sequence":1,"activity":"Pickup","status":"Planned","location":"ECT Delta","tar":{"code":"001234","startUtc":"2026-10-22T08:00:00Z","endUtc":"2026-10-22T10:00:00Z","timeZone":"Europe/Amsterdam"}},
+            {"id":"s2","sequence":2,"activity":"Pickup","status":"Planned","location":"ECT Delta","tar":{"code":"009876","startUtc":"2026-10-22T12:00:00Z","endUtc":"2026-10-22T14:00:00Z","timeZone":"Europe/Amsterdam"}},
+            {"id":"s3","sequence":3,"activity":"Deliver","status":"Planned","location":"Venlo","tar":null}
+        ]"""
+        h.routes.on("GET", "/trips/t1") { jsonResponse(DriverApiJson.detail(DriverApiJson.summary("t1", "Active", "InProgress"), stops = stops)) }
+        h.routes.on("GET", "/trips/t1/execution") { jsonResponse(DriverApiJson.execution(actions = emptyList())) }
+
+        assertEquals(RefreshResult.SUCCESS, h.trips.refreshTrip("t1"))
+        var trip = h.trips.currentTrips().single()
+        // Two stops at the same terminal keep their own TAR, matched by stop id.
+        assertEquals(listOf("001234", "009876", null), trip.stops.map { it.tar?.code })
+        assertEquals(Instant.parse("2026-10-22T12:00:00Z"), trip.stops[1].tar?.startAt)
+
+        // The planner moved the first window and removed the second.
+        stops = """[
+            {"id":"s1","sequence":1,"activity":"Pickup","status":"Planned","location":"ECT Delta","tar":{"code":"001234","startUtc":"2026-10-22T09:00:00Z","endUtc":"2026-10-22T11:00:00Z","timeZone":"Europe/Amsterdam"}},
+            {"id":"s2","sequence":2,"activity":"Pickup","status":"Planned","location":"ECT Delta","tar":null},
+            {"id":"s3","sequence":3,"activity":"Deliver","status":"Planned","location":"Venlo"}
+        ]"""
+        assertEquals(RefreshResult.SUCCESS, h.trips.refreshTrip("t1"))
+        trip = h.trips.currentTrips().single()
+        assertEquals(listOf("001234", null, null), trip.stops.map { it.tar?.code })
+        assertEquals(Instant.parse("2026-10-22T09:00:00Z"), trip.stops[0].tar?.startAt)
+
+        // A failed read keeps the last successful stops.
+        h.routes.on("GET", "/trips/t1") { problemResponse(503, "service_unavailable") }
+        assertEquals(RefreshResult.SERVICE_UNAVAILABLE, h.trips.refreshTrip("t1"))
+        assertEquals("001234", h.trips.currentTrips().single().stops[0].tar?.code)
+    }
+
+    @Test
     fun `legacy trips derive the step from the status history and offer no trip actions`() = runBlocking {
         h.signIn()
         routeLegacyTrip({ "InProgress" }, { listOf("ArrivedAtLoading", "Departed") })

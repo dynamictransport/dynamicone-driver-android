@@ -26,6 +26,7 @@ import com.dynamictransport.dynamicone.domain.model.TripWorkflow
 import com.dynamictransport.dynamicone.domain.repository.AppInfo
 import com.dynamictransport.dynamicone.domain.repository.MessageRepository
 import com.dynamictransport.dynamicone.domain.repository.NetworkMonitor
+import com.dynamictransport.dynamicone.domain.repository.ServerClock
 import com.dynamictransport.dynamicone.domain.repository.ShiftRepository
 import com.dynamictransport.dynamicone.domain.repository.TripExecutionRepository
 import com.dynamictransport.dynamicone.domain.repository.TripRepository
@@ -37,6 +38,8 @@ import com.dynamictransport.dynamicone.domain.usecase.SubmitTripActionUseCase
 import com.dynamictransport.dynamicone.feature.common.SingleFlight
 import com.dynamictransport.dynamicone.feature.common.messageRes
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -46,10 +49,21 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import java.time.Clock
+import java.time.Duration
 import java.time.Instant
 import javax.inject.Inject
 
 const val TRIP_ID_ARG = "tripId"
+
+/** Outcome and time of the trip reloads plus the server clock correction (docs/26). */
+private data class RefreshInfo(
+    val result: RefreshResult?,
+    val lastUpdatedAt: Instant?,
+    val clockOffset: Duration,
+)
 
 /** What the trip action workflow knows about one trip right now. */
 private data class ExecutionSnapshot(
@@ -70,8 +84,12 @@ data class TripDetailUiState(
     val offlineActionsQueued: Boolean = true,
     /** The trip could not be loaded and nothing is known about it. */
     @param:StringRes val loadError: Int? = null,
-    /** Outcome of the latest reload; null while it runs. */
+    /** Outcome of the latest reload; null while the first one runs. */
     val refreshResult: RefreshResult? = null,
+    /** Device time of the latest successful reload of this trip; null until one succeeded in this session. */
+    val lastUpdatedAt: Instant? = null,
+    /** Server time minus device time, from the HTTP `Date` header; TAR countdowns use it (docs/26). */
+    val clockOffset: Duration = Duration.ZERO,
     val submitting: Boolean = false,
     @param:StringRes val message: Int? = null,
     /** Trip action workflow: the server plan (null until read). */
@@ -133,6 +151,9 @@ data class TripDetailUiState(
             val current = trip ?: return null
             return current.nextStop?.takeIf { !current.state.isTerminal }
         }
+
+    /** The trip on screen could not be reloaded: what is shown is the last successful read. */
+    val stale: Boolean get() = trip != null && refreshResult != null && refreshResult != RefreshResult.SUCCESS
 }
 
 @HiltViewModel
@@ -145,20 +166,31 @@ class TripDetailViewModel @Inject constructor(
     private val submitTripAction: SubmitTripActionUseCase,
     private val executionRepository: TripExecutionRepository,
     messageRepository: MessageRepository,
+    serverClock: ServerClock,
+    private val clock: Clock,
 ) : ViewModel() {
 
     private val tripId: String = checkNotNull(savedStateHandle[TRIP_ID_ARG])
     private val singleFlight = SingleFlight()
     private val message = MutableStateFlow<Int?>(null)
     private val lastRefresh = MutableStateFlow<RefreshResult?>(null)
+    private val lastUpdatedAt = MutableStateFlow<Instant?>(null)
+    private val reloadMutex = Mutex()
+    private var polling: Job? = null
+
+    /** The reload started in [init] covers the first resume; later resumes read again. */
+    private var initialReloadPending = true
+
+    private val refreshInfo = combine(lastRefresh, lastUpdatedAt, serverClock.offset, ::RefreshInfo)
 
     private val content = combine(
         tripRepository.observeTrip(tripId),
         shiftRepository.observeShift(),
         tripRepository.observeActionHistory(tripId),
         networkMonitor.isOnline,
-        lastRefresh,
-    ) { trip, shift, history, online, refresh ->
+        refreshInfo,
+    ) { trip, shift, history, online, info ->
+        val refresh = info.result
         TripDetailUiState(
             loading = trip == null && refresh == null,
             trip = trip,
@@ -173,6 +205,8 @@ class TripDetailViewModel @Inject constructor(
             offlineActionsQueued = appInfo.isDemoMode,
             loadError = refresh?.takeIf { trip == null }?.messageRes(),
             refreshResult = refresh,
+            lastUpdatedAt = info.lastUpdatedAt,
+            clockOffset = info.clockOffset,
             shiftStartsAtVehicle = shift.requiresVehicleCheck,
         )
     }
@@ -202,6 +236,27 @@ class TripDetailViewModel @Inject constructor(
 
     init {
         refresh()
+    }
+
+    /**
+     * While the screen is in the foreground the trip is read again every [POLL_INTERVAL_MILLIS] so a changed or
+     * removed TAR shows up (docs/26); the TAR countdown itself ticks on the device. A return from the background
+     * reads at once. One loop at a time: leaving the screen cancels it.
+     */
+    fun onResume() {
+        if (polling?.isActive == true) return
+        polling = viewModelScope.launch {
+            if (initialReloadPending) initialReloadPending = false else reload(quiet = true)
+            while (true) {
+                delay(POLL_INTERVAL_MILLIS)
+                reload(quiet = true)
+            }
+        }
+    }
+
+    fun onPause() {
+        polling?.cancel()
+        polling = null
     }
 
     fun onPrimaryAction(action: PrimaryAction) {
@@ -262,19 +317,30 @@ class TripDetailViewModel @Inject constructor(
     }
 
     private fun refresh() {
-        viewModelScope.launch {
-            lastRefresh.value = null
-            val result = tripRepository.refreshTrip(tripId)
-            lastRefresh.value = result
-            val trip = tripRepository.observeTrip(tripId).first()
-            if (trip?.workflow == TripWorkflow.TRIP_ACTIONS) executionRepository.refreshReceipts(tripId)
-            // Only an accepted trip can still choose its trailer; a running one keeps the recorded choice.
-            if (trip?.workflow == TripWorkflow.TRIP_ACTIONS && trip.state == TripState.ACCEPTED) {
-                executionRepository.refreshTrailers(tripId)
-            }
-            // With a trip on screen a failed reload is only a hint; the last loaded state stays visible.
-            result.messageRes()?.let { if (trip != null) message.value = it }
+        viewModelScope.launch { reload(quiet = false) }
+    }
+
+    /**
+     * A quiet reload (polling, return to the foreground) keeps the previous outcome on screen while it runs and
+     * reports a failure only through the stale banner, never as a message every minute.
+     */
+    private suspend fun reload(quiet: Boolean) = reloadMutex.withLock {
+        if (!quiet) lastRefresh.value = null
+        val result = tripRepository.refreshTrip(tripId)
+        if (result == RefreshResult.SUCCESS) lastUpdatedAt.value = clock.instant()
+        lastRefresh.value = result
+        val trip = tripRepository.observeTrip(tripId).first()
+        if (trip?.workflow == TripWorkflow.TRIP_ACTIONS) executionRepository.refreshReceipts(tripId)
+        // Only an accepted trip can still choose its trailer; a running one keeps the recorded choice.
+        if (trip?.workflow == TripWorkflow.TRIP_ACTIONS && trip.state == TripState.ACCEPTED) {
+            executionRepository.refreshTrailers(tripId)
         }
+        // With a trip on screen a failed reload is only a hint; the last loaded state stays visible.
+        if (!quiet) result.messageRes()?.let { if (trip != null) message.value = it }
+    }
+
+    companion object {
+        const val POLL_INTERVAL_MILLIS = 60_000L
     }
 }
 

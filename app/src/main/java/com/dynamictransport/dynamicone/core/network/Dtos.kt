@@ -119,6 +119,17 @@ data class DriverStopResponseDto(
     val actualArrivalUtc: String? = null,
     val actualDepartureUtc: String? = null,
     val reference: String? = null,
+    /** Terminal appointment reference (docs/26); null or absent when the stop has none. */
+    val tar: DriverStopTarDto? = null,
+)
+
+/** `stops[].tar`: the code is text (leading zeros matter), the window is UTC, `timeZone` is the terminal's IANA zone. */
+@Serializable
+data class DriverStopTarDto(
+    val code: String? = null,
+    val startUtc: String? = null,
+    val endUtc: String? = null,
+    val timeZone: String? = null,
 )
 
 @Serializable

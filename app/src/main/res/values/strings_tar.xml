@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Terminal appointment reference (TAR) on port terminal stops (docs/26_TERMINAL_APPOINTMENT_TAR.md) -->
+    <string name="tar_title" translatable="false">TAR</string>
+    <string name="tar_phase_upcoming">TAR not started yet</string>
+    <string name="tar_phase_active">TAR window open</string>
+    <string name="tar_phase_ending_soon">TAR ends soon</string>
+    <string name="tar_phase_expired">TAR expired</string>
+    <string name="tar_phase_past">Past TAR</string>
+    <string name="tar_until_start">Time to TAR start</string>
+    <string name="tar_until_end">Time to TAR end</string>
+    <string name="tar_terminal_time">Terminal time · %1$s</string>
+    <string name="tar_copy">Copy the TAR code</string>
+    <string name="tar_copied">TAR code copied</string>
+    <string name="trip_stale_offline">No connection · last update %1$s</string>
+    <string name="trip_stale_failed">Could not refresh · last update %1$s</string>
+    <string name="trip_stale_no_details">Could not refresh · trip details not loaded yet</string>
+</resources>

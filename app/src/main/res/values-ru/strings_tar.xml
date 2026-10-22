@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Код TAR на точках в портовых терминалах (docs/26_TERMINAL_APPOINTMENT_TAR.md) -->
+    <string name="tar_phase_upcoming">TAR ещё не начался</string>
+    <string name="tar_phase_active">TAR действует</string>
+    <string name="tar_phase_ending_soon">TAR скоро закончится</string>
+    <string name="tar_phase_expired">Срок TAR истёк</string>
+    <string name="tar_phase_past">Прошедший TAR</string>
+    <string name="tar_until_start">До начала TAR</string>
+    <string name="tar_until_end">До конца TAR</string>
+    <string name="tar_terminal_time">Время терминала · %1$s</string>
+    <string name="tar_copy">Скопировать код TAR</string>
+    <string name="tar_copied">Код TAR скопирован</string>
+    <string name="trip_stale_offline">Нет связи · последнее обновление %1$s</string>
+    <string name="trip_stale_failed">Не удалось обновить · последнее обновление %1$s</string>
+    <string name="trip_stale_no_details">Не удалось обновить · детали рейса ещё не загружены</string>
+</resources>

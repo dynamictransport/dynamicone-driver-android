@@ -59,6 +59,7 @@ import com.dynamictransport.dynamicone.domain.rules.RestAlarmSettings
 import com.dynamictransport.dynamicone.domain.scan.ScanMode
 import com.dynamictransport.dynamicone.domain.scan.ScanOutcome
 import java.io.File
+import java.time.Duration
 import java.time.Instant
 import java.time.YearMonth
 import kotlinx.coroutines.flow.Flow
@@ -438,6 +439,17 @@ interface SyncRepository {
 
 interface NetworkMonitor {
     val isOnline: Flow<Boolean>
+}
+
+/**
+ * The server's idea of "now" (docs/26): the device clock corrected by the offset measured from the HTTP `Date`
+ * header of the latest API response. Zero until a response has been seen, so it never invents a correction.
+ */
+interface ServerClock {
+    /** Server time minus device time. */
+    val offset: StateFlow<Duration>
+
+    fun now(): Instant
 }
 
 interface AppInfo {

@@ -51,6 +51,7 @@ import com.dynamictransport.dynamicone.core.media.DocumentImageDecoder
 import com.dynamictransport.dynamicone.core.network.DriverApi
 import com.dynamictransport.dynamicone.core.network.DriverAuthApi
 import com.dynamictransport.dynamicone.core.network.DriverHttpClients
+import com.dynamictransport.dynamicone.core.network.ServerTimeSync
 import com.dynamictransport.dynamicone.core.network.MobileApi
 import com.dynamictransport.dynamicone.core.nfc.AndroidNfcStatusProvider
 import com.dynamictransport.dynamicone.core.nfc.NfcStatusProvider
@@ -177,6 +178,7 @@ import com.dynamictransport.dynamicone.domain.repository.IncidentRepository
 import com.dynamictransport.dynamicone.domain.repository.MessageRepository
 import com.dynamictransport.dynamicone.domain.repository.MyDocumentRepository
 import com.dynamictransport.dynamicone.domain.repository.NetworkMonitor
+import com.dynamictransport.dynamicone.domain.repository.ServerClock
 import com.dynamictransport.dynamicone.domain.repository.PayrollRepository
 import com.dynamictransport.dynamicone.domain.repository.RestAlarmSettingsRepository
 import com.dynamictransport.dynamicone.domain.repository.RoadSnapshotRepository
@@ -356,8 +358,12 @@ object NetworkModule {
     @Provides
     @Singleton
     @BaseHttpClient
-    fun provideBaseHttpClient(): OkHttpClient =
-        DriverHttpClients.base(appVersion = BuildConfig.VERSION_NAME, logRequests = BuildConfig.DEBUG)
+    fun provideBaseHttpClient(serverTime: ServerTimeSync): OkHttpClient =
+        DriverHttpClients.base(appVersion = BuildConfig.VERSION_NAME, logRequests = BuildConfig.DEBUG, serverTime = serverTime)
+
+    /** Measured from the Driver API; the demo backend never answers over HTTP, so its offset stays zero. */
+    @Provides
+    fun provideServerClock(serverTime: ServerTimeSync): ServerClock = serverTime
 
     /**
      * Token refresh runs without the authenticator, so a failed refresh can never recurse. Tokens are refreshed where
