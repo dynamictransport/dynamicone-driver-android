@@ -29,6 +29,7 @@ import com.dynamictransport.dynamicone.data.real.RealMessageRepository
 import com.dynamictransport.dynamicone.data.real.RealPayrollRepository
 import com.dynamictransport.dynamicone.data.real.RealPushRegistrar
 import com.dynamictransport.dynamicone.data.real.RealRoadSnapshotRepository
+import com.dynamictransport.dynamicone.data.real.RealWakeUpCallRepository
 import com.dynamictransport.dynamicone.data.real.RealSessionData
 import com.dynamictransport.dynamicone.data.real.RealSignedDocumentRepository
 import com.dynamictransport.dynamicone.data.real.RealSyncRepository
@@ -70,6 +71,8 @@ class RealApiHarness(folder: TemporaryFolder, mobileAccount: Boolean = false) {
     val snapshotScheduler = RecordingSnapshotSyncScheduler()
     val snapshotPreparer = FakeSnapshotPhotoPreparer()
     val deviceProfile = FakeDeviceProfile()
+    val wakeUpDao = InMemoryWakeUpCallDao()
+    val wakeUpScheduler = RecordingWakeUpSyncScheduler()
 
     /** In-memory DataStore: the JVM file rename DataStore relies on cannot replace files on Windows. */
     val sessionStore = InMemoryPreferencesDataStore()
@@ -94,6 +97,7 @@ class RealApiHarness(folder: TemporaryFolder, mobileAccount: Boolean = false) {
     val hrDocuments: RealHrDocumentRepository
     val vehiclePosition: ApiVehiclePositionRepository
     val snapshots: RealRoadSnapshotRepository
+    val wakeUps: RealWakeUpCallRepository
     val myDocuments: RealMyDocumentRepository
     val vehicleDocuments: RealVehicleDocumentRepository
     val photos: EmployeePhotoStore
@@ -126,6 +130,7 @@ class RealApiHarness(folder: TemporaryFolder, mobileAccount: Boolean = false) {
         )
         vehiclePosition = ApiVehiclePositionRepository(api, tracker, sessionPreferences)
         snapshots = RealRoadSnapshotRepository(api, tracker, snapshotDao, sessionPreferences, snapshotScheduler, snapshotPreparer, directories, clock, Dispatchers.IO)
+        wakeUps = RealWakeUpCallRepository(api, tracker, wakeUpDao, sessionPreferences, wakeUpScheduler, clock)
         myDocuments = RealMyDocumentRepository(mobileApi, tracker, downloader, sessionPreferences)
         vehicleDocuments = RealVehicleDocumentRepository(mobileApi, tracker, downloader, sessionPreferences)
         sessionData = RealSessionData(

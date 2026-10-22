@@ -40,6 +40,9 @@ import com.dynamictransport.dynamicone.domain.model.VehicleDocumentsSnapshot
 import com.dynamictransport.dynamicone.domain.model.VehicleInfo
 import com.dynamictransport.dynamicone.domain.model.VehicleLookup
 import com.dynamictransport.dynamicone.domain.model.VehiclePositionState
+import com.dynamictransport.dynamicone.domain.model.WakeUpCall
+import com.dynamictransport.dynamicone.domain.model.WakeUpDecision
+import com.dynamictransport.dynamicone.domain.model.WakeUpOutcome
 import com.dynamictransport.dynamicone.domain.repository.AttendanceRepository
 import com.dynamictransport.dynamicone.domain.repository.DailyShiftRepository
 import com.dynamictransport.dynamicone.domain.repository.DriverTimesRepository
@@ -53,6 +56,7 @@ import com.dynamictransport.dynamicone.domain.repository.TripExecutionRepository
 import com.dynamictransport.dynamicone.domain.repository.VehicleCheckRepository
 import com.dynamictransport.dynamicone.domain.repository.VehicleDocumentRepository
 import com.dynamictransport.dynamicone.domain.repository.VehiclePositionRepository
+import com.dynamictransport.dynamicone.domain.repository.WakeUpCallRepository
 import java.io.File
 import java.time.Instant
 import java.time.YearMonth
@@ -187,5 +191,17 @@ object UnavailableRoadSnapshotRepository : RoadSnapshotRepository {
     override suspend fun pendingRequest(requestId: String): SnapshotRequest? = null
     override suspend fun storePhoto(requestId: String, source: File, capturedAt: Instant, camera: SnapshotCamera): Boolean = false
     override suspend fun reportFailure(requestId: String, failure: SnapshotFailure) = Unit
+    override suspend fun sendPending(): Boolean = true
+}
+
+/** The demo backend has no planner and no push: no wake-up call ever reaches it (docs/25). */
+object UnavailableWakeUpCallRepository : WakeUpCallRepository {
+    override fun observeLatest(): Flow<WakeUpOutcome?> = flowOf(null)
+    override suspend fun onRingSignal(callId: String, reason: String?, expiresAt: Instant?): WakeUpDecision = WakeUpDecision.Ignore
+    override suspend fun onStopSignal(callId: String) = Unit
+    override suspend fun ringingCalls(): List<WakeUpCall> = emptyList()
+    override suspend fun reportRinging(callId: String) = Unit
+    override suspend fun acknowledge(callId: String) = Unit
+    override suspend fun expire(callId: String) = Unit
     override suspend fun sendPending(): Boolean = true
 }

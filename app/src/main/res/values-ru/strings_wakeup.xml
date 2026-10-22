@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_channel_wake_up">Вызовы из офиса</string>
+    <string name="wake_up_channel_description">Звонит сигналом будильника, когда офис вас вызывает.</string>
+    <string name="wake_up_title_named">%1$s вызывает вас</string>
+    <string name="wake_up_title_office">Офис вызывает вас</string>
+    <string name="wake_up_reason_call_office">Позвоните в офис.</string>
+    <string name="wake_up_reason_departure_time">Пора выезжать.</string>
+    <string name="wake_up_reason_loading_time_changed">Время погрузки изменилось.</string>
+    <string name="wake_up_reason_trip_changed">Ваш рейс изменился.</string>
+    <string name="wake_up_reason_other">Вы нужны офису прямо сейчас.</string>
+    <string name="wake_up_trip">Рейс %1$s</string>
+    <string name="wake_up_acknowledge">Я НЕ СПЛЮ</string>
+    <string name="wake_up_office">Офис</string>
+    <string name="wake_up_home_ringing">%1$s вызывает вас</string>
+    <string name="wake_up_home_acknowledged_pending">%1$s вызывал(а) · %2$s · ответ ожидает отправки</string>
+    <string name="wake_up_home_acknowledged">%1$s вызывал(а) · %2$s · отвечено</string>
+    <string name="wake_up_home_no_answer">%1$s вызывал(а) · %2$s · без ответа</string>
+    <string name="wake_up_home_stopped">%1$s вызывал(а) · %2$s · отвечено на другом устройстве</string>
+    <string name="wake_up_permission_notifications">Вызовы останутся беззвучными: уведомления выключены.</string>
+    <string name="wake_up_permission_full_screen">Вызов не может открыться поверх экрана блокировки.</string>
+    <string name="wake_up_permission_battery">Вызов может прийти с опозданием: оптимизация батареи ограничивает приложение.</string>
+    <string name="wake_up_permission_dnd">Вызов не будет слышен, пока режим «Не беспокоить» установлен на полную тишину.</string>
+    <string name="wake_up_permission_open">РАЗРЕШИТЬ</string>
+</resources>

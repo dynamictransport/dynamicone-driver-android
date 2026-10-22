@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_channel_wake_up">Pobudki z biura</string>
+    <string name="wake_up_channel_description">Dzwoni dźwiękiem alarmu, gdy biuro Cię wzywa.</string>
+    <string name="wake_up_title_named">%1$s Cię wzywa</string>
+    <string name="wake_up_title_office">Biuro Cię wzywa</string>
+    <string name="wake_up_reason_call_office">Zadzwoń do biura.</string>
+    <string name="wake_up_reason_departure_time">Czas wyjeżdżać.</string>
+    <string name="wake_up_reason_loading_time_changed">Zmieniła się godzina załadunku.</string>
+    <string name="wake_up_reason_trip_changed">Twoja trasa się zmieniła.</string>
+    <string name="wake_up_reason_other">Biuro potrzebuje Cię teraz.</string>
+    <string name="wake_up_trip">Trasa %1$s</string>
+    <string name="wake_up_acknowledge">NIE ŚPIĘ</string>
+    <string name="wake_up_office">Biuro</string>
+    <string name="wake_up_home_ringing">%1$s Cię wzywa</string>
+    <string name="wake_up_home_acknowledged_pending">%1$s wzywał(a) · %2$s · odpowiedź czeka na wysłanie</string>
+    <string name="wake_up_home_acknowledged">%1$s wzywał(a) · %2$s · odebrano</string>
+    <string name="wake_up_home_no_answer">%1$s wzywał(a) · %2$s · bez odpowiedzi</string>
+    <string name="wake_up_home_stopped">%1$s wzywał(a) · %2$s · odebrano na innym urządzeniu</string>
+    <string name="wake_up_permission_notifications">Pobudki pozostaną ciche: powiadomienia są wyłączone.</string>
+    <string name="wake_up_permission_full_screen">Pobudka nie może otworzyć się na ekranie blokady.</string>
+    <string name="wake_up_permission_battery">Pobudka może dotrzeć późno: optymalizacja baterii ogranicza aplikację.</string>
+    <string name="wake_up_permission_dnd">Pobudka pozostanie cicha, gdy tryb Nie przeszkadzać to „całkowita cisza”.</string>
+    <string name="wake_up_permission_open">ZEZWÓL</string>
+</resources>

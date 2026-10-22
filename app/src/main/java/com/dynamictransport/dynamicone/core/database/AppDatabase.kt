@@ -26,8 +26,9 @@ import java.time.Instant
         HrSignatureEntity::class,
         HrDocumentCacheEntity::class,
         SnapshotRequestEntity::class,
+        WakeUpCallEntity::class,
     ],
-    version = 6,
+    version = 7,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 1, to = 2, spec = AppDatabase.Version1To2::class),
@@ -39,6 +40,8 @@ import java.time.Instant
         AutoMigration(from = 4, to = 5),
         // v6: remote road snapshot requests and the photos / failure reports waiting on the tablet (docs/24).
         AutoMigration(from = 5, to = 6),
+        // v7: wake-up calls of the planner and the answers waiting on the device (docs/25).
+        AutoMigration(from = 6, to = 7),
     ],
 )
 @TypeConverters(DatabaseConverters::class)
@@ -56,6 +59,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun driverCacheDao(): DriverCacheDao
     abstract fun hrDocumentDao(): HrDocumentDao
     abstract fun snapshotRequestDao(): SnapshotRequestDao
+    abstract fun wakeUpCallDao(): WakeUpCallDao
 
     /**
      * v2: Driver API command store added; the demo earnings cache is dropped (pay data is no longer cached

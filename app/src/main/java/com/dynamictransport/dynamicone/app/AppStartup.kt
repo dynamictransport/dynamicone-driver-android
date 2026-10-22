@@ -9,6 +9,8 @@ import com.dynamictransport.dynamicone.core.sync.HrDocumentSyncScheduler
 import com.dynamictransport.dynamicone.core.sync.ShiftSyncScheduler
 import com.dynamictransport.dynamicone.core.sync.SnapshotSyncScheduler
 import com.dynamictransport.dynamicone.core.sync.SyncScheduler
+import com.dynamictransport.dynamicone.core.sync.WakeUpSyncScheduler
+import com.dynamictransport.dynamicone.core.wakeup.WakeUpCallController
 import com.dynamictransport.dynamicone.data.sync.SyncEngine
 import com.dynamictransport.dynamicone.domain.model.AppModule
 import com.dynamictransport.dynamicone.domain.model.SessionState
@@ -46,6 +48,8 @@ class AppStartup @Inject constructor(
     private val restAlarm: Provider<RestAlarmController>,
     private val hrDocumentSyncScheduler: HrDocumentSyncScheduler,
     private val snapshotSyncScheduler: SnapshotSyncScheduler,
+    private val wakeUpSyncScheduler: WakeUpSyncScheduler,
+    private val wakeUpCalls: Provider<WakeUpCallController>,
 ) {
     /** Driver API daily shift with tachograph rest and wake-up alarm (docs/16). */
     private val dailyShift: Boolean get() = appInfo.isDriverShiftEnabled && !appInfo.isDemoMode
@@ -54,6 +58,8 @@ class AppStartup @Inject constructor(
         scope.launch { authRepository.restoreSession() }
         if (appInfo.isDemoMode) startDemoSync() else startApiReads()
         if (dailyShift) startDriverDay()
+        // A wake-up call cut short by a restart rings again from stored data (docs/25 U9: no flag, no demo).
+        if (!appInfo.isDemoMode) wakeUpCalls.get().start()
     }
 
     /**
@@ -113,8 +119,10 @@ class AppStartup @Inject constructor(
                     if (AppModule.OFFICE_ATTENDANCE in session.modules) attendanceSyncScheduler.requestSend()
                     if (AppModule.HR_DOCUMENTS in session.modules) hrDocumentSyncScheduler.requestSend()
                     if (AppModule.DRIVER in session.modules) {
-                        // Road snapshot photos taken before a restart or without network go out first (docs/24).
+                        // Road snapshot photos taken before a restart or without network go out first (docs/24),
+                        // as do answers to wake-up calls (docs/25).
                         snapshotSyncScheduler.requestSend()
+                        wakeUpSyncScheduler.requestSend()
                         syncRepository.refreshFromServer()
                     }
                 }
@@ -135,6 +143,7 @@ class AppStartup @Inject constructor(
                 if (AppModule.HR_DOCUMENTS in session.modules) hrDocumentSyncScheduler.requestSend()
                 if (AppModule.DRIVER in session.modules) {
                     snapshotSyncScheduler.requestSend()
+                    wakeUpSyncScheduler.requestSend()
                     syncRepository.refreshFromServer()
                 }
             }

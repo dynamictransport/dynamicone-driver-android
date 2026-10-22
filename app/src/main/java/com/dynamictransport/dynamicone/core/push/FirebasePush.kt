@@ -161,9 +161,16 @@ class DriverMessagingService : FirebaseMessagingService() {
     @Inject
     lateinit var snapshotSignals: RoadSnapshotSignalHandler
 
+    @Inject
+    lateinit var wakeUpSignals: WakeUpCallSignalHandler
+
     override fun onMessageReceived(message: RemoteMessage) {
         if (appInfo.isDemoMode) return
         when (message.data[EXTRA_TYPE]) {
+            // The planner rings this device, or silences it because another device answered (docs/25 §4).
+            TYPE_DRIVER_WAKEUP -> runBlocking {
+                withTimeoutOrNull(SIGNAL_TIMEOUT_MILLIS) { wakeUpSignals.onSignal(WakeUpSignal.from(message.data)) }
+            }
             // The planner asks the vehicle tablet for a photo of the road (docs/24 §4).
             TYPE_TRIP_SNAPSHOT -> runBlocking {
                 withTimeoutOrNull(SIGNAL_TIMEOUT_MILLIS) { snapshotSignals.onSignal(message.data[EXTRA_TRIP_ID], message.data[EXTRA_REQUEST_ID]) }

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_channel_wake_up">Uyandırma çağrıları</string>
+    <string name="wake_up_channel_description">Ofis seni aradığında alarm sesiyle çalar.</string>
+    <string name="wake_up_title_named">%1$s seni arıyor</string>
+    <string name="wake_up_title_office">Ofis seni arıyor</string>
+    <string name="wake_up_reason_call_office">Lütfen ofisi ara.</string>
+    <string name="wake_up_reason_departure_time">Çıkış saati geldi.</string>
+    <string name="wake_up_reason_loading_time_changed">Yükleme saati değişti.</string>
+    <string name="wake_up_reason_trip_changed">Seferin değişti.</string>
+    <string name="wake_up_reason_other">Ofisin sana şimdi ihtiyacı var.</string>
+    <string name="wake_up_trip">Sefer %1$s</string>
+    <string name="wake_up_acknowledge">UYANDIM</string>
+    <string name="wake_up_office">Ofis</string>
+    <string name="wake_up_home_ringing">%1$s seni arıyor</string>
+    <string name="wake_up_home_acknowledged_pending">%1$s aradı · %2$s · cevap gönderilmeyi bekliyor</string>
+    <string name="wake_up_home_acknowledged">%1$s aradı · %2$s · cevaplandı</string>
+    <string name="wake_up_home_no_answer">%1$s aradı · %2$s · cevaplanmadı</string>
+    <string name="wake_up_home_stopped">%1$s aradı · %2$s · başka cihazdan cevaplandı</string>
+    <string name="wake_up_permission_notifications">Uyandırma çağrıları sessiz kalır: bildirimler kapalı.</string>
+    <string name="wake_up_permission_full_screen">Uyandırma çağrısı kilit ekranının üstünde açılamıyor.</string>
+    <string name="wake_up_permission_battery">Uyandırma çağrısı geç gelebilir: pil optimizasyonu uygulamayı kısıtlıyor.</string>
+    <string name="wake_up_permission_dnd">Rahatsız Etmeyin "tam sessiz" iken uyandırma çağrısı duyulmaz.</string>
+    <string name="wake_up_permission_open">İZİN VER</string>
+</resources>

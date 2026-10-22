@@ -11,9 +11,13 @@ import com.dynamictransport.dynamicone.domain.model.AssignedVehicleState
 import com.dynamictransport.dynamicone.domain.model.RestWindow
 import com.dynamictransport.dynamicone.domain.model.SnapshotOutcome
 import com.dynamictransport.dynamicone.domain.model.VehiclePositionState
+import com.dynamictransport.dynamicone.domain.model.WakeUpOutcome
 import com.dynamictransport.dynamicone.domain.repository.DriverTimesRepository
 import com.dynamictransport.dynamicone.domain.repository.RoadSnapshotRepository
 import com.dynamictransport.dynamicone.domain.repository.VehiclePositionRepository
+import com.dynamictransport.dynamicone.domain.repository.WakeUpCallRepository
+import com.dynamictransport.dynamicone.core.wakeup.WakeUpCallPermissions
+import com.dynamictransport.dynamicone.core.wakeup.WakeUpPermissionIssue
 import com.dynamictransport.dynamicone.feature.shift.DriverDayState
 import kotlinx.coroutines.flow.flowOf
 import com.dynamictransport.dynamicone.domain.model.RefreshResult
@@ -81,6 +85,10 @@ data class HomeUiState(
     val vehiclePlace: String? = null,
     /** The planner's latest road photo request on this tablet, while it is recent (docs/24); null otherwise. */
     val snapshot: SnapshotOutcome? = null,
+    /** The office's latest wake-up call on this device, while it is recent (docs/25); null otherwise. */
+    val wakeUpCall: WakeUpOutcome? = null,
+    /** What keeps a wake-up call from ringing on this device (docs/25 U5); null when nothing does. */
+    val wakeUpIssue: WakeUpPermissionIssue? = null,
 )
 
 @HiltViewModel
@@ -97,6 +105,8 @@ class HomeViewModel @Inject constructor(
     private val vehiclePositions: VehiclePositionRepository,
     private val placeNames: PlaceNameResolver,
     roadSnapshots: RoadSnapshotRepository,
+    wakeUpCalls: WakeUpCallRepository,
+    private val wakeUpPermissions: WakeUpCallPermissions,
     clock: Clock,
 ) : ViewModel() {
 
@@ -104,6 +114,16 @@ class HomeViewModel @Inject constructor(
     private val recentSnapshot = roadSnapshots.observeLatest().map { outcome ->
         outcome?.takeIf { Duration.between(it.updatedAt, clock.instant()) <= SNAPSHOT_SHOWN_FOR }
     }
+
+    /** The same for the office's wake-up call: a ringing one always, an answered one for a few hours. */
+    private val recentWakeUp = wakeUpCalls.observeLatest().map { outcome ->
+        outcome?.takeIf { Duration.between(it.updatedAt, clock.instant()) <= SNAPSHOT_SHOWN_FOR }
+    }
+
+    private val demoMode = appInfo.isDemoMode
+
+    /** Read when the screen is built and again when it returns to the front (a system setting may have changed). */
+    private val wakeUpIssue = MutableStateFlow(if (demoMode) null else wakeUpPermissions.firstIssue())
 
     private val driverDay = if (appInfo.isDriverShiftEnabled) {
         combine(driverTimes.observeDriverTimes(), restAlarm.status) { times, alarm -> DriverDayState(times, alarm) }
@@ -169,6 +189,8 @@ class HomeViewModel @Inject constructor(
     ) { state, day, vehicle, position, place ->
         state.copy(driverDay = day, assignedVehicle = vehicle, vehiclePosition = position, vehiclePlace = place)
     }.combine(recentSnapshot) { state, snapshot -> state.copy(snapshot = snapshot) }
+        .combine(recentWakeUp) { state, wakeUp -> state.copy(wakeUpCall = wakeUp) }
+        .combine(wakeUpIssue) { state, issue -> state.copy(wakeUpIssue = issue) }
 
     val uiState: StateFlow<HomeUiState> =
         combine(contentWithDay, syncRepository.observeLastRefresh(), refreshing, singleFlight.busy, message) {
@@ -233,6 +255,7 @@ class HomeViewModel @Inject constructor(
      */
     fun onResume() {
         restAlarm.refreshPermissions()
+        if (!demoMode) wakeUpIssue.value = wakeUpPermissions.firstIssue()
         refreshProfile()
         readVehiclePosition()
     }

@@ -77,6 +77,10 @@ import com.dynamictransport.dynamicone.feature.common.toActionUi
 import com.dynamictransport.dynamicone.feature.common.vehicleLabel
 import com.dynamictransport.dynamicone.feature.shift.DriverDayCard
 import com.dynamictransport.dynamicone.feature.snapshot.SnapshotBanner
+import com.dynamictransport.dynamicone.feature.wakeup.WakeUpCallBanner
+import com.dynamictransport.dynamicone.feature.wakeup.WakeUpPermissionBanner
+import com.dynamictransport.dynamicone.core.wakeup.WakeUpCallSettingsScreens
+import com.dynamictransport.dynamicone.core.wakeup.WakeUpPermissionIssue
 import java.time.Duration
 import java.time.Instant
 
@@ -128,6 +132,7 @@ fun HomeRoute(
         onRetryAssignedVehicle = viewModel::onRetryAssignedVehicle,
         onRetryVehiclePosition = viewModel::onRetryVehiclePosition,
         onShowVehicleOnMap = { point, label -> if (!NavigationLinks.open(context, point, label)) viewModel.onMapUnavailable() },
+        onOpenWakeUpSettings = { issue -> WakeUpCallSettingsScreens.open(context, issue) },
     )
 }
 
@@ -151,6 +156,7 @@ fun HomeScreen(
     onRetryAssignedVehicle: () -> Unit = {},
     onRetryVehiclePosition: () -> Unit = {},
     onShowVehicleOnMap: (GeoPoint, String?) -> Unit = { _, _ -> },
+    onOpenWakeUpSettings: (WakeUpPermissionIssue) -> Unit = {},
     now: Instant = rememberCurrentInstant(),
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -204,6 +210,8 @@ fun HomeScreen(
                 offlineMessage = if (state.isDemoMode) R.string.sync_offline else R.string.sync_offline_real,
             )
             state.snapshot?.let { SnapshotBanner(it) }
+            state.wakeUpCall?.let { WakeUpCallBanner(it) }
+            state.wakeUpIssue?.let { issue -> WakeUpPermissionBanner(issue, onOpenSettings = { onOpenWakeUpSettings(issue) }) }
             state.refreshError?.let { error ->
                 StatusBanner(
                     message = stringResource(error),

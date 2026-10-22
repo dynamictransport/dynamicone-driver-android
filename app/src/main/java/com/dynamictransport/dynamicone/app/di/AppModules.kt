@@ -43,6 +43,7 @@ import com.dynamictransport.dynamicone.core.database.ShiftDao
 import com.dynamictransport.dynamicone.core.database.SnapshotRequestDao
 import com.dynamictransport.dynamicone.core.database.SyncMetaDao
 import com.dynamictransport.dynamicone.core.database.TripDao
+import com.dynamictransport.dynamicone.core.database.WakeUpCallDao
 import com.dynamictransport.dynamicone.core.location.GeocoderPlaceNameResolver
 import com.dynamictransport.dynamicone.core.location.PlaceNameResolver
 import com.dynamictransport.dynamicone.core.media.AndroidDocumentImageDecoder
@@ -58,12 +59,14 @@ import com.dynamictransport.dynamicone.core.pdf.PdfDocumentOpener
 import com.dynamictransport.dynamicone.core.push.AndroidHrDocumentNotifier
 import com.dynamictransport.dynamicone.core.push.AndroidMessageNotifier
 import com.dynamictransport.dynamicone.core.push.AndroidRoadSnapshotNotifier
+import com.dynamictransport.dynamicone.core.push.AndroidWakeUpCallNotifier
 import com.dynamictransport.dynamicone.core.push.FirebasePushSession
 import com.dynamictransport.dynamicone.core.push.HrDocumentNotifier
 import com.dynamictransport.dynamicone.core.push.MessageNotifier
 import com.dynamictransport.dynamicone.core.push.PushRegistrar
 import com.dynamictransport.dynamicone.core.push.PushSession
 import com.dynamictransport.dynamicone.core.push.RoadSnapshotNotifier
+import com.dynamictransport.dynamicone.core.push.WakeUpCallNotifier
 import com.dynamictransport.dynamicone.core.security.CryptoBox
 import com.dynamictransport.dynamicone.core.security.EncryptedTokenStore
 import com.dynamictransport.dynamicone.core.security.KeystoreCryptoBox
@@ -86,6 +89,12 @@ import com.dynamictransport.dynamicone.core.sync.WorkManagerHrDocumentSyncSchedu
 import com.dynamictransport.dynamicone.core.sync.WorkManagerShiftSyncScheduler
 import com.dynamictransport.dynamicone.core.sync.WorkManagerSnapshotSyncScheduler
 import com.dynamictransport.dynamicone.core.sync.WorkManagerSyncScheduler
+import com.dynamictransport.dynamicone.core.sync.WakeUpSyncScheduler
+import com.dynamictransport.dynamicone.core.sync.WorkManagerWakeUpSyncScheduler
+import com.dynamictransport.dynamicone.core.wakeup.AlarmVolumeBooster
+import com.dynamictransport.dynamicone.core.wakeup.AndroidAlarmVolumeBooster
+import com.dynamictransport.dynamicone.core.wakeup.AndroidWakeUpCallPermissions
+import com.dynamictransport.dynamicone.core.wakeup.WakeUpCallPermissions
 import com.dynamictransport.dynamicone.data.demo.AppNetworkMonitor
 import com.dynamictransport.dynamicone.data.demo.FakeDemoBackendControls
 import com.dynamictransport.dynamicone.data.demo.UnavailableAttendanceRepository
@@ -102,6 +111,7 @@ import com.dynamictransport.dynamicone.data.demo.UnavailableTripExecutionReposit
 import com.dynamictransport.dynamicone.data.demo.UnavailableVehicleCheckRepository
 import com.dynamictransport.dynamicone.data.demo.UnavailableVehicleDocumentRepository
 import com.dynamictransport.dynamicone.data.demo.UnavailableVehiclePositionRepository
+import com.dynamictransport.dynamicone.data.demo.UnavailableWakeUpCallRepository
 import com.dynamictransport.dynamicone.data.media.AndroidProfilePhotoImages
 import com.dynamictransport.dynamicone.data.media.BitmapDocumentScanner
 import com.dynamictransport.dynamicone.data.media.BitmapSnapshotPhotoPreparer
@@ -140,6 +150,7 @@ import com.dynamictransport.dynamicone.data.real.RealSyncRepository
 import com.dynamictransport.dynamicone.data.real.RealTripExecutionRepository
 import com.dynamictransport.dynamicone.data.real.RealTripRepository
 import com.dynamictransport.dynamicone.data.real.RealVehicleDocumentRepository
+import com.dynamictransport.dynamicone.data.real.RealWakeUpCallRepository
 import com.dynamictransport.dynamicone.data.real.UnavailableDriverRemoteDataSource
 import com.dynamictransport.dynamicone.data.remote.DriverRemoteDataSource
 import com.dynamictransport.dynamicone.data.remote.fake.FakeDriverBackend
@@ -178,6 +189,7 @@ import com.dynamictransport.dynamicone.domain.repository.VehicleCheckRepository
 import com.dynamictransport.dynamicone.domain.repository.VehicleDocumentRepository
 import com.dynamictransport.dynamicone.domain.repository.VehiclePositionRepository
 import com.dynamictransport.dynamicone.domain.repository.ViewedFileCleaner
+import com.dynamictransport.dynamicone.domain.repository.WakeUpCallRepository
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -295,6 +307,9 @@ object DatabaseModule {
 
     @Provides
     fun provideSnapshotRequestDao(database: AppDatabase): SnapshotRequestDao = database.snapshotRequestDao()
+
+    @Provides
+    fun provideWakeUpCallDao(database: AppDatabase): WakeUpCallDao = database.wakeUpCallDao()
 }
 
 @Module
@@ -460,6 +475,11 @@ object RepositoryModule {
     fun provideRoadSnapshotRepository(real: Provider<RealRoadSnapshotRepository>): RoadSnapshotRepository =
         if (isDemoMode()) UnavailableRoadSnapshotRepository else real.get()
 
+    /** Wake-up calls come only from the real planner (docs/25); the demo has none. */
+    @Provides
+    fun provideWakeUpCallRepository(real: Provider<RealWakeUpCallRepository>): WakeUpCallRepository =
+        if (isDemoMode()) UnavailableWakeUpCallRepository else real.get()
+
     @Provides
     fun provideDriverDaySync(real: Provider<ApiDriverDaySync>): DriverDaySync = if (isDriverShift()) real.get() else NoOpDriverDaySync
 
@@ -569,6 +589,18 @@ abstract class BindingsModule {
 
     @Binds
     abstract fun bindRoadSnapshotNotifier(impl: AndroidRoadSnapshotNotifier): RoadSnapshotNotifier
+
+    @Binds
+    abstract fun bindWakeUpSyncScheduler(impl: WorkManagerWakeUpSyncScheduler): WakeUpSyncScheduler
+
+    @Binds
+    abstract fun bindWakeUpCallNotifier(impl: AndroidWakeUpCallNotifier): WakeUpCallNotifier
+
+    @Binds
+    abstract fun bindAlarmVolumeBooster(impl: AndroidAlarmVolumeBooster): AlarmVolumeBooster
+
+    @Binds
+    abstract fun bindWakeUpCallPermissions(impl: AndroidWakeUpCallPermissions): WakeUpCallPermissions
 
     @Binds
     abstract fun bindDeviceProfile(impl: AndroidDeviceProfile): DeviceProfile

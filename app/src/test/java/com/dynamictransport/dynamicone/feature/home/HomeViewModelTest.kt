@@ -38,6 +38,8 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import com.dynamictransport.dynamicone.data.demo.UnavailableRoadSnapshotRepository
+import com.dynamictransport.dynamicone.data.demo.UnavailableWakeUpCallRepository
+import com.dynamictransport.dynamicone.testing.FakeWakeUpCallPermissions
 import kotlinx.coroutines.test.runTest
 import java.time.Clock
 import java.time.ZoneOffset
@@ -75,6 +77,8 @@ class HomeViewModelTest {
         vehiclePositions = positions,
         placeNames = places,
         roadSnapshots = UnavailableRoadSnapshotRepository,
+        wakeUpCalls = UnavailableWakeUpCallRepository,
+        wakeUpPermissions = FakeWakeUpCallPermissions(),
         clock = Clock.fixed(TEST_NOW, ZoneOffset.UTC),
     )
 

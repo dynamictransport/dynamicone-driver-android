@@ -52,6 +52,9 @@ import com.dynamictransport.dynamicone.domain.model.VehicleDocumentsSnapshot
 import com.dynamictransport.dynamicone.domain.model.VehicleInfo
 import com.dynamictransport.dynamicone.domain.model.VehicleLookup
 import com.dynamictransport.dynamicone.domain.model.VehiclePositionState
+import com.dynamictransport.dynamicone.domain.model.WakeUpCall
+import com.dynamictransport.dynamicone.domain.model.WakeUpDecision
+import com.dynamictransport.dynamicone.domain.model.WakeUpOutcome
 import com.dynamictransport.dynamicone.domain.rules.RestAlarmSettings
 import com.dynamictransport.dynamicone.domain.scan.ScanMode
 import com.dynamictransport.dynamicone.domain.scan.ScanOutcome
@@ -479,5 +482,38 @@ interface RoadSnapshotRepository {
     suspend fun reportFailure(requestId: String, failure: SnapshotFailure)
 
     /** Sends photos and failure reports waiting on the tablet. False when something must be tried again later. */
+    suspend fun sendPending(): Boolean
+}
+
+/**
+ * Wake-up calls (docs/25): the planner's call read after a push, the driver's answer on this device, and the queue
+ * that carries the answer to the server. Every device of the driver handles calls.
+ */
+interface WakeUpCallRepository {
+    /** The latest call of the signed-in driver, for the banner on the home screen; null without one. */
+    fun observeLatest(): Flow<WakeUpOutcome?>
+
+    /**
+     * A `ring` push arrived: the call is read from the server and stored. [reason] and [expiresAt] are the push's own
+     * data, used when the server cannot be asked right now.
+     */
+    suspend fun onRingSignal(callId: String, reason: String?, expiresAt: Instant?): WakeUpDecision
+
+    /** A `stop` push arrived (answered elsewhere, cancelled): the call is closed on this device without a report. */
+    suspend fun onStopSignal(callId: String)
+
+    /** Calls that were ringing when the process stopped (a restart); the caller decides whether they still ring. */
+    suspend fun ringingCalls(): List<WakeUpCall>
+
+    /** This device started to ring; best effort, never queued. */
+    suspend fun reportRinging(callId: String)
+
+    /** The driver answered: the answer is stored and queued for the server. */
+    suspend fun acknowledge(callId: String)
+
+    /** The call rang until its deadline without an answer: the report is stored and queued. */
+    suspend fun expire(callId: String)
+
+    /** Sends answers and ring-out reports waiting on the device. False when something must be tried again later. */
     suspend fun sendPending(): Boolean
 }

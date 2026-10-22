@@ -239,6 +239,20 @@ interface DriverApi {
         @Path("requestId") requestId: String,
         @Body body: SnapshotResultRequestDto,
     ): Response<Unit>
+
+    // --- Wake-up calls (docs/25) ---
+
+    /** 200 in every state; `404 wake_up_call_not_found` for another driver's call. */
+    @GET("me/wake-up-calls/{callId}")
+    suspend fun wakeUpCall(@Path("callId") callId: String): WakeUpCallDto
+
+    /** 204; a call that is no longer pending stays as it is. */
+    @POST("me/wake-up-calls/{callId}/ringing")
+    suspend fun reportWakeUpRinging(@Path("callId") callId: String, @Body body: WakeUpRingingRequestDto): Response<Unit>
+
+    /** 204, also for an already closed call; idempotent by `clientActionId`. */
+    @POST("me/wake-up-calls/{callId}/result")
+    suspend fun reportWakeUpResult(@Path("callId") callId: String, @Body body: WakeUpResultRequestDto): Response<Unit>
 }
 
 /** Refresh runs on a client without the authenticator, so a failed refresh can never loop. */

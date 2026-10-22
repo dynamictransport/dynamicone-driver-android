@@ -17,6 +17,7 @@ import com.dynamictransport.dynamicone.domain.repository.AttendanceRepository
 import com.dynamictransport.dynamicone.domain.repository.DailyShiftRepository
 import com.dynamictransport.dynamicone.domain.repository.HrDocumentRepository
 import com.dynamictransport.dynamicone.domain.repository.RoadSnapshotRepository
+import com.dynamictransport.dynamicone.domain.repository.WakeUpCallRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -298,4 +299,41 @@ class SnapshotSyncWorker @AssistedInject constructor(
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result = if (roadSnapshotRepository.sendPending()) Result.success() else Result.retry()
+}
+
+/** Sends the driver's answers to wake-up calls and the ring-out reports waiting on the device (docs/25 §8, U6). */
+interface WakeUpSyncScheduler {
+    fun requestSend(delaySeconds: Long = 0)
+}
+
+@Singleton
+class WorkManagerWakeUpSyncScheduler @Inject constructor(
+    @param:ApplicationContext private val context: Context,
+) : WakeUpSyncScheduler {
+
+    override fun requestSend(delaySeconds: Long) {
+        val request = OneTimeWorkRequestBuilder<WakeUpSyncWorker>()
+            .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, WAKE_UP_BACKOFF_SECONDS, TimeUnit.SECONDS)
+            .setInitialDelay(delaySeconds.coerceIn(0, MAX_WAKE_UP_DELAY_SECONDS), TimeUnit.SECONDS)
+            .build()
+        // Every send is idempotent by clientActionId: restarting a running send is safe.
+        WorkManager.getInstance(context).enqueueUniqueWork(UNIQUE_WORK_NAME, ExistingWorkPolicy.REPLACE, request)
+    }
+
+    companion object {
+        const val UNIQUE_WORK_NAME = "wake-up-call-sync"
+        private const val WAKE_UP_BACKOFF_SECONDS = 20L
+        private const val MAX_WAKE_UP_DELAY_SECONDS = 10 * 60L
+    }
+}
+
+@HiltWorker
+class WakeUpSyncWorker @AssistedInject constructor(
+    @Assisted context: Context,
+    @Assisted params: WorkerParameters,
+    private val wakeUpCallRepository: WakeUpCallRepository,
+) : CoroutineWorker(context, params) {
+
+    override suspend fun doWork(): Result = if (wakeUpCallRepository.sendPending()) Result.success() else Result.retry()
 }

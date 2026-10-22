@@ -16,6 +16,10 @@
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <!-- Alarms are lost at a restart: they are set again from the stored rest. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Wake-up calls (docs/25 U5): a sleeping phone must get the push at once, so the driver may exempt the app. -->
+    <uses-permission
+        android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"
+        tools:ignore="BatteryLife" />
 
     <uses-feature
         android:name="android.hardware.camera"
@@ -76,6 +80,20 @@
         <!-- "Not now" on a road snapshot request notification (docs/24). -->
         <receiver
             android:name=".core.push.SnapshotDismissReceiver"
+            android:exported="false" />
+
+        <!-- The planner's wake-up call over the lock screen (docs/25); opened only by the call's full-screen notification. -->
+        <activity
+            android:name=".app.WakeUpCallActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:taskAffinity=""
+            android:theme="@style/Theme.DynamicOne" />
+
+        <!-- "I'm awake" on the wake-up call notification. -->
+        <receiver
+            android:name=".core.push.WakeUpCallReceiver"
             android:exported="false" />
 
         <!-- Sets the alarm again after a restart, an app update and clock or permission changes (system broadcasts). -->

@@ -191,6 +191,7 @@ Uygulamada SQL bağlantısı, storage anahtarı, JWT imza anahtarı veya başka 
 - Firebase projesi `dynamicone-driver`, Android uygulaması `com.dynamictransport.dynamicone` (applicationId 17.09.2026'da `com.dynamictransport.driver`'dan değişti: aynı Firebase projesine bu paket adıyla Android uygulaması eklenmeli). Konsoldan indirilen `google-services.json` dosyasını `app/google-services.json` olarak koyun; dosya Git'e girmez. Dosya yoksa veya bu paket adını içermiyorsa uygulama push olmadan derlenir ve çalışır (`BuildConfig.PUSH_CONFIGURED = false`).
 - FCM kaydı yalnızca gerçek backend'e giriş yapıldıktan sonra başlar; demo modunda push yoktur. Android 13+ cihazlarda girişten sonra bildirim izni istenir.
 - Cihaz kaydı (`POST`/`DELETE me/devices`) ve FCM mesaj push'u backend'de yayında (TH-2026-0444). Uygulama girişten sonra cihazı kaydeder, çıkıştan önce kaydı siler. Üretimde gönderimin etkinleştirilmesi backend'de ayrı adımdır. Ayrıntı: [docs/13_PUSH_NOTIFICATIONS.md](docs/13_PUSH_NOTIFICATIONS.md). Firebase service account anahtarı yalnızca backend'in gizli ayarlarına konur, bu repoya girmez.
+- Planlamacının şoförü tablet ve telefondan sesli uyandırması (docs/25): `driver.wakeup` push'u alarm sesiyle tam ekran çalar, *UYANDIM* cevabı `wake-up-call-sync` kuyruğuyla gider. Sözleşme önerisi ve Codex görevi [docs/25_DRIVER_WAKE_UP_CALL.md](docs/25_DRIVER_WAKE_UP_CALL.md); backend'de henüz yok, uygulama tarafı JVM testleriyle doğrulandı (ASSUMPTIONS U1–U9).
 
 ### Demo modu (backend olmadan)
 
