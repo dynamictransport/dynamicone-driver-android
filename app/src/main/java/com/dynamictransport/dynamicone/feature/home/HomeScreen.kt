@@ -24,7 +24,6 @@ import androidx.compose.material.icons.filled.ReportProblem
 import androidx.compose.material.icons.filled.SyncProblem
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -47,14 +46,18 @@ import com.dynamictransport.dynamicone.core.design.component.EmptyState
 import com.dynamictransport.dynamicone.core.design.component.QuickActionTile
 import com.dynamictransport.dynamicone.core.design.component.StatusBanner
 import com.dynamictransport.dynamicone.core.design.component.StatusTone
+import com.dynamictransport.dynamicone.core.design.layout.readableWidth
 import com.dynamictransport.dynamicone.core.design.theme.Dimens
 import com.dynamictransport.dynamicone.core.design.theme.DriverTheme
+import com.dynamictransport.dynamicone.domain.model.AssignedVehicleState
+import com.dynamictransport.dynamicone.domain.model.GeoPoint
 import com.dynamictransport.dynamicone.domain.model.RestWindow
 import com.dynamictransport.dynamicone.domain.model.Shift
 import com.dynamictransport.dynamicone.domain.model.ShiftStatus
 import com.dynamictransport.dynamicone.domain.model.Trip
 import com.dynamictransport.dynamicone.domain.statemachine.PrimaryAction
-import com.dynamictransport.dynamicone.feature.common.ActionBar
+import com.dynamictransport.dynamicone.feature.common.ActionScaffold
+import com.dynamictransport.dynamicone.feature.common.AssignedVehicleRow
 import com.dynamictransport.dynamicone.feature.common.BlockedAction
 import com.dynamictransport.dynamicone.feature.common.ConnectivityBadge
 import com.dynamictransport.dynamicone.feature.common.DemoBadge
@@ -151,7 +154,7 @@ fun HomeScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     MessageEffect(state.message, snackbarHostState, onMessageShown)
 
-    Scaffold(
+    ActionScaffold(
         topBar = {
             DriverTopBar(
                 title = stringResource(R.string.app_name),
@@ -161,11 +164,7 @@ fun HomeScreen(
                 },
             )
         },
-        bottomBar = {
-            if (!state.loading) {
-                ActionBar { HomePrimaryAction(state, onPrimaryAction) }
-            }
-        },
+        actions = if (state.loading) null else ({ HomePrimaryAction(state, onPrimaryAction) }),
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
         Column(
@@ -174,9 +173,17 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
+                .readableWidth()
                 .padding(horizontal = Dimens.ScreenPadding, vertical = 12.dp),
         ) {
-            DriverHeader(state = state, now = now, onOpenShift = onOpenShift)
+            DriverHeader(
+                state = state,
+                now = now,
+                onOpenShift = onOpenShift,
+                onRetryAssignedVehicle = onRetryAssignedVehicle,
+                onRetryVehiclePosition = onRetryVehiclePosition,
+                onShowVehicleOnMap = onShowVehicleOnMap,
+            )
             state.driverDay?.let { day ->
                 DriverDayCard(
                     state = day,

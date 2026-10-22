@@ -7,12 +7,17 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBars
@@ -22,7 +27,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.CloudUpload
@@ -38,6 +45,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -70,6 +78,9 @@ import com.dynamictransport.dynamicone.core.design.component.PrimaryActionButton
 import com.dynamictransport.dynamicone.core.design.component.StatusBadge
 import com.dynamictransport.dynamicone.core.design.component.StatusBanner
 import com.dynamictransport.dynamicone.core.design.component.StatusTone
+import com.dynamictransport.dynamicone.core.design.layout.isWideScreen
+import com.dynamictransport.dynamicone.core.design.layout.readableWidth
+import com.dynamictransport.dynamicone.core.design.theme.Dimens
 import com.dynamictransport.dynamicone.core.design.theme.DriverTheme
 import com.dynamictransport.dynamicone.domain.model.SyncState
 import com.dynamictransport.dynamicone.domain.model.Trip
@@ -134,7 +145,13 @@ fun DriverActionButton(
     }
 }
 
-/** Pinned bottom area holding the screen's dominant action, always within thumb reach. */
+const val ACTION_BAR_TAG = "action_bar"
+const val ACTION_PANE_TAG = "action_pane"
+
+/**
+ * Pinned bottom area holding the screen's dominant action, always within thumb reach. On a wide screen the buttons
+ * keep a readable width in the middle instead of stretching across the whole tablet.
+ */
 @Composable
 fun ActionBar(
     modifier: Modifier = Modifier,
@@ -143,13 +160,86 @@ fun ActionBar(
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerLowest,
         shadowElevation = 8.dp,
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag(ACTION_BAR_TAG),
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
                 .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime).only(WindowInsetsSides.Bottom))
+                .readableWidth(Dimens.ActionMaxWidth)
                 .padding(horizontal = 16.dp, vertical = 12.dp),
+            content = content,
+        )
+    }
+}
+
+/**
+ * The dominant action on a wide screen: a pane on the right of the content, so the short landscape height of a
+ * tablet in the truck stays for the trip itself. The actions sit at mid height, where the hand reaches a mounted
+ * tablet, and scroll when there are more than fit.
+ */
+@Composable
+fun ActionPane(
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceContainerLowest,
+        shadowElevation = 8.dp,
+        modifier = modifier
+            .fillMaxHeight()
+            .width(Dimens.ActionPaneWidth)
+            .testTag(ACTION_PANE_TAG),
+    ) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
+            modifier = Modifier
+                .fillMaxHeight()
+                .verticalScroll(rememberScrollState())
+                .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime).only(WindowInsetsSides.Bottom))
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            content = content,
+        )
+    }
+}
+
+/**
+ * Screen with one dominant action area. Phones pin it under the content ([ActionBar]); wide screens put it in an
+ * [ActionPane] on the right. [actions] null means the screen has no action area (for example a finished trip).
+ * [content] receives the padding to apply, as with [Scaffold].
+ */
+@Composable
+fun ActionScaffold(
+    topBar: @Composable () -> Unit,
+    actions: (@Composable ColumnScope.() -> Unit)?,
+    snackbarHost: @Composable () -> Unit = {},
+    content: @Composable (PaddingValues) -> Unit,
+) {
+    if (isWideScreen()) {
+        Scaffold(topBar = topBar, snackbarHost = snackbarHost) { padding ->
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .consumeWindowInsets(padding),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                ) {
+                    content(PaddingValues())
+                }
+                if (actions != null) ActionPane(content = actions)
+            }
+        }
+    } else {
+        Scaffold(
+            topBar = topBar,
+            bottomBar = { if (actions != null) ActionBar(content = actions) },
+            snackbarHost = snackbarHost,
             content = content,
         )
     }

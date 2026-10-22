@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -74,8 +75,10 @@ import com.dynamictransport.dynamicone.core.design.component.PrimaryActionButton
 import com.dynamictransport.dynamicone.core.design.component.QuickActionTile
 import com.dynamictransport.dynamicone.core.design.component.SecondaryActionButton
 import com.dynamictransport.dynamicone.core.design.component.SectionCard
+import com.dynamictransport.dynamicone.core.design.component.StatusBadge
 import com.dynamictransport.dynamicone.core.design.component.StatusBanner
 import com.dynamictransport.dynamicone.core.design.component.StatusTone
+import com.dynamictransport.dynamicone.core.design.layout.readableWidth
 import com.dynamictransport.dynamicone.core.design.theme.Dimens
 import com.dynamictransport.dynamicone.core.design.theme.DriverTheme
 import com.dynamictransport.dynamicone.domain.model.ActionReceipt
@@ -95,8 +98,10 @@ import com.dynamictransport.dynamicone.domain.model.TripExecution
 import com.dynamictransport.dynamicone.domain.model.TripLocation
 import com.dynamictransport.dynamicone.domain.model.TripStop
 import com.dynamictransport.dynamicone.domain.statemachine.PrimaryAction
-import com.dynamictransport.dynamicone.feature.common.ActionBar
+import com.dynamictransport.dynamicone.feature.common.ActionScaffold
 import com.dynamictransport.dynamicone.feature.common.BlockedAction
+import com.dynamictransport.dynamicone.feature.common.CoordinateClipboard
+import com.dynamictransport.dynamicone.feature.common.CoordinateFormat
 import com.dynamictransport.dynamicone.feature.common.DriverActionButton
 import com.dynamictransport.dynamicone.feature.common.DriverFormats
 import com.dynamictransport.dynamicone.feature.common.LabeledDivider
@@ -191,7 +196,20 @@ fun TripDetailScreen(
     MessageEffect(state.message, snackbarHostState, onMessageShown)
     val trip = state.trip
 
-    Scaffold(
+    val actions: (@Composable ColumnScope.() -> Unit)? = if (trip != null && !trip.state.isTerminal) {
+        {
+            if (state.usesServerActions && !state.shiftStartRequired) {
+                ExecutionActions(state, trip, onExecutionAction, onResendPending, onDiscardPending, onRetry, onOpenDocuments, onConfirmTrailer)
+            } else {
+                if (state.shiftStartRequired) CenteredHint(stringResource(R.string.trip_shift_start_first), Modifier.testTag("trip_shift_start_first"))
+                TripActions(state, onPrimaryAction, onSecondaryAction)
+            }
+        }
+    } else {
+        null
+    }
+
+    ActionScaffold(
         topBar = {
             DriverTopBar(
                 title = trip?.let { stringResource(R.string.trip_title, it.tripNo) }.orEmpty(),
@@ -199,18 +217,7 @@ fun TripDetailScreen(
                 backContentDescription = stringResource(R.string.common_back),
             )
         },
-        bottomBar = {
-            if (trip != null && !trip.state.isTerminal) {
-                ActionBar {
-                    if (state.usesServerActions && !state.shiftStartRequired) {
-                        ExecutionActions(state, trip, onExecutionAction, onResendPending, onDiscardPending, onRetry)
-                    } else {
-                        if (state.shiftStartRequired) CenteredHint(stringResource(R.string.trip_shift_start_first), Modifier.testTag("trip_shift_start_first"))
-                        TripActions(state, onPrimaryAction, onSecondaryAction)
-                    }
-                }
-            }
-        },
+        actions = actions,
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
         Column(
@@ -219,6 +226,7 @@ fun TripDetailScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
+                .readableWidth()
                 .padding(horizontal = Dimens.ScreenPadding, vertical = 12.dp),
         ) {
             val loadError = state.loadError

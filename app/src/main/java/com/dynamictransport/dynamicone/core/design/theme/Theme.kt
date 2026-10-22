@@ -179,6 +179,12 @@ object Dimens {
     val SecondaryActionHeight = 56.dp
     val TileMinHeight = 88.dp
     val CardCorner = 16.dp
+
+    /** Wide screens (tablet in the truck): content stays readable, the action area stays within one glance. */
+    val ContentMaxWidth = 720.dp
+    val ActionMaxWidth = 560.dp
+    val ActionPaneWidth = 360.dp
+    val LoginFormWidth = 480.dp
 }
 
 val LocalDriverColors = staticCompositionLocalOf { LightDriverColors }

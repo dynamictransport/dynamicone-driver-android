@@ -27,6 +27,7 @@ import com.dynamictransport.dynamicone.core.design.component.ActionTone
 import com.dynamictransport.dynamicone.core.design.component.ChoiceRow
 import com.dynamictransport.dynamicone.core.design.component.DriverTopBar
 import com.dynamictransport.dynamicone.core.design.component.HoldToConfirmButton
+import com.dynamictransport.dynamicone.core.design.layout.readableWidth
 import com.dynamictransport.dynamicone.core.design.theme.Dimens
 import com.dynamictransport.dynamicone.core.design.theme.DriverTheme
 import com.dynamictransport.dynamicone.domain.model.RejectReason
@@ -101,6 +102,7 @@ fun RejectTripScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .readableWidth()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = Dimens.ScreenPadding, vertical = 12.dp),
         ) {

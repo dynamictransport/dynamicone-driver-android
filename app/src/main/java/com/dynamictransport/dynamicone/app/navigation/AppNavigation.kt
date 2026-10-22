@@ -6,14 +6,20 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.EventNote
+import androidx.compose.material.icons.filled.AssignmentInd
 import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Draw
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocalShipping
@@ -26,6 +32,8 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -53,8 +61,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.dynamictransport.dynamicone.R
 import com.dynamictransport.dynamicone.app.AppViewModel
+import com.dynamictransport.dynamicone.core.design.layout.isWideScreen
 import com.dynamictransport.dynamicone.domain.model.AppModule
 import com.dynamictransport.dynamicone.domain.model.SessionState
 import com.dynamictransport.dynamicone.feature.attendance.AttendanceRecordsRoute
@@ -90,6 +100,9 @@ import com.dynamictransport.dynamicone.feature.tripdetail.RejectTripRoute
 import com.dynamictransport.dynamicone.feature.tripdetail.TripDetailRoute
 import com.dynamictransport.dynamicone.feature.trips.TripsRoute
 import kotlinx.serialization.Serializable
+
+const val NAV_BAR_TAG = "nav_bar"
+const val NAV_RAIL_TAG = "nav_rail"
 
 // Centralised, typed navigation destinations. Argument names match TRIP_ID_ARG ("tripId").
 
@@ -275,26 +288,35 @@ private fun MainNavigation(modules: Set<AppModule>) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentSection = backStackEntry?.destination.section()?.takeIf { it in layout.bottomBar }
+    val hrDocuments = AppModule.HR_DOCUMENTS in modules
     val unreadMessages = if (driver) rememberUnreadMessages() else 0
+    val documentsToSign = if (hrDocuments && AppSection.HR_DOCUMENTS in layout.bottomBar) rememberDocumentsToSign() else 0
 
-    if (driver) DriverNotificationEffects(navController)
+    if (driver || hrDocuments) NotificationEffects(navController, driver = driver, hrDocuments = hrDocuments)
+
+    // Phones: the bar at the bottom. Wide screens (a tablet in the truck): a rail on the left, which leaves the
+    // short landscape height to the screens; its items sit at mid height, where the hand reaches a mounted tablet.
+    val wide = isWideScreen()
+    val sectionIcon: @Composable (AppSection) -> Unit = { section ->
+        when {
+            section == AppSection.MESSAGES && unreadMessages > 0 ->
+                CountIcon(section.icon, unreadMessages, pluralStringResource(R.plurals.messages_unread, unreadMessages, unreadMessages), "nav_messages_unread")
+            section == AppSection.HR_DOCUMENTS && documentsToSign > 0 ->
+                CountIcon(section.icon, documentsToSign, pluralStringResource(R.plurals.hr_badge, documentsToSign, documentsToSign), "nav_hr_documents_count")
+            else -> Icon(section.icon, contentDescription = null)
+        }
+    }
 
     Scaffold(
         bottomBar = {
-            if (currentSection != null) {
-                NavigationBar {
+            if (!wide && currentSection != null) {
+                NavigationBar(modifier = Modifier.testTag(NAV_BAR_TAG)) {
                     layout.bottomBar.forEach { section ->
                         NavigationBarItem(
                             selected = section == currentSection,
                             onClick = { navController.navigateToTopLevel(section) },
-                            icon = {
-                                if (section == AppSection.MESSAGES && unreadMessages > 0) {
-                                    UnreadIcon(section.icon, unreadMessages)
-                                } else {
-                                    Icon(section.icon, contentDescription = null)
-                                }
-                            },
-                            label = { Text(stringResource(section.label), maxLines = 1) },
+                            icon = { sectionIcon(section) },
+                            label = { NavLabel(stringResource(section.label)) },
                             modifier = Modifier.testTag("nav_${section.name}"),
                         )
                     }
@@ -309,116 +331,183 @@ private fun MainNavigation(modules: Set<AppModule>) {
                 .padding(padding)
                 .consumeWindowInsets(padding),
         ) {
-            // An area outside the bar opens like a detail screen, with a back button.
-            val openSection: (AppSection) -> Unit = { section ->
-                if (section in layout.bottomBar) navController.navigateToTopLevel(section) else navController.navigate(section.destination)
+            if (wide && currentSection != null) {
+                NavigationRail(modifier = Modifier.testTag(NAV_RAIL_TAG)) {
+                    Spacer(Modifier.weight(1f))
+                    layout.bottomBar.forEach { section ->
+                        NavigationRailItem(
+                            selected = section == currentSection,
+                            onClick = { navController.navigateToTopLevel(section) },
+                            icon = { sectionIcon(section) },
+                            label = { NavLabel(stringResource(section.label)) },
+                            modifier = Modifier.testTag("nav_${section.name}"),
+                        )
+                    }
+                    Spacer(Modifier.weight(1f))
+                }
             }
-            val backUnlessInBar: (AppSection) -> (() -> Unit)? = { section ->
-                if (section in layout.bottomBar) null else ({ navController.popBackStack() })
-            }
+            NavHost(
+                navController = navController,
+                startDestination = layout.start.destination,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+            ) {
+                // An area outside the bar opens like a detail screen, with a back button.
+                val openSection: (AppSection) -> Unit = { section ->
+                    if (section in layout.bottomBar) navController.navigateToTopLevel(section) else navController.navigate(section.destination)
+                }
+                val backUnlessInBar: (AppSection) -> (() -> Unit)? = { section ->
+                    if (section in layout.bottomBar) null else ({ navController.popBackStack() })
+                }
 
-            composable<HomeDestination> {
-                HomeRoute(
-                    onOpenTrip = { navController.navigate(TripDetailDestination(it)) },
-                    onOpenTrips = { openSection(AppSection.TRIPS) },
-                    onOpenDocuments = { openSection(AppSection.DOCUMENTS) },
-                    onOpenEarnings = { navController.navigate(PayrollDestination) },
-                    onReportIncident = { navController.navigate(ReportIncidentDestination(it)) },
-                    onOpenShift = { navController.navigate(ShiftDestination) },
-                    onStartShift = { navController.navigate(StartShiftDestination) { launchSingleTop = true } },
-                    onOpenRestAlarmSettings = { navController.navigate(RestAlarmSettingsDestination) },
-                )
-            }
-            composable<TripsDestination> {
-                TripsRoute(onOpenTrip = { navController.navigate(TripDetailDestination(it)) })
-            }
-            composable<DocumentsDestination> { entry ->
-                DocumentsEntry(entry = entry, navController = navController, onBack = backUnlessInBar(AppSection.DOCUMENTS))
-            }
-            composable<MessagesDestination> {
-                ConversationsRoute(
-                    onOpenConversation = { tripId ->
-                        if (tripId == null) navController.navigate(GeneralMessagesDestination) else navController.navigate(TripMessagesDestination(tripId))
-                    },
-                )
-            }
-            composable<AttendanceDestination> {
-                AttendanceRoute(onOpenRecords = { openSection(AppSection.ATTENDANCE_RECORDS) })
-            }
-            composable<AttendanceRecordsDestination> {
-                AttendanceRecordsRoute(onBack = backUnlessInBar(AppSection.ATTENDANCE_RECORDS))
-            }
-            composable<ProfileDestination> {
-                ProfileRoute(
-                    links = layout.overflow.map { ProfileLink(it.name, it.label, it.icon) },
-                    onOpenLink = { key -> openSection(AppSection.valueOf(key)) },
-                    onOpenPayroll = { navController.navigate(PayrollDestination) },
-                    onOpenSignedDocuments = { navController.navigate(SignedDocumentsDestination) },
-                    onOpenChangePassword = { navController.navigate(ChangePasswordDestination) },
-                    onOpenRestAlarm = { navController.navigate(RestAlarmSettingsDestination) },
-                )
-            }
-            composable<ShiftDestination> {
-                ShiftRoute(
-                    onBack = { navController.popBackStack() },
-                    onStartDailyShift = { navController.navigate(StartShiftDestination) { launchSingleTop = true } },
-                    onOpenRestAlarmSettings = { navController.navigate(RestAlarmSettingsDestination) },
-                )
-            }
-            composable<StartShiftDestination> {
-                StartShiftRoute(onClose = { navController.popBackStack() })
-            }
-            composable<RestAlarmSettingsDestination> {
-                RestAlarmSettingsRoute(onBack = { navController.popBackStack() })
-            }
-            composable<PayrollDestination> {
-                PayrollRoute(onBack = { navController.popBackStack() })
-            }
-            composable<SignedDocumentsDestination> {
-                SignedDocumentsRoute(onBack = { navController.popBackStack() })
-            }
-            composable<ChangePasswordDestination> {
-                ChangePasswordRoute(onBack = { navController.popBackStack() })
-            }
-            composable<TripDetailDestination> {
-                TripDetailRoute(
-                    onBack = { navController.popBackStack() },
-                    onOpenDocuments = { navController.navigate(TripDocumentsDestination(it)) },
-                    onOpenMessages = { navController.navigate(TripMessagesDestination(it)) },
-                    onReject = { navController.navigate(RejectTripDestination(it)) },
-                    onReportIncident = { navController.navigate(ReportIncidentDestination(it)) },
-                    onStartShift = { navController.navigate(StartShiftDestination) { launchSingleTop = true } },
-                )
-            }
-            composable<TripDocumentsDestination> { entry ->
-                DocumentsEntry(entry = entry, navController = navController, onBack = { navController.popBackStack() })
-            }
-            composable<GeneralMessagesDestination> {
-                MessagesRoute(onBack = { navController.popBackStack() })
-            }
-            composable<TripMessagesDestination> {
-                MessagesRoute(onBack = { navController.popBackStack() })
-            }
-            composable<DocumentScanDestination> {
-                DocumentScanRoute(
-                    onClose = { navController.popBackStack() },
-                    onAccepted = { imagePath ->
-                        navController.previousBackStackEntry?.savedStateHandle?.set(SCAN_RESULT_KEY, imagePath)
-                        navController.popBackStack()
-                    },
-                )
-            }
-            composable<RejectTripDestination> {
-                RejectTripRoute(
-                    onBack = { navController.popBackStack() },
-                    onRejected = { navController.popBackStack(HomeDestination, inclusive = false) },
-                )
-            }
-            composable<ReportIncidentDestination> {
-                ReportIncidentRoute(
-                    onBack = { navController.popBackStack() },
-                    onDone = { navController.popBackStack() },
-                )
+                // The card of documents to sign on the first screen of the account (docs/17 §12).
+                val openDocumentsToSign: (String?) -> Unit = { documentId ->
+                    if (documentId != null) navController.navigate(HrDocumentDetailDestination(documentId)) else openSection(AppSection.HR_DOCUMENTS)
+                }
+                val documentsToSignBanner: (@Composable () -> Unit)? =
+                    if (hrDocuments) ({ PendingSignaturesBanner(onOpen = openDocumentsToSign) }) else null
+
+                composable<HomeDestination> {
+                    HomeRoute(
+                        documentsToSignBanner = documentsToSignBanner,
+                        onOpenTrip = { navController.navigate(TripDetailDestination(it)) },
+                        onOpenTrips = { openSection(AppSection.TRIPS) },
+                        onOpenDocuments = { openSection(AppSection.DOCUMENTS) },
+                        onOpenEarnings = { navController.navigate(PayrollDestination) },
+                        onReportIncident = { navController.navigate(ReportIncidentDestination(it)) },
+                        onOpenShift = { navController.navigate(ShiftDestination) },
+                        onStartShift = { navController.navigate(StartShiftDestination) { launchSingleTop = true } },
+                        onOpenRestAlarmSettings = { navController.navigate(RestAlarmSettingsDestination) },
+                    )
+                }
+                composable<TripsDestination> {
+                    TripsRoute(onOpenTrip = { navController.navigate(TripDetailDestination(it)) })
+                }
+                composable<DocumentsDestination> { entry ->
+                    DocumentsEntry(entry = entry, navController = navController, onBack = backUnlessInBar(AppSection.DOCUMENTS))
+                }
+                composable<MessagesDestination> {
+                    ConversationsRoute(
+                        onOpenConversation = { tripId ->
+                            if (tripId == null) navController.navigate(GeneralMessagesDestination) else navController.navigate(TripMessagesDestination(tripId))
+                        },
+                    )
+                }
+                composable<AttendanceDestination> {
+                    AttendanceRoute(
+                        onOpenRecords = { openSection(AppSection.ATTENDANCE_RECORDS) },
+                        documentsToSignBanner = documentsToSignBanner,
+                    )
+                }
+                composable<AttendanceRecordsDestination> {
+                    AttendanceRecordsRoute(onBack = backUnlessInBar(AppSection.ATTENDANCE_RECORDS))
+                }
+                composable<HrDocumentsDestination> {
+                    HrDocumentsRoute(
+                        onOpenDocument = { navController.navigate(HrDocumentDetailDestination(it)) { launchSingleTop = true } },
+                        onBack = backUnlessInBar(AppSection.HR_DOCUMENTS),
+                    )
+                }
+                val openFile: (ViewedFileSource) -> (FileToView) -> Unit = { source ->
+                    { file ->
+                        navController.navigate(DocumentViewerDestination(source.name, file.documentId, file.title, file.contentType)) {
+                            launchSingleTop = true
+                        }
+                    }
+                }
+                composable<HrDocumentDetailDestination> {
+                    HrDocumentDetailRoute(onBack = { navController.popBackStack() }, onOpenReceipt = openFile(ViewedFileSource.HR_RECEIPT))
+                }
+                composable<MyDocumentsDestination> {
+                    MyDocumentsRoute(onBack = backUnlessInBar(AppSection.MY_DOCUMENTS), onOpenFile = openFile(ViewedFileSource.PERSONNEL))
+                }
+                composable<VehicleDocumentsDestination> {
+                    VehicleDocumentsRoute(onBack = backUnlessInBar(AppSection.VEHICLE_DOCUMENTS), onOpenFile = openFile(ViewedFileSource.VEHICLE))
+                }
+                composable<DocumentViewerDestination> { entry ->
+                    DocumentViewerRoute(title = entry.toRoute<DocumentViewerDestination>().title, onBack = { navController.popBackStack() })
+                }
+                composable<ProfileDestination> {
+                    ProfileRoute(
+                        links = layout.overflow.map { ProfileLink(it.name, it.linkLabel, it.icon) },
+                        onOpenLink = { key -> openSection(AppSection.valueOf(key)) },
+                        onOpenPayroll = { navController.navigate(PayrollDestination) },
+                        onOpenSignedDocuments = { navController.navigate(SignedDocumentsDestination) },
+                        onOpenChangePassword = { navController.navigate(ChangePasswordDestination) },
+                        onOpenRestAlarm = { navController.navigate(RestAlarmSettingsDestination) },
+                    )
+                }
+                composable<ShiftDestination> {
+                    ShiftRoute(
+                        onBack = { navController.popBackStack() },
+                        onStartDailyShift = { navController.navigate(StartShiftDestination) { launchSingleTop = true } },
+                        onOpenRestAlarmSettings = { navController.navigate(RestAlarmSettingsDestination) },
+                    )
+                }
+                composable<StartShiftDestination> {
+                    StartShiftRoute(onClose = { navController.popBackStack() })
+                }
+                composable<RestAlarmSettingsDestination> {
+                    RestAlarmSettingsRoute(onBack = { navController.popBackStack() })
+                }
+                composable<PayrollDestination> {
+                    PayrollRoute(onBack = { navController.popBackStack() })
+                }
+                composable<SignedDocumentsDestination> {
+                    SignedDocumentsRoute(onBack = { navController.popBackStack() }, onOpenFile = openFile(ViewedFileSource.SIGNED))
+                }
+                composable<ChangePasswordDestination> {
+                    ChangePasswordRoute(onBack = { navController.popBackStack() })
+                }
+                composable<TripDetailDestination> {
+                    TripDetailRoute(
+                        onBack = { navController.popBackStack() },
+                        onOpenDocuments = { tripId, slot -> navController.navigate(TripDocumentsDestination(tripId, slot)) },
+                        onOpenMessages = { navController.navigate(TripMessagesDestination(it)) },
+                        onReject = { navController.navigate(RejectTripDestination(it)) },
+                        onReportIncident = { navController.navigate(ReportIncidentDestination(it)) },
+                        onStartShift = { navController.navigate(StartShiftDestination) { launchSingleTop = true } },
+                        onConfirmTrailer = { navController.navigate(ConfirmTrailerDestination(it)) { launchSingleTop = true } },
+                    )
+                }
+                composable<ConfirmTrailerDestination> {
+                    ConfirmTrailerRoute(
+                        onBack = { navController.popBackStack() },
+                        // Back on the trip screen the confirmed trailer and the next step are shown.
+                        onConfirmed = { navController.popBackStack() },
+                    )
+                }
+                composable<TripDocumentsDestination> { entry ->
+                    DocumentsEntry(entry = entry, navController = navController, onBack = { navController.popBackStack() })
+                }
+                composable<GeneralMessagesDestination> {
+                    MessagesRoute(onBack = { navController.popBackStack() })
+                }
+                composable<TripMessagesDestination> {
+                    MessagesRoute(onBack = { navController.popBackStack() })
+                }
+                composable<DocumentScanDestination> {
+                    DocumentScanRoute(
+                        onClose = { navController.popBackStack() },
+                        onAccepted = { imagePath ->
+                            navController.previousBackStackEntry?.savedStateHandle?.set(SCAN_RESULT_KEY, imagePath)
+                            navController.popBackStack()
+                        },
+                    )
+                }
+                composable<RejectTripDestination> {
+                    RejectTripRoute(
+                        onBack = { navController.popBackStack() },
+                        onRejected = { navController.popBackStack(HomeDestination, inclusive = false) },
+                    )
+                }
+                composable<ReportIncidentDestination> {
+                    ReportIncidentRoute(
+                        onBack = { navController.popBackStack() },
+                        onDone = { navController.popBackStack() },
+                    )
+                }
             }
         }
     }

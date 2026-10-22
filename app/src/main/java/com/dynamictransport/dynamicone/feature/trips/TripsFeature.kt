@@ -45,6 +45,7 @@ import com.dynamictransport.dynamicone.R
 import com.dynamictransport.dynamicone.core.design.component.DriverTopBar
 import com.dynamictransport.dynamicone.core.design.component.EmptyState
 import com.dynamictransport.dynamicone.core.design.component.SecondaryActionButton
+import com.dynamictransport.dynamicone.core.design.layout.readableWidth
 import com.dynamictransport.dynamicone.core.design.theme.Dimens
 import com.dynamictransport.dynamicone.domain.model.Trip
 import com.dynamictransport.dynamicone.domain.repository.SyncRepository
@@ -202,7 +203,8 @@ fun TripsScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding),
+                .padding(padding)
+                .readableWidth(),
         ) {
             PrimaryTabRow(selectedTabIndex = state.selectedTab.ordinal) {
                 TripsTab.entries.forEach { tab ->

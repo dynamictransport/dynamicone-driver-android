@@ -36,6 +36,7 @@ import com.dynamictransport.dynamicone.core.design.component.EmptyState
 import com.dynamictransport.dynamicone.core.design.component.PrimaryActionButton
 import com.dynamictransport.dynamicone.core.design.component.StatusBanner
 import com.dynamictransport.dynamicone.core.design.component.StatusTone
+import com.dynamictransport.dynamicone.core.design.layout.readableWidth
 import com.dynamictransport.dynamicone.core.design.theme.Dimens
 import com.dynamictransport.dynamicone.domain.model.ActionResult
 import com.dynamictransport.dynamicone.domain.model.IncidentCategory
@@ -189,6 +190,7 @@ fun ReportIncidentScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .readableWidth()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = Dimens.ScreenPadding, vertical = 12.dp),
         ) {

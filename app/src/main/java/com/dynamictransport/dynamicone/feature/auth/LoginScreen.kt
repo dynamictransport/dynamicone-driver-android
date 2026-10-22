@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -39,6 +40,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -54,6 +56,8 @@ import com.dynamictransport.dynamicone.R
 import com.dynamictransport.dynamicone.core.design.component.PrimaryActionButton
 import com.dynamictransport.dynamicone.core.design.component.StatusBanner
 import com.dynamictransport.dynamicone.core.design.component.StatusTone
+import com.dynamictransport.dynamicone.core.design.layout.isWideScreen
+import com.dynamictransport.dynamicone.core.design.theme.Dimens
 import com.dynamictransport.dynamicone.core.design.theme.DriverTheme
 import com.dynamictransport.dynamicone.feature.common.LanguagePickerDialog
 import com.dynamictransport.dynamicone.feature.common.PRIMARY_ACTION_TAG
@@ -84,133 +88,66 @@ fun LoginScreen(
     var showSupport by rememberSaveable { mutableStateOf(false) }
 
     Scaffold { padding ->
-        Column(
-            verticalArrangement = Arrangement.spacedBy(14.dp),
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .imePadding()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 32.dp),
-        ) {
-            // The brand mark on the screen background, at the size its per-density images are made for (96 dp wide).
-            Image(
-                painter = painterResource(R.drawable.dynamicone_logo),
-                contentDescription = null,
+        if (isWideScreen()) {
+            // Tablet in landscape: the brand on the left, the form on the right. With the keyboard open the form
+            // alone still fits beside the brand, so username, password and the button stay together.
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(32.dp),
                 modifier = Modifier
-                    .width(96.dp)
-                    .aspectRatio(LOGO_ASPECT_RATIO)
-                    .testTag("app_logo"),
-            )
-            Column {
-                Text(stringResource(R.string.login_welcome), style = MaterialTheme.typography.headlineSmall)
-                Text(
-                    text = stringResource(R.string.app_name),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = DriverTheme.colors.muted,
-                )
-            }
-            if (state.sessionExpired) {
-                StatusBanner(
-                    message = stringResource(
-                        if (state.isDemoMode) R.string.login_session_expired else R.string.login_session_expired_real,
-                    ),
-                    icon = Icons.Filled.LockClock,
-                    tone = StatusTone.Warning,
-                )
-            }
-            if (state.isDemoMode) {
-                StatusBanner(stringResource(R.string.login_demo_hint), Icons.Filled.Info, StatusTone.Info)
-            }
-            OutlinedTextField(
-                value = state.username,
-                onValueChange = onUsernameChanged,
-                label = { Text(stringResource(R.string.login_username)) },
-                singleLine = true,
-                enabled = !state.submitting,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("login_username"),
-            )
-            OutlinedTextField(
-                value = state.password,
-                onValueChange = onPasswordChanged,
-                label = { Text(stringResource(R.string.login_password)) },
-                singleLine = true,
-                enabled = !state.submitting,
-                visualTransformation = if (state.passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = if (state.twoFactorRequired) ImeAction.Next else ImeAction.Done,
-                ),
-                keyboardActions = KeyboardActions(onDone = { onLogin() }),
-                trailingIcon = {
-                    IconButton(onClick = onTogglePasswordVisibility, modifier = Modifier.size(48.dp)) {
-                        Icon(
-                            imageVector = if (state.passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-                            contentDescription = stringResource(
-                                if (state.passwordVisible) R.string.login_hide_password else R.string.login_show_password,
-                            ),
-                        )
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("login_password"),
-            )
-            if (state.twoFactorRequired) {
-                OutlinedTextField(
-                    value = state.twoFactorCode,
-                    onValueChange = onTwoFactorCodeChanged,
-                    label = { Text(stringResource(R.string.login_two_factor_code)) },
-                    singleLine = true,
-                    enabled = !state.submitting,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword, imeAction = ImeAction.Done),
-                    keyboardActions = KeyboardActions(onDone = { onLogin() }),
+                    .fillMaxSize()
+                    .padding(padding)
+                    .imePadding()
+                    .padding(horizontal = 32.dp, vertical = 24.dp)
+                    .testTag("login_wide"),
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(14.dp, Alignment.CenterVertically),
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("login_two_factor_code"),
-                )
-            }
-            state.error?.let {
-                Text(
-                    text = stringResource(it),
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.testTag("login_error"),
-                )
-            }
-            PrimaryActionButton(
-                text = stringResource(R.string.login_submit),
-                onClick = onLogin,
-                icon = Icons.AutoMirrored.Filled.Login,
-                loading = state.submitting,
-                modifier = Modifier.testTag(PRIMARY_ACTION_TAG),
-            )
-            // On narrow phones (360 dp) both links do not fit side by side: the second one moves to the next line
-            // instead of squeezing its label into one letter per line.
-            FlowRow(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                TextButton(
-                    onClick = { showLanguagePicker = true },
-                    modifier = Modifier
-                        .heightIn(min = 48.dp)
-                        .testTag("login_language"),
+                        .weight(1f)
+                        .fillMaxHeight(),
                 ) {
-                    Icon(Icons.Filled.Language, contentDescription = null)
-                    Spacer(Modifier.width(6.dp))
-                    Text(stringResource(R.string.login_language), maxLines = 1)
+                    LoginBrand()
                 }
-                TextButton(
-                    onClick = { showSupport = true },
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(14.dp, Alignment.CenterVertically),
                     modifier = Modifier
-                        .heightIn(min = 48.dp)
-                        .testTag("login_support"),
+                        .width(Dimens.LoginFormWidth)
+                        .fillMaxHeight()
+                        .verticalScroll(rememberScrollState()),
                 ) {
-                    Icon(Icons.Filled.SupportAgent, contentDescription = null)
-                    Spacer(Modifier.width(6.dp))
-                    Text(stringResource(R.string.login_support), maxLines = 1)
+                    LoginForm(
+                        state = state,
+                        onUsernameChanged = onUsernameChanged,
+                        onPasswordChanged = onPasswordChanged,
+                        onTogglePasswordVisibility = onTogglePasswordVisibility,
+                        onLogin = onLogin,
+                        onTwoFactorCodeChanged = onTwoFactorCodeChanged,
+                        onShowLanguagePicker = { showLanguagePicker = true },
+                        onShowSupport = { showSupport = true },
+                    )
                 }
+            }
+        } else {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .imePadding()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp, vertical = 32.dp),
+            ) {
+                LoginBrand()
+                LoginForm(
+                    state = state,
+                    onUsernameChanged = onUsernameChanged,
+                    onPasswordChanged = onPasswordChanged,
+                    onTogglePasswordVisibility = onTogglePasswordVisibility,
+                    onLogin = onLogin,
+                    onTwoFactorCodeChanged = onTwoFactorCodeChanged,
+                    onShowLanguagePicker = { showLanguagePicker = true },
+                    onShowSupport = { showSupport = true },
+                )
             }
         }
     }
@@ -227,6 +164,145 @@ fun LoginScreen(
                 TextButton(onClick = { showSupport = false }) { Text(stringResource(R.string.common_ok)) }
             },
         )
+    }
+}
+
+/** The brand mark on the screen background, at the size its per-density images are made for (96 dp wide). */
+@Composable
+private fun LoginBrand() {
+    Image(
+        painter = painterResource(R.drawable.dynamicone_logo),
+        contentDescription = null,
+        modifier = Modifier
+            .width(96.dp)
+            .aspectRatio(LOGO_ASPECT_RATIO)
+            .testTag("app_logo"),
+    )
+    Column {
+        Text(stringResource(R.string.login_welcome), style = MaterialTheme.typography.headlineSmall)
+        Text(
+            text = stringResource(R.string.app_name),
+            style = MaterialTheme.typography.bodyMedium,
+            color = DriverTheme.colors.muted,
+        )
+    }
+}
+
+/** Banners, the fields, the one button and the two links; laid out by the caller's column. */
+@Composable
+private fun LoginForm(
+    state: LoginUiState,
+    onUsernameChanged: (String) -> Unit,
+    onPasswordChanged: (String) -> Unit,
+    onTogglePasswordVisibility: () -> Unit,
+    onLogin: () -> Unit,
+    onTwoFactorCodeChanged: (String) -> Unit,
+    onShowLanguagePicker: () -> Unit,
+    onShowSupport: () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.testTag("login_form")) {
+        if (state.sessionExpired) {
+            StatusBanner(
+                message = stringResource(
+                    if (state.isDemoMode) R.string.login_session_expired else R.string.login_session_expired_real,
+                ),
+                icon = Icons.Filled.LockClock,
+                tone = StatusTone.Warning,
+            )
+        }
+        if (state.isDemoMode) {
+            StatusBanner(stringResource(R.string.login_demo_hint), Icons.Filled.Info, StatusTone.Info)
+        }
+        OutlinedTextField(
+            value = state.username,
+            onValueChange = onUsernameChanged,
+            label = { Text(stringResource(R.string.login_username)) },
+            singleLine = true,
+            enabled = !state.submitting,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("login_username"),
+        )
+        OutlinedTextField(
+            value = state.password,
+            onValueChange = onPasswordChanged,
+            label = { Text(stringResource(R.string.login_password)) },
+            singleLine = true,
+            enabled = !state.submitting,
+            visualTransformation = if (state.passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Password,
+                imeAction = if (state.twoFactorRequired) ImeAction.Next else ImeAction.Done,
+            ),
+            keyboardActions = KeyboardActions(onDone = { onLogin() }),
+            trailingIcon = {
+                IconButton(onClick = onTogglePasswordVisibility, modifier = Modifier.size(48.dp)) {
+                    Icon(
+                        imageVector = if (state.passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                        contentDescription = stringResource(
+                            if (state.passwordVisible) R.string.login_hide_password else R.string.login_show_password,
+                        ),
+                    )
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("login_password"),
+        )
+        if (state.twoFactorRequired) {
+            OutlinedTextField(
+                value = state.twoFactorCode,
+                onValueChange = onTwoFactorCodeChanged,
+                label = { Text(stringResource(R.string.login_two_factor_code)) },
+                singleLine = true,
+                enabled = !state.submitting,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword, imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { onLogin() }),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("login_two_factor_code"),
+            )
+        }
+        state.error?.let {
+            Text(
+                text = stringResource(it),
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.testTag("login_error"),
+            )
+        }
+        PrimaryActionButton(
+            text = stringResource(R.string.login_submit),
+            onClick = onLogin,
+            icon = Icons.AutoMirrored.Filled.Login,
+            loading = state.submitting,
+            modifier = Modifier.testTag(PRIMARY_ACTION_TAG),
+        )
+        // On narrow phones (360 dp) both links do not fit side by side: the second one moves to the next line
+        // instead of squeezing its label into one letter per line.
+        FlowRow(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+            TextButton(
+                onClick = onShowLanguagePicker,
+                modifier = Modifier
+                    .heightIn(min = 48.dp)
+                    .testTag("login_language"),
+            ) {
+                Icon(Icons.Filled.Language, contentDescription = null)
+                Spacer(Modifier.width(6.dp))
+                Text(stringResource(R.string.login_language), maxLines = 1)
+            }
+            TextButton(
+                onClick = onShowSupport,
+                modifier = Modifier
+                    .heightIn(min = 48.dp)
+                    .testTag("login_support"),
+            ) {
+                Icon(Icons.Filled.SupportAgent, contentDescription = null)
+                Spacer(Modifier.width(6.dp))
+                Text(stringResource(R.string.login_support), maxLines = 1)
+            }
+        }
     }
 }
 

@@ -68,6 +68,7 @@ import com.dynamictransport.dynamicone.core.design.component.EmptyState
 import com.dynamictransport.dynamicone.core.design.component.SecondaryActionButton
 import com.dynamictransport.dynamicone.core.design.component.StatusBanner
 import com.dynamictransport.dynamicone.core.design.component.StatusTone
+import com.dynamictransport.dynamicone.core.design.layout.readableWidth
 import com.dynamictransport.dynamicone.core.design.theme.Dimens
 import com.dynamictransport.dynamicone.core.design.theme.DriverTheme
 import com.dynamictransport.dynamicone.core.push.MessageNotifier
@@ -405,7 +406,9 @@ fun MessagesScreen(
                 bottom = padding.calculateBottomPadding() + 12.dp,
             ),
             verticalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .readableWidth(),
         ) {
             if (state.stale) {
                 item(key = "stale") {

@@ -49,9 +49,9 @@ import com.dynamictransport.dynamicone.core.design.component.EmptyState
 import com.dynamictransport.dynamicone.core.design.component.SecondaryActionButton
 import com.dynamictransport.dynamicone.core.design.component.StatusBanner
 import com.dynamictransport.dynamicone.core.design.component.StatusTone
+import com.dynamictransport.dynamicone.core.design.layout.readableWidth
 import com.dynamictransport.dynamicone.core.design.theme.Dimens
 import com.dynamictransport.dynamicone.core.design.theme.DriverTheme
-import com.dynamictransport.dynamicone.domain.model.DocumentContentResult
 import com.dynamictransport.dynamicone.domain.model.RefreshResult
 import com.dynamictransport.dynamicone.domain.model.SignedDocument
 import com.dynamictransport.dynamicone.domain.repository.AppInfo
@@ -189,7 +189,9 @@ fun SignedDocumentsScreen(
                 bottom = padding.calculateBottomPadding() + 12.dp,
             ),
             verticalArrangement = Arrangement.spacedBy(Dimens.CardGap),
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .readableWidth(),
         ) {
             item(key = "note") {
                 StatusBanner(stringResource(R.string.signed_note), Icons.Filled.Info, StatusTone.Neutral)
