@@ -59,3 +59,44 @@ enum class TarPhase {
 
 /** [remaining] is the time to the start (UPCOMING) or to the end (ACTIVE, ENDING_SOON); null otherwise. */
 data class TarStatus(val phase: TarPhase, val remaining: Duration?)
+
+/**
+ * One warning before a TAR window ends (docs/26 §6): sound and notification [leadMinutes] before [endAt]. The key is
+ * stable per stop and lead, so a changed window replaces the earlier warning of the same stop.
+ */
+data class TarWarning(
+    val tripId: String,
+    val tripNo: String,
+    val stopId: String,
+    val stopName: String?,
+    val code: String,
+    val endAt: Instant,
+    val timeZone: ZoneId,
+    val leadMinutes: Long,
+) {
+    val key: String get() = "$tripId/$stopId/$leadMinutes"
+
+    /** Server instant at which the warning is due. */
+    val triggerAt: Instant get() = endAt.minus(Duration.ofMinutes(leadMinutes))
+}
+
+object TarWarningRules {
+    /** Minutes before the end of the window, in the order the warnings fire. */
+    val LEADS: List<Long> = listOf(60, 30, 15, 5)
+
+    /**
+     * The warnings still ahead at [now] for open stops with a TAR on open trips. A lead already passed is not
+     * warned about afterwards (opening a trip with 20 minutes left does not ring the 60- and 30-minute warnings).
+     */
+    fun plan(trips: List<Trip>, now: Instant): List<TarWarning> = trips
+        .filterNot { it.state.isTerminal }
+        .flatMap { trip ->
+            trip.stops
+                .filter { it.status != StopStatus.COMPLETED && it.status != StopStatus.SKIPPED && it.tar != null }
+                .flatMap { stop ->
+                    val tar = checkNotNull(stop.tar)
+                    LEADS.map { lead -> TarWarning(trip.id, trip.tripNo, stop.id, stop.locationName, tar.code, tar.endAt, tar.timeZone, lead) }
+                        .filter { it.triggerAt.isAfter(now) }
+                }
+        }
+}

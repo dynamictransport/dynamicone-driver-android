@@ -27,8 +27,9 @@ import java.time.Instant
         HrDocumentCacheEntity::class,
         SnapshotRequestEntity::class,
         WakeUpCallEntity::class,
+        TarWarningEntity::class,
     ],
-    version = 7,
+    version = 8,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 1, to = 2, spec = AppDatabase.Version1To2::class),
@@ -42,6 +43,8 @@ import java.time.Instant
         AutoMigration(from = 5, to = 6),
         // v7: wake-up calls of the planner and the answers waiting on the device (docs/25).
         AutoMigration(from = 6, to = 7),
+        // v8: TAR warnings set on the device's alarm manager (docs/26 §6).
+        AutoMigration(from = 7, to = 8),
     ],
 )
 @TypeConverters(DatabaseConverters::class)
@@ -60,6 +63,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun hrDocumentDao(): HrDocumentDao
     abstract fun snapshotRequestDao(): SnapshotRequestDao
     abstract fun wakeUpCallDao(): WakeUpCallDao
+    abstract fun tarWarningDao(): TarWarningDao
 
     /**
      * v2: Driver API command store added; the demo earnings cache is dropped (pay data is no longer cached

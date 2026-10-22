@@ -32,6 +32,11 @@ class NotificationRoutingViewModel @Inject constructor(
 
     fun onDocumentRequestHandled() = navigation.consumeDocument()
 
+    /** A TAR warning asked to open this trip (docs/26 §6). */
+    val tripRequest: StateFlow<String?> = navigation.tripRequest
+
+    fun onTripRequestHandled() = navigation.consumeTrip()
+
     /** Android 13+, push set up for the real backend, not allowed yet, and not asked before in this process. */
     fun shouldAskForNotificationPermission(): Boolean =
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&

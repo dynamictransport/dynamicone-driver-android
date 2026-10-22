@@ -43,6 +43,7 @@ import com.dynamictransport.dynamicone.core.database.ShiftDao
 import com.dynamictransport.dynamicone.core.database.SnapshotRequestDao
 import com.dynamictransport.dynamicone.core.database.SyncMetaDao
 import com.dynamictransport.dynamicone.core.database.TripDao
+import com.dynamictransport.dynamicone.core.database.TarWarningDao
 import com.dynamictransport.dynamicone.core.database.WakeUpCallDao
 import com.dynamictransport.dynamicone.core.location.GeocoderPlaceNameResolver
 import com.dynamictransport.dynamicone.core.location.PlaceNameResolver
@@ -52,6 +53,10 @@ import com.dynamictransport.dynamicone.core.network.DriverApi
 import com.dynamictransport.dynamicone.core.network.DriverAuthApi
 import com.dynamictransport.dynamicone.core.network.DriverHttpClients
 import com.dynamictransport.dynamicone.core.network.ServerTimeSync
+import com.dynamictransport.dynamicone.core.tar.AndroidTarWarningNotifier
+import com.dynamictransport.dynamicone.core.tar.AndroidTarWarningScheduler
+import com.dynamictransport.dynamicone.core.tar.TarWarningNotifier
+import com.dynamictransport.dynamicone.core.tar.TarWarningScheduler
 import com.dynamictransport.dynamicone.core.network.MobileApi
 import com.dynamictransport.dynamicone.core.nfc.AndroidNfcStatusProvider
 import com.dynamictransport.dynamicone.core.nfc.NfcStatusProvider
@@ -312,6 +317,9 @@ object DatabaseModule {
 
     @Provides
     fun provideWakeUpCallDao(database: AppDatabase): WakeUpCallDao = database.wakeUpCallDao()
+
+    @Provides
+    fun provideTarWarningDao(database: AppDatabase): TarWarningDao = database.tarWarningDao()
 }
 
 @Module
@@ -364,6 +372,12 @@ object NetworkModule {
     /** Measured from the Driver API; the demo backend never answers over HTTP, so its offset stays zero. */
     @Provides
     fun provideServerClock(serverTime: ServerTimeSync): ServerClock = serverTime
+
+    @Provides
+    fun provideTarWarningScheduler(scheduler: AndroidTarWarningScheduler): TarWarningScheduler = scheduler
+
+    @Provides
+    fun provideTarWarningNotifier(notifier: AndroidTarWarningNotifier): TarWarningNotifier = notifier
 
     /**
      * Token refresh runs without the authenticator, so a failed refresh can never recurse. Tokens are refreshed where

@@ -15,4 +15,8 @@
     <string name="trip_stale_offline">No connection · last update %1$s</string>
     <string name="trip_stale_failed">Could not refresh · last update %1$s</string>
     <string name="trip_stale_no_details">Could not refresh · trip details not loaded yet</string>
+    <string name="tar_channel">TAR warnings</string>
+    <string name="tar_channel_description">Sounds 60, 30, 15 and 5 minutes before a terminal appointment window ends.</string>
+    <string name="tar_warning_title">TAR %1$s · %2$d min left</string>
+    <string name="tar_warning_body">%1$s · window ends %2$s (%3$s)</string>
 </resources>

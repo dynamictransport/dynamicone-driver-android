@@ -98,3 +98,23 @@ Sefer detayındaki *Duraklar* kartında, ilgili durağın (API `id` ile eşleşe
 | Arka plana gidip gelme, tek döngü | `TripDetailViewModelTest` |
 | Sunucu saati düzeltmesi | `ServerTimeSyncTest`, `TripDetailViewModelTest` |
 | Yabancı sefer (403) | mevcut `RealApiRepositoriesTest` (`SESSION_EXPIRED` eşlemesi) |
+
+## 6. Bitişe kalan süre uyarıları (22.10.2026, ikinci istek)
+
+Kullanıcı isteği: TAR bitişine **60, 30, 15 ve 5 dakika** kala sesli ve görsel uyarı.
+
+- Uyarılar cihazın `AlarmManager`'ında kurulur (`TarWarningController`, `core/tar`), ağ olmadan da çalar. Her uyarı
+  `tripId/stopId/lead` anahtarıyla Room `tar_warnings` tablosunda (v8) tutulur; yeniden başlatma, saat/dilim
+  değişikliği ve uygulama güncellemesi sonrası `TarWarningRescheduleReceiver` kurulu uyarıları yeniden kurar.
+- Kaynak bellekteki seferlerdir: her sefer okuması (ekran açılışı, 60 sn döngü, liste) uyarıları eşler. Taşınan pencere
+  yeniden kurar; kaldırılan TAR, tamamlanan/atlanan durak, biten sefer veya listeden düşen sefer iptal eder. Yalnız
+  listeden bilinen (durakları okunmamış) sefer ve boş liste kararsızdır: kayıtlı uyarılara dokunulmaz. Oturum
+  kapanınca (`RealSessionData.clearServerData`) hepsi iptal edilir.
+- Geçmiş eşikler sonradan çalmaz: 20 dk kala öğrenilen TAR için yalnız 15 ve 5 dk uyarıları kurulur.
+- Alarm çalınca sefer yeniden kontrol edilir: durak hâlâ açık ve aynı pencereyse çalar; süreç yeniden başlamışsa
+  sefer önce sunucudan okunur, sunucuya ulaşılamazsa kayıtlı veriyle çalar. Pencere bittiyse hiç çalmaz.
+- Bildirim: kanal `tar_warning` (alarm sesi `USAGE_ALARM`, titreşim, yüksek önem), başlık *TAR 001234 · 30 dk kaldı*,
+  metin *ECT Delta · bitiş 12:00 (Amsterdam)*, kilit ekranında görünür, dokununca sefer detayı açılır
+  (`TYPE_TAR_WARNING`). Durak başına tek bildirim: 30 dk uyarısı 60 dk olanın yerine geçer. Tam ekran alarm ve
+  ısrarlı çalma yoktur; ses bir kez çalar.
+- Cihaz saati sapması: alarm anı = sunucu tetik anı − `ServerClock` offset'i.

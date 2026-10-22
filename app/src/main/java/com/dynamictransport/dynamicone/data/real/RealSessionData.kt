@@ -1,5 +1,6 @@
 package com.dynamictransport.dynamicone.data.real
 
+import com.dynamictransport.dynamicone.core.tar.TarWarningController
 import com.dynamictransport.dynamicone.domain.model.UserProfile
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -22,9 +23,12 @@ class RealSessionData @Inject constructor(
     private val vehicleDocuments: RealVehicleDocumentRepository,
     private val driverDay: DriverDaySessionData = DriverDaySessionData.None,
     private val hrDocuments: HrDocumentSessionData = HrDocumentSessionData.None,
+    private val tarWarnings: TarWarningController? = null,
 ) {
     /** Server data held in memory plus temporary viewing files. */
     suspend fun clearServerData() {
+        // Before the trips go: nothing of this session may ring later (docs/26 §6).
+        tarWarnings?.clear()
         trips.clear()
         executions.clear()
         documents.clear()

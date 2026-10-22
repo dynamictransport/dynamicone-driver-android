@@ -96,6 +96,22 @@
             android:name=".core.push.WakeUpCallReceiver"
             android:exported="false" />
 
+        <!-- TAR warnings before a terminal window ends (docs/26 §6): the device alarm and its re-arming after a restart. -->
+        <receiver
+            android:name=".core.tar.TarWarningReceiver"
+            android:exported="false" />
+        <receiver
+            android:name=".core.tar.TarWarningRescheduleReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
+            </intent-filter>
+        </receiver>
+
         <!-- Sets the alarm again after a restart, an app update and clock or permission changes (system broadcasts). -->
         <receiver
             android:name=".core.alarm.RestAlarmRescheduleReceiver"

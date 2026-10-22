@@ -10,6 +10,7 @@ import com.dynamictransport.dynamicone.core.sync.ShiftSyncScheduler
 import com.dynamictransport.dynamicone.core.sync.SnapshotSyncScheduler
 import com.dynamictransport.dynamicone.core.sync.SyncScheduler
 import com.dynamictransport.dynamicone.core.sync.WakeUpSyncScheduler
+import com.dynamictransport.dynamicone.core.tar.TarWarningController
 import com.dynamictransport.dynamicone.core.wakeup.WakeUpCallController
 import com.dynamictransport.dynamicone.data.sync.SyncEngine
 import com.dynamictransport.dynamicone.domain.model.AppModule
@@ -50,6 +51,7 @@ class AppStartup @Inject constructor(
     private val snapshotSyncScheduler: SnapshotSyncScheduler,
     private val wakeUpSyncScheduler: WakeUpSyncScheduler,
     private val wakeUpCalls: Provider<WakeUpCallController>,
+    private val tarWarnings: Provider<TarWarningController>,
 ) {
     /** Driver API daily shift with tachograph rest and wake-up alarm (docs/16). */
     private val dailyShift: Boolean get() = appInfo.isDriverShiftEnabled && !appInfo.isDemoMode
@@ -60,6 +62,8 @@ class AppStartup @Inject constructor(
         if (dailyShift) startDriverDay()
         // A wake-up call cut short by a restart rings again from stored data (docs/25 U9: no flag, no demo).
         if (!appInfo.isDemoMode) wakeUpCalls.get().start()
+        // TAR warnings follow the trips in memory and the alarms stored on the device (docs/26 §6).
+        tarWarnings.get().start()
     }
 
     /**

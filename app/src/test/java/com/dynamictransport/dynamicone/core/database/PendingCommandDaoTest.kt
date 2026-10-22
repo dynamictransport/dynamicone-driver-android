@@ -117,7 +117,7 @@ class AppDatabaseMigrationTest {
                 it.moveToFirst()
                 assertEquals(0, it.getInt(0))
             }
-            assertEquals(7, db.version)
+            assertEquals(8, db.version)
             assertTrue(runBlocking { room.pendingCommandDao().observeMessages(null).first() }.isEmpty())
             // v4: the driver daily shift tables (docs/16) exist and start empty; v5: personnel document signatures (docs/17);
             // v6: road snapshot requests (docs/24); v7: wake-up calls (docs/25).

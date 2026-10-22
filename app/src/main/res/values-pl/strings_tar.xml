@@ -14,4 +14,8 @@
     <string name="trip_stale_offline">Brak połączenia · ostatnia aktualizacja %1$s</string>
     <string name="trip_stale_failed">Nie udało się odświeżyć · ostatnia aktualizacja %1$s</string>
     <string name="trip_stale_no_details">Nie udało się odświeżyć · szczegóły kursu jeszcze nie wczytane</string>
+    <string name="tar_channel">Ostrzeżenia TAR</string>
+    <string name="tar_channel_description">Dźwięk na 60, 30, 15 i 5 minut przed końcem okna awizacji w terminalu.</string>
+    <string name="tar_warning_title">TAR %1$s · zostało %2$d min</string>
+    <string name="tar_warning_body">%1$s · koniec okna %2$s (%3$s)</string>
 </resources>

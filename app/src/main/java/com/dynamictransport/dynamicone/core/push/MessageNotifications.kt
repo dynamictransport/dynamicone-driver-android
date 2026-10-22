@@ -24,6 +24,9 @@ const val TYPE_DRIVER_TIMES = "driver.times"
 /** A tapped wake-up alarm or reminder opens the daily shift start (docs/16 §1). */
 const val TYPE_START_SHIFT = "driver.startShift"
 
+/** A tapped TAR warning opens its trip (docs/26 §6). Local only; there is no such push. */
+const val TYPE_TAR_WARNING = "driver.tarWarning"
+
 /** The tag the backend's system notification uses too, so the app replaces and removes it. */
 fun conversationTag(tripId: String?): String = "message-${tripId ?: "general"}"
 
@@ -152,6 +155,11 @@ class NotificationNavigation @Inject constructor() {
     /** A tapped road snapshot notification asks to take the photo of this request now (docs/24). */
     val snapshotRequest: StateFlow<String?> = snapshots.asStateFlow()
 
+    private val tripRequests = MutableStateFlow<String?>(null)
+
+    /** A tapped TAR warning asks to open this trip (docs/26 §6). */
+    val tripRequest: StateFlow<String?> = tripRequests.asStateFlow()
+
     /** The notification permission is asked at most once per app process. */
     @Volatile
     var permissionAsked: Boolean = false
@@ -163,6 +171,7 @@ class NotificationNavigation @Inject constructor() {
             TYPE_DRIVER_MESSAGE -> requests.value = ConversationOpenRequest(tapped.getStringExtra(EXTRA_TRIP_ID)?.takeIf { it.isNotBlank() })
             TYPE_HR_DOCUMENT -> tapped.getStringExtra(EXTRA_DOCUMENT_ID)?.takeIf { it.isNotBlank() }?.let { documents.value = it }
             TYPE_TRIP_SNAPSHOT -> tapped.getStringExtra(EXTRA_REQUEST_ID)?.takeIf { it.isNotBlank() }?.let { snapshots.value = it }
+            TYPE_TAR_WARNING -> tapped.getStringExtra(EXTRA_TRIP_ID)?.takeIf { it.isNotBlank() }?.let { tripRequests.value = it }
             TYPE_START_SHIFT -> {
                 startShift.value = true
                 return true
@@ -177,6 +186,10 @@ class NotificationNavigation @Inject constructor() {
 
     fun consumeDocument() {
         documents.value = null
+    }
+
+    fun consumeTrip() {
+        tripRequests.value = null
     }
 
     fun consumeStartShift() {

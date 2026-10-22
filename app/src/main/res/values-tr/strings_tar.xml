@@ -14,4 +14,8 @@
     <string name="trip_stale_offline">Bağlantı yok · son güncelleme %1$s</string>
     <string name="trip_stale_failed">Güncellenemedi · son güncelleme %1$s</string>
     <string name="trip_stale_no_details">Güncellenemedi · sefer ayrıntıları henüz yüklenmedi</string>
+    <string name="tar_channel">TAR uyarıları</string>
+    <string name="tar_channel_description">Terminal randevu süresinin bitişine 60, 30, 15 ve 5 dakika kala sesli uyarır.</string>
+    <string name="tar_warning_title">TAR %1$s · %2$d dk kaldı</string>
+    <string name="tar_warning_body">%1$s · bitiş %2$s (%3$s)</string>
 </resources>

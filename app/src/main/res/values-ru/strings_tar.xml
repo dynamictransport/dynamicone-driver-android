@@ -14,4 +14,8 @@
     <string name="trip_stale_offline">Нет связи · последнее обновление %1$s</string>
     <string name="trip_stale_failed">Не удалось обновить · последнее обновление %1$s</string>
     <string name="trip_stale_no_details">Не удалось обновить · детали рейса ещё не загружены</string>
+    <string name="tar_channel">Предупреждения TAR</string>
+    <string name="tar_channel_description">Звуковой сигнал за 60, 30, 15 и 5 минут до конца окна терминала.</string>
+    <string name="tar_warning_title">TAR %1$s · осталось %2$d мин</string>
+    <string name="tar_warning_body">%1$s · конец окна %2$s (%3$s)</string>
 </resources>

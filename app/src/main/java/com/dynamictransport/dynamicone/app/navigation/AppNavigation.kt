@@ -540,6 +540,14 @@ private fun NotificationEffects(
     val openRequest by routingViewModel.openRequest.collectAsStateWithLifecycle()
     val startShiftRequest by routingViewModel.startShiftRequest.collectAsStateWithLifecycle()
     val documentRequest by routingViewModel.documentRequest.collectAsStateWithLifecycle()
+    val tripRequest by routingViewModel.tripRequest.collectAsStateWithLifecycle()
+
+    // A tapped TAR warning opens its trip (docs/26 §6).
+    LaunchedEffect(tripRequest, driver) {
+        val tripId = tripRequest ?: return@LaunchedEffect
+        if (driver) navController.navigate(TripDetailDestination(tripId)) { launchSingleTop = true }
+        routingViewModel.onTripRequestHandled()
+    }
 
     // A tapped message notification opens its conversation (also when it was tapped before signing in).
     LaunchedEffect(openRequest, driver) {
