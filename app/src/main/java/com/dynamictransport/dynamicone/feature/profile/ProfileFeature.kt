@@ -50,9 +50,11 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.dynamictransport.dynamicone.R
@@ -64,6 +66,7 @@ import com.dynamictransport.dynamicone.core.design.component.StatusTone
 import com.dynamictransport.dynamicone.core.design.theme.Dimens
 import com.dynamictransport.dynamicone.core.design.theme.DriverTheme
 import com.dynamictransport.dynamicone.domain.model.AppModule
+import com.dynamictransport.dynamicone.domain.model.AssignedVehicleState
 import com.dynamictransport.dynamicone.domain.model.FailedAction
 import com.dynamictransport.dynamicone.domain.model.SessionState
 import com.dynamictransport.dynamicone.domain.model.SyncOverview
@@ -74,10 +77,12 @@ import com.dynamictransport.dynamicone.domain.repository.DemoBackendControls
 import com.dynamictransport.dynamicone.domain.repository.NetworkMonitor
 import com.dynamictransport.dynamicone.domain.repository.SyncRepository
 import com.dynamictransport.dynamicone.feature.common.AppLanguage
+import com.dynamictransport.dynamicone.feature.common.AssignedVehicleRow
 import com.dynamictransport.dynamicone.feature.common.ConnectivityBadge
 import com.dynamictransport.dynamicone.feature.common.DemoBadge
 import com.dynamictransport.dynamicone.feature.common.DriverFormats
 import com.dynamictransport.dynamicone.feature.common.LanguageOptions
+import com.dynamictransport.dynamicone.feature.common.LocalImageThumbnail
 import com.dynamictransport.dynamicone.feature.common.SingleFlight
 import com.dynamictransport.dynamicone.feature.common.currentLocale
 import com.dynamictransport.dynamicone.feature.common.labelRes
@@ -93,7 +98,11 @@ import javax.inject.Inject
 
 data class ProfileUiState(
     val profile: UserProfile? = null,
+    /** The person's HR photo on the phone (docs/21); null shows the placeholder. */
+    val photoPath: String? = null,
     val modules: Set<AppModule> = emptySet(),
+    /** Shown for accounts with the driver module only. */
+    val assignedVehicle: AssignedVehicleState = AssignedVehicleState.Loading,
     val overview: SyncOverview = SyncOverview.Empty,
     val isOnline: Boolean = true,
     val versionName: String = "",
@@ -121,7 +130,13 @@ class ProfileViewModel @Inject constructor(
     private val singleFlight = SingleFlight()
 
     private val flags = combine(singleFlight.busy, showLogoutConfirmation, ::Pair)
-    private val account = combine(authRepository.observeProfile(), authRepository.sessionState, ::Pair)
+    private val account = combine(
+        authRepository.observeProfile(),
+        authRepository.sessionState,
+        authRepository.observeAssignedVehicle(),
+        authRepository.observePhoto(),
+        ::AccountParts,
+    )
 
     val uiState: StateFlow<ProfileUiState> = combine(
         account,
@@ -129,10 +144,12 @@ class ProfileViewModel @Inject constructor(
         networkMonitor.isOnline,
         demoControls.simulateOffline,
         flags,
-    ) { (profile, session), overview, online, simulateOffline, (busy, confirmLogout) ->
+    ) { (profile, session, vehicle, photo), overview, online, simulateOffline, (busy, confirmLogout) ->
         ProfileUiState(
             profile = profile,
+            photoPath = photo,
             modules = (session as? SessionState.LoggedIn)?.modules.orEmpty(),
+            assignedVehicle = vehicle,
             overview = overview,
             isOnline = online,
             versionName = appInfo.versionName,
@@ -181,10 +198,26 @@ class ProfileViewModel @Inject constructor(
         singleFlight.launch(viewModelScope) { demoControls.resetDemoData() }
     }
 
+    /** Back on the profile: the vehicle assignment (and name or modules) may have changed on the server. */
+    fun onResume() = refreshProfile()
+
+    fun onRetryAssignedVehicle() = refreshProfile()
+
+    private fun refreshProfile() {
+        viewModelScope.launch { authRepository.refreshProfile() }
+    }
+
     private fun logout() {
         singleFlight.launch(viewModelScope) { authRepository.logout() }
     }
 }
+
+private data class AccountParts(
+    val profile: UserProfile?,
+    val session: SessionState,
+    val vehicle: AssignedVehicleState,
+    val photo: String?,
+)
 
 /** An area of the account's modules opened from the profile; [key] identifies it for the navigation. */
 data class ProfileLink(
@@ -204,6 +237,10 @@ fun ProfileRoute(
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    LifecycleResumeEffect(viewModel) {
+        viewModel.onResume()
+        onPauseOrDispose { }
+    }
     ProfileScreen(
         state = state,
         links = links,
@@ -219,6 +256,7 @@ fun ProfileRoute(
         onLogoutDismissed = viewModel::onLogoutDismissed,
         onSimulateOfflineChanged = viewModel::onSimulateOfflineChanged,
         onResetDemoData = viewModel::onResetDemoData,
+        onRetryAssignedVehicle = viewModel::onRetryAssignedVehicle,
     )
 }
 
@@ -239,6 +277,7 @@ fun ProfileScreen(
     links: List<ProfileLink> = emptyList(),
     onOpenLink: (String) -> Unit = {},
     onOpenRestAlarm: () -> Unit = {},
+    onRetryAssignedVehicle: () -> Unit = {},
 ) {
     var language by remember { mutableStateOf(AppLanguage.current()) }
 
@@ -261,17 +300,39 @@ fun ProfileScreen(
             state.profile?.let { profile ->
                 SectionCard {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier
-                                .size(56.dp)
-                                .background(DriverTheme.colors.neutralContainer, CircleShape),
-                        ) {
-                            Icon(Icons.Filled.Person, contentDescription = null, tint = DriverTheme.colors.brand)
+                        val photoPath = state.photoPath
+                        if (photoPath != null) {
+                            // Decorative: the name next to it says whose photo it is.
+                            LocalImageThumbnail(
+                                path = photoPath,
+                                shape = CircleShape,
+                                targetPx = PHOTO_DECODE_PX,
+                                modifier = Modifier.size(56.dp).testTag(PROFILE_PHOTO_TAG),
+                            )
+                        } else {
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .background(DriverTheme.colors.neutralContainer, CircleShape),
+                            ) {
+                                Icon(Icons.Filled.Person, contentDescription = null, tint = DriverTheme.colors.brand)
+                            }
                         }
                         Spacer(Modifier.width(12.dp))
                         Column {
                             Text(profile.displayName, style = MaterialTheme.typography.titleLarge)
+                            profile.jobTitle?.let { title ->
+                                Text(
+                                    text = title,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = DriverTheme.colors.muted,
+                                    // Shown as HR wrote it: never translated or shortened, only cut after two lines.
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.testTag(PROFILE_JOB_TITLE_TAG),
+                                )
+                            }
                             // Not part of the Driver API profile: shown only when the source provides it.
                             profile.personnelNo?.let { personnelNo ->
                                 Text(
@@ -285,6 +346,11 @@ fun ProfileScreen(
                                 )
                             }
                         }
+                    }
+                    // Only drivers have a fleet vehicle; office accounts never get one (docs/15).
+                    if (AppModule.DRIVER in state.modules) {
+                        Spacer(Modifier.size(8.dp))
+                        AssignedVehicleRow(state = state.assignedVehicle, onRetry = onRetryAssignedVehicle)
                     }
                 }
             }
@@ -504,3 +570,9 @@ private fun FailureRow(failure: FailedAction, onAcknowledge: () -> Unit) {
         }
     }
 }
+
+const val PROFILE_PHOTO_TAG = "profile_photo"
+const val PROFILE_JOB_TITLE_TAG = "profile_job_title"
+
+/** 56dp on the densest screens. */
+private const val PHOTO_DECODE_PX = 224

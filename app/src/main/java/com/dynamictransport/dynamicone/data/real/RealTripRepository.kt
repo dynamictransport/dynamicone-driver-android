@@ -2,6 +2,7 @@ package com.dynamictransport.dynamicone.data.real
 
 import com.dynamictransport.dynamicone.core.network.DriverApi
 import com.dynamictransport.dynamicone.core.network.DriverCommandResponseDto
+import com.dynamictransport.dynamicone.core.network.DriverStatusNames
 import com.dynamictransport.dynamicone.core.network.DriverStatusRequestDto
 import com.dynamictransport.dynamicone.core.network.DriverStatusResponseDto
 import com.dynamictransport.dynamicone.core.network.DriverTripSummaryResponseDto
@@ -181,7 +182,15 @@ class RealTripRepository @Inject constructor(
     suspend fun reportStatus(tripId: String, status: String, note: String?): ActionResult {
         val trip = trips.value.firstOrNull { it.id == tripId } ?: return ActionResult.Rejected(ActionRejection.NOT_FOUND)
         if (trip.workflow != TripWorkflow.LEGACY_STATUSES) return ActionResult.Rejected(ActionRejection.NOT_ALLOWED)
-        return write(tripId) { api.reportStatus(tripId, DriverStatusRequestDto(status, note)) }
+        val result = write(tripId) { api.reportStatus(tripId, DriverStatusRequestDto(status, note)) }
+        // The legacy refusal has no own code: a refused completion with open required evidence in the
+        // re-read checklist is explained as missing documents instead of a changed state.
+        val evidenceOpen = executions.value[tripId]?.documents?.any { it.needsUpload } == true
+        return if (result == ActionResult.Rejected(ActionRejection.CONFLICT) && status in DriverStatusNames.EVIDENCE_GATED && evidenceOpen) {
+            ActionResult.Rejected(ActionRejection.DOCUMENTS_REQUIRED)
+        } else {
+            result
+        }
     }
 
     fun clear() {

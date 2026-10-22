@@ -37,11 +37,13 @@ data class CheckTemplate(
                         "en" to "No new damage on the truck or trailer",
                         "pl" to "Brak nowych uszkodzeń ciągnika i naczepy",
                         "tr" to "Çekici ve dorsede yeni hasar yok",
+                        "ru" to "Нет новых повреждений тягача и прицепа",
                     ),
                     hints = mapOf(
                         "en" to "Body, cab, glass, bumpers",
                         "pl" to "Nadwozie, kabina, szyby, zderzaki",
                         "tr" to "Kasa, kabin, camlar, tamponlar",
+                        "ru" to "Кузов, кабина, стёкла, бамперы",
                     ),
                 ),
                 CheckItem(
@@ -50,6 +52,7 @@ data class CheckTemplate(
                         "en" to "Tyres: pressure normal, no cuts or damage",
                         "pl" to "Opony: ciśnienie w normie, bez przecięć i uszkodzeń",
                         "tr" to "Lastikler: basınç normal, kesik veya hasar yok",
+                        "ru" to "Шины: давление в норме, без порезов и повреждений",
                     ),
                 ),
                 CheckItem(
@@ -58,6 +61,7 @@ data class CheckTemplate(
                         "en" to "Lights and indicators work",
                         "pl" to "Światła i kierunkowskazy działają",
                         "tr" to "Işıklar ve sinyaller çalışıyor",
+                        "ru" to "Фары и указатели поворота работают",
                     ),
                 ),
                 CheckItem(
@@ -66,6 +70,7 @@ data class CheckTemplate(
                         "en" to "Mirrors and windows clean and intact",
                         "pl" to "Lusterka i szyby czyste i całe",
                         "tr" to "Aynalar ve camlar temiz ve sağlam",
+                        "ru" to "Зеркала и стёкла чистые и целые",
                     ),
                 ),
                 CheckItem(
@@ -74,6 +79,7 @@ data class CheckTemplate(
                         "en" to "No leaks (oil, fuel, air, AdBlue)",
                         "pl" to "Brak wycieków (olej, paliwo, powietrze, AdBlue)",
                         "tr" to "Sızıntı yok (yağ, yakıt, hava, AdBlue)",
+                        "ru" to "Нет утечек (масло, топливо, воздух, AdBlue)",
                     ),
                 ),
                 CheckItem(
@@ -82,6 +88,7 @@ data class CheckTemplate(
                         "en" to "Brakes and air pressure normal",
                         "pl" to "Hamulce i ciśnienie powietrza w normie",
                         "tr" to "Frenler ve hava basıncı normal",
+                        "ru" to "Тормоза и давление воздуха в норме",
                     ),
                 ),
                 CheckItem(
@@ -90,6 +97,7 @@ data class CheckTemplate(
                         "en" to "Trailer coupling, lines and connectors secure",
                         "pl" to "Sprzęg, przewody i złącza naczepy sprawne",
                         "tr" to "Dorse bağlantısı, hortumlar ve soketler sağlam",
+                        "ru" to "Сцепка, шланги и разъёмы прицепа исправны",
                     ),
                     notApplicableAllowed = true,
                 ),
@@ -99,6 +107,7 @@ data class CheckTemplate(
                         "en" to "Number plates and reflectors in place",
                         "pl" to "Tablice rejestracyjne i odblaski na miejscu",
                         "tr" to "Plakalar ve reflektörler yerinde",
+                        "ru" to "Номерные знаки и светоотражатели на месте",
                     ),
                 ),
                 CheckItem(
@@ -107,6 +116,7 @@ data class CheckTemplate(
                         "en" to "No warning lights on the dashboard",
                         "pl" to "Brak kontrolek ostrzegawczych na desce",
                         "tr" to "Gösterge panelinde uyarı lambası yok",
+                        "ru" to "Нет предупреждающих ламп на приборной панели",
                     ),
                 ),
                 CheckItem(
@@ -115,6 +125,7 @@ data class CheckTemplate(
                         "en" to "Safety equipment complete (vest, triangle, extinguisher, first aid)",
                         "pl" to "Wyposażenie bezpieczeństwa kompletne (kamizelka, trójkąt, gaśnica, apteczka)",
                         "tr" to "Güvenlik ekipmanı tam (yelek, üçgen, söndürücü, ilk yardım)",
+                        "ru" to "Средства безопасности в комплекте (жилет, знак аварийной остановки, огнетушитель, аптечка)",
                     ),
                 ),
                 CheckItem(
@@ -123,11 +134,13 @@ data class CheckTemplate(
                         "en" to "Container locks (twist-locks) closed",
                         "pl" to "Zamki kontenera (twist-locki) zamknięte",
                         "tr" to "Konteyner kilitleri (twist-lock) kapalı",
+                        "ru" to "Замки контейнера (твистлоки) закрыты",
                     ),
                     hints = mapOf(
                         "en" to "Only when a container is loaded",
                         "pl" to "Tylko gdy kontener jest załadowany",
                         "tr" to "Sadece konteyner yüklüyse",
+                        "ru" to "Только если загружен контейнер",
                     ),
                     notApplicableAllowed = true,
                 ),

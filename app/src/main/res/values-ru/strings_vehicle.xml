@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Текущее транспортное средство водителя из me.assignedVehicle (главная и профиль) -->
+    <string name="assigned_vehicle_label">Закреплённое ТС</string>
+    <string name="assigned_vehicle_none">ТС не закреплено</string>
+    <string name="assigned_vehicle_loading">Загрузка ТС…</string>
+    <string name="assigned_vehicle_unavailable">Не удалось загрузить ТС</string>
+
+    <!-- Последнее переданное местоположение закреплённого ТС (docs/19) -->
+    <string name="vehicle_position_label">Местоположение ТС</string>
+    <string name="vehicle_position_loading">Загрузка местоположения…</string>
+    <string name="vehicle_position_unavailable">Не удалось загрузить местоположение</string>
+    <string name="vehicle_position_no_data">Местоположение пока не передано</string>
+    <string name="vehicle_position_not_linked">Не подключено к мониторингу автопарка</string>
+    <string name="vehicle_position_just_now">только что</string>
+    <string name="vehicle_position_ago">%1$s назад</string>
+    <string name="vehicle_position_minutes">%1$d мин</string>
+    <string name="vehicle_position_show_on_map">Показать на карте</string>
+</resources>

@@ -6,10 +6,11 @@
     <string name="counter_of" translatable="false">%1$d / %2$d</string>
     <string name="value_separator" translatable="false">%1$s · %2$s</string>
     <string name="value_unknown" translatable="false">—</string>
-    <string name="login_language" translatable="false">Language / Dil / Język</string>
+    <string name="login_language" translatable="false">Language / Dil / Język / Язык</string>
     <string name="language_en" translatable="false">English</string>
     <string name="language_pl" translatable="false">Polski</string>
     <string name="language_tr" translatable="false">Türkçe</string>
+    <string name="language_ru" translatable="false">Русский</string>
 
     <!-- Common -->
     <string name="common_back">Back</string>

@@ -3,6 +3,8 @@ package com.dynamictransport.dynamicone.data.real
 import com.dynamictransport.dynamicone.core.common.IdGenerator
 import com.dynamictransport.dynamicone.core.network.DriverActionCommandDto
 import com.dynamictransport.dynamicone.core.network.DriverApi
+import com.dynamictransport.dynamicone.core.network.DriverErrorCodes
+import com.dynamictransport.dynamicone.core.network.DriverTrailerCommandDto
 import com.dynamictransport.dynamicone.core.network.RemoteException
 import com.dynamictransport.dynamicone.domain.model.ActionReceipt
 import com.dynamictransport.dynamicone.domain.model.ActionRejection
@@ -12,6 +14,7 @@ import com.dynamictransport.dynamicone.domain.model.PendingCommandState
 import com.dynamictransport.dynamicone.domain.model.PendingTripAction
 import com.dynamictransport.dynamicone.domain.model.RefreshResult
 import com.dynamictransport.dynamicone.domain.model.TripExecution
+import com.dynamictransport.dynamicone.domain.model.TripTrailerState
 import com.dynamictransport.dynamicone.domain.model.TripWorkflow
 import com.dynamictransport.dynamicone.domain.repository.TripExecutionRepository
 import com.dynamictransport.dynamicone.domain.rules.DriverInputRules
@@ -32,7 +35,8 @@ import javax.inject.Singleton
 /**
  * Trip action workflow: only options of the current server plan are sent, each with a command id that is
  * stored before sending. An unknown outcome keeps the command for an exact resend; a 409 drops it and the
- * current plan is read so the driver chooses again. A queued command is never rewritten.
+ * current plan is read so the driver chooses again. A queued command is never rewritten. A step the server
+ * blocks for missing evidence (docs/18) is not sent; if the server refuses it anyway, nothing is marked done.
  */
 @Singleton
 class RealTripExecutionRepository @Inject constructor(
@@ -45,6 +49,7 @@ class RealTripExecutionRepository @Inject constructor(
 ) : TripExecutionRepository {
 
     private val receipts = MutableStateFlow<Map<String, List<ActionReceipt>>>(emptyMap())
+    private val trailers = MutableStateFlow<Map<String, TripTrailerState>>(emptyMap())
     private val sendMutex = Mutex()
 
     override fun observeExecution(tripId: String): Flow<TripExecution?> = trips.observeExecution(tripId)
@@ -65,19 +70,66 @@ class RealTripExecutionRepository @Inject constructor(
         e.toRefreshResult()
     }
 
+    override fun observeTrailers(tripId: String): Flow<TripTrailerState?> =
+        trailers.map { it[tripId] }.distinctUntilChanged()
+
+    override suspend fun refreshTrailers(tripId: String): RefreshResult = try {
+        val state = DriverApiMapping.trailerState(tripId, tracker.call { api.trailers(tripId) })
+        trailers.update { it + (tripId to state) }
+        tracker.markReadSucceeded()
+        RefreshResult.SUCCESS
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: RemoteException) {
+        e.toRefreshResult()
+    }
+
+    /**
+     * The choice is sent with the version of the list that was read. The server records the same choice
+     * again without a second history entry, so an unclear outcome is resolved by reading, never by a
+     * second, different write.
+     */
+    override suspend fun confirmTrailer(tripId: String, trailerId: String): ActionResult = sendMutex.withLock {
+        val state = trailers.value[tripId] ?: return@withLock ActionResult.Rejected(ActionRejection.PLAN_CHANGED)
+        if (!state.canConfirm) return@withLock ActionResult.Rejected(ActionRejection.NOT_ALLOWED)
+        if (state.trailers.none { it.id == trailerId }) return@withLock ActionResult.Rejected(ActionRejection.NOT_FOUND)
+        val response = try {
+            tracker.call { api.confirmTrailer(tripId, DriverTrailerCommandDto(trailerId, state.version)) }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: RemoteException) {
+            // A changed plan, a trailer that is no longer active or an unknown outcome: read the truth.
+            if (e is RemoteException.Conflict || e is RemoteException.Validation || e.isOutcomeUnknown()) {
+                refreshTrailers(tripId)
+                trips.refreshTrip(tripId)
+            }
+            return@withLock ActionResult.Rejected(
+                if (e is RemoteException.Conflict) ActionRejection.PLAN_CHANGED else e.toActionRejection(),
+            )
+        }
+        // The confirmation changes the execution version: the plan and the list are read again before Start.
+        refreshTrailers(tripId)
+        trips.refreshTrip(tripId)
+        if (response.succeeded) ActionResult.Queued else ActionResult.Rejected(ActionRejection.FAILED)
+    }
+
     override suspend fun submit(tripId: String, action: ExecutionAction, note: String?): ActionResult {
         DriverInputRules.validateActionNote(action.code, note)?.let { return ActionResult.Rejected(it) }
         return sendMutex.withLock {
             if (store.tripAction(tripId) != null) return@withLock ActionResult.Rejected(ActionRejection.PENDING_ACTION)
-            val execution = trips.currentExecution(tripId)
-            if (execution == null || execution.workflow != TripWorkflow.TRIP_ACTIONS || action !in execution.availableActions) {
-                return@withLock ActionResult.Rejected(ActionRejection.PLAN_CHANGED)
-            }
+            val execution = trips.currentExecution(tripId)?.takeIf { it.workflow == TripWorkflow.TRIP_ACTIONS }
+                ?: return@withLock ActionResult.Rejected(ActionRejection.PLAN_CHANGED)
+            // The step is looked up in the current plan: its evidence state may have changed since it was shown.
+            val current = execution.availableActions.firstOrNull { it.isSameStep(action) }
+                ?: return@withLock ActionResult.Rejected(ActionRejection.PLAN_CHANGED)
+            // The trailer step comes first; it is not an evidence problem (docs/20).
+            if (current.blockedByTrailer) return@withLock ActionResult.Rejected(ActionRejection.NOT_ALLOWED)
+            if (current.isBlocked) return@withLock ActionResult.Rejected(ActionRejection.DOCUMENTS_REQUIRED)
             val command = PendingTripAction(
                 commandId = ids.newId(),
                 tripId = tripId,
                 expectedVersion = execution.version,
-                action = action,
+                action = current,
                 note = DriverInputRules.normalizeNote(note),
                 location = null,
                 createdAt = clock.instant(),
@@ -100,6 +152,7 @@ class RealTripExecutionRepository @Inject constructor(
 
     fun clear() {
         receipts.value = emptyMap()
+        trailers.value = emptyMap()
     }
 
     private suspend fun send(command: PendingTripAction): ActionResult {
@@ -125,9 +178,11 @@ class RealTripExecutionRepository @Inject constructor(
             ActionResult.Rejected(ActionRejection.OUTCOME_UNKNOWN)
         }
         e is RemoteException.Conflict -> {
+            // Not recorded. The new plan carries the evidence checklist that shows what is missing.
             store.delete(command.commandId)
             trips.refreshTrip(command.tripId)
-            ActionResult.Rejected(ActionRejection.PLAN_CHANGED)
+            val documentsMissing = e.problem?.code == DriverErrorCodes.REQUIRED_DOCUMENTS_MISSING
+            ActionResult.Rejected(if (documentsMissing) ActionRejection.DOCUMENTS_REQUIRED else ActionRejection.PLAN_CHANGED)
         }
         e is RemoteException.NotFound && !e.isApiDisabled -> {
             store.delete(command.commandId)

@@ -49,6 +49,17 @@ data class DriverProfileResponseDto(
     val driverId: String? = null,
     val displayName: String? = null,
     val preferredLanguageCode: String? = null,
+    /** The driver's current fleet vehicle; null without one (backend PR #133). */
+    val assignedVehicle: AssignedVehicleDto? = null,
+)
+
+/** `me.assignedVehicle` of the Driver and Mobile API. */
+@Serializable
+data class AssignedVehicleDto(
+    val vehicleId: String? = null,
+    /** DYNA code; null when the vehicle has none. */
+    val companyCode: String? = null,
+    val registrationNumber: String? = null,
 )
 
 @Serializable
@@ -74,6 +85,8 @@ data class DriverTripSummaryResponseDto(
     val status: String? = null,
     val assignmentStatus: String? = null,
     val vehicleRegistration: String? = null,
+    /** DYNA code of the trip's vehicle; null when the vehicle has none. */
+    val vehicleCompanyCode: String? = null,
     val assignedFromUtc: String? = null,
     /** First stop; null when the trip has no stop. */
     val origin: DriverLocationDto? = null,
@@ -170,6 +183,9 @@ object DriverStatusNames {
 
     /** Backend-enforced order of the progression steps after acceptance. */
     val PROGRESSION = listOf(DEPARTED, ARRIVED_AT_LOADING, LOADING_COMPLETED, ARRIVED_AT_DELIVERY, DELIVERY_COMPLETED)
+
+    /** Completions the backend refuses (409 `workflow_conflict`) while required evidence is open (docs/18). */
+    val EVIDENCE_GATED = setOf(LOADING_COMPLETED, DELIVERY_COMPLETED)
 }
 
 /** Operational trip document types (`TripDocumentType`). "A1" in this business is the transport customs document: `Customs`. */
@@ -200,6 +216,9 @@ object DriverErrorCodes {
     const val INVALID_STATUS = "invalid_status"
     const val INVALID_ACTION = "invalid_action"
     const val INVALID_SLOT = "invalid_slot"
+
+    /** 409 on a trip action: required evidence of the step is missing or rejected (docs/18). */
+    const val REQUIRED_DOCUMENTS_MISSING = "required_documents_missing"
     const val INVALID_DOCUMENT = "invalid_document"
     const val INVALID_DOCUMENT_SIZE = "invalid_document_size"
     const val DOCUMENT_REJECTED = "document_rejected"

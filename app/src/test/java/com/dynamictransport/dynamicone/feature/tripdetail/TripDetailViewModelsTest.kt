@@ -252,6 +252,35 @@ class TripDetailViewModelTest {
     }
 
     @Test
+    fun `evidence that blocks a step is listed in checklist order and a refusal asks for it`() = runTest {
+        val cmr = testSlot("Cmr:trip:all", DocumentType.CMR, DocumentSlotState.MISSING)
+        val interchange = testSlot("Interchange:s1:c1", DocumentType.INTERCHANGE, DocumentSlotState.REJECTED, stopId = "s1", containerId = "c1")
+        val seal = testSlot("Seal:s1:c2", DocumentType.SEAL_PHOTO, DocumentSlotState.MISSING, stopId = "s1", containerId = "c2")
+        val blocked = pickupFirstContainer.copy(blockingDocumentSlots = listOf("Interchange:s1:c1", "Cmr:trip:all"), canExecute = false)
+        trips.trips.value = listOf(serverTrip())
+        // A slot the server lists for a break is not evidence of a step and is not shown.
+        executions.execution.value = testExecution(
+            actions = listOf(blocked, pickupSecondContainer, rest.copy(blockingDocumentSlots = listOf("Seal:s1:c2"))),
+            documents = listOf(cmr, interchange, seal),
+        )
+        val viewModel = viewModel(demo = false)
+        keepCollecting(viewModel.uiState)
+
+        assertEquals(listOf(cmr, interchange), viewModel.uiState.value.blockingDocuments)
+        assertEquals(3, viewModel.uiState.value.openDocumentCount)
+
+        executions.submitResult = ActionResult.Rejected(ActionRejection.DOCUMENTS_REQUIRED)
+        viewModel.onExecutionAction(pickupSecondContainer)
+        advanceUntilIdle()
+        assertEquals(R.string.error_documents_required, viewModel.uiState.value.message)
+
+        // Legacy trips have no server options, so no step is shown as blocked.
+        trips.trips.value = listOf(serverTrip().copy(workflow = TripWorkflow.LEGACY_STATUSES))
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.blockingDocuments.isEmpty())
+    }
+
+    @Test
     fun `a stored action is resent or discarded before anything else`() = runTest {
         trips.trips.value = listOf(serverTrip())
         executions.execution.value = testExecution(actions = listOf(pickupFirstContainer))

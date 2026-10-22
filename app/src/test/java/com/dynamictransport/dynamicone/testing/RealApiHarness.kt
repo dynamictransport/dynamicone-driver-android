@@ -8,14 +8,22 @@ import com.dynamictransport.dynamicone.core.network.MobileApi
 import com.dynamictransport.dynamicone.core.security.SessionPreferences
 import com.dynamictransport.dynamicone.core.security.TokenManager
 import com.dynamictransport.dynamicone.core.security.TokenPair
+import com.dynamictransport.dynamicone.data.media.ProfilePhotoImages
+import com.dynamictransport.dynamicone.data.real.AccountRemote
 import com.dynamictransport.dynamicone.data.real.ApiActivityTracker
+import com.dynamictransport.dynamicone.data.real.ApiVehiclePositionRepository
 import com.dynamictransport.dynamicone.data.real.DriverAccountRemote
+import com.dynamictransport.dynamicone.data.real.EmployeePhotoStore
+import com.dynamictransport.dynamicone.data.real.HrDocumentFileStore
 import com.dynamictransport.dynamicone.data.real.MobileAccountRemote
 import com.dynamictransport.dynamicone.data.real.PendingCommandStore
 import com.dynamictransport.dynamicone.data.real.ProtectedFileDownloader
 import com.dynamictransport.dynamicone.data.real.RealAttendanceRepository
 import com.dynamictransport.dynamicone.data.real.RealAuthRepository
 import com.dynamictransport.dynamicone.data.real.RealDocumentRepository
+import com.dynamictransport.dynamicone.data.real.RealHrDocumentRepository
+import com.dynamictransport.dynamicone.data.real.RealMyDocumentRepository
+import com.dynamictransport.dynamicone.data.real.RealVehicleDocumentRepository
 import com.dynamictransport.dynamicone.data.real.RealIncidentRepository
 import com.dynamictransport.dynamicone.data.real.RealMessageRepository
 import com.dynamictransport.dynamicone.data.real.RealPayrollRepository
@@ -35,6 +43,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.rules.TemporaryFolder
+import java.io.File
 import java.time.Instant
 
 /**
@@ -129,5 +138,18 @@ class RealApiHarness(folder: TemporaryFolder, mobileAccount: Boolean = false) {
     fun close() {
         server.shutdown()
         scope.cancel()
+    }
+}
+
+/** Keeps the downloaded bytes as they are (no Android bitmap decoding on the JVM); [readable] = false rejects them. */
+class FakeProfilePhotoImages : ProfilePhotoImages {
+    var readable = true
+    var calls = 0
+
+    override fun reduce(source: File, output: File, maxEdgePx: Int): Boolean {
+        calls++
+        if (!readable) return false
+        source.copyTo(output, overwrite = true)
+        return true
     }
 }

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Оболочка приложения (модули) -->
+    <string name="nav_attendance">Работа</string>
+    <string name="nav_attendance_records">Мои записи</string>
+    <string name="profile_more">Ещё</string>
+
+    <!-- Рабочее время в офисе (NFC) -->
+    <string name="attendance_title">Рабочее время</string>
+    <string name="attendance_action_start">НАЧАТЬ РАБОТУ</string>
+    <string name="attendance_action_end">ЗАВЕРШИТЬ РАБОТУ</string>
+    <string name="attendance_cancel_scan">ОСТАНОВИТЬ</string>
+    <string name="attendance_open_nfc_settings">ВКЛЮЧИТЬ NFC</string>
+    <string name="attendance_state_in">Вы на работе</string>
+    <string name="attendance_state_out">Вы не на работе</string>
+    <string name="attendance_since">Приход %1$s · %2$s</string>
+    <string name="attendance_scan_in_title">Отсканируйте метку прихода</string>
+    <string name="attendance_scan_out_title">Отсканируйте метку ухода</string>
+    <string name="attendance_scan_in_body">Приложите заднюю сторону телефона к метке ПРИХОД в офисе.</string>
+    <string name="attendance_scan_out_body">Приложите заднюю сторону телефона к метке УХОД в офисе.</string>
+    <string name="attendance_outcome_recorded_in">Приход записан: %1$s</string>
+    <string name="attendance_outcome_recorded_out">Уход записан: %1$s</string>
+    <string name="attendance_outcome_saved">Нет связи с сервером. Запись сохранена в телефоне и будет отправлена автоматически.</string>
+    <string name="attendance_hold_access">Не отправлено: учёт рабочего времени для этой учётной записи не включён. Запись хранится в телефоне и будет отправлена, как только офис его включит.</string>
+    <string name="attendance_access_removed">Учёт рабочего времени для этой учётной записи больше не включён. Обратитесь в офис.</string>
+    <string name="attendance_outcome_unreadable">Не удалось считать метку. Приложите телефон к метке ещё раз.</string>
+    <string name="attendance_nfc_disabled">NFC выключен. Включите NFC, чтобы отмечать рабочее время.</string>
+    <string name="attendance_nfc_not_supported">В этом телефоне нет NFC. Для учёта рабочего времени нужен телефон с NFC.</string>
+    <plurals name="attendance_waiting">
+        <item quantity="one">%d запись рабочего времени ждёт в телефоне и будет отправлена, когда появится связь.</item>
+        <item quantity="few">%d записи рабочего времени ждут в телефоне и будут отправлены, когда появится связь.</item>
+        <item quantity="many">%d записей рабочего времени ждут в телефоне и будут отправлены, когда появится связь.</item>
+        <item quantity="other">%d записи рабочего времени ждут в телефоне и будут отправлены, когда появится связь.</item>
+    </plurals>
+    <string name="attendance_failed_title">Не записано: %1$s · %2$s</string>
+    <string name="attendance_resend">Отправить снова</string>
+    <string name="attendance_remove">Удалить</string>
+    <string name="attendance_today">Сегодня</string>
+    <string name="attendance_today_empty">Сегодня записей ещё нет.</string>
+    <string name="attendance_punch_line">%1$s %2$s</string>
+    <string name="attendance_direction_in">Приход</string>
+    <string name="attendance_direction_out">Уход</string>
+    <string name="attendance_all_records">Все мои записи рабочего времени</string>
+    <string name="attendance_failure_tag_unknown">Эта метка не зарегистрирована для учёта рабочего времени. Обратитесь в офис.</string>
+    <string name="attendance_failure_wrong_tag_in">Это не метка прихода. Чтобы начать работу, отсканируйте метку ПРИХОД.</string>
+    <string name="attendance_failure_wrong_tag_out">Это не метка ухода. Чтобы завершить работу, отсканируйте метку УХОД.</string>
+    <string name="attendance_failure_time">Сервер не принял время этой записи. Обратитесь в офис.</string>
+    <string name="attendance_failure_access">Учёт рабочего времени для этой учётной записи не включён. Обратитесь в офис.</string>
+    <string name="attendance_failure_rejected">Сервер не принял эту запись.</string>
+
+    <string name="attendance_records_title">Мои записи рабочего времени</string>
+    <string name="attendance_records_empty">В этом месяце нет записей рабочего времени.</string>
+    <string name="attendance_worked">Отработано</string>
+    <string name="attendance_day_complete">Полный</string>
+    <string name="attendance_day_open">В процессе</string>
+    <string name="attendance_day_incomplete">Нет записи</string>
+    <string name="attendance_day_review">На проверке</string>
+    <string name="attendance_day_unknown">Неизвестно</string>
+</resources>

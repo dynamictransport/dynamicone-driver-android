@@ -61,8 +61,10 @@ class AttendanceViewModelTest {
     @After
     fun tearDown() = TimeZone.setDefault(defaultZone)
 
+    private val auth = FakeAuthRepository()
+
     private fun viewModel(clock: MutableClock = MutableClock()) =
-        AttendanceViewModel(attendance, FakeAuthRepository(), network, nfc, clock)
+        AttendanceViewModel(attendance, auth, network, nfc, clock)
 
     private fun checkedInStatus() = AttendanceStatus(
         checkedIn = true,
@@ -89,6 +91,20 @@ class AttendanceViewModelTest {
         assertNull(state.scanning)
         assertTrue(state.outcome is PunchOutcome.Recorded)
         assertEquals(1, attendance.statusRefreshes)
+    }
+
+    @Test
+    fun `the job title from me is shown under the name and follows a newer me`() = runTest {
+        auth.driver.value = auth.driver.value!!.copy(displayName = "Ayşe Yılmaz", jobTitle = "Operations Manager")
+        val viewModel = viewModel()
+        keepCollecting(viewModel.uiState)
+        advanceUntilIdle()
+        assertEquals("Ayşe Yılmaz", viewModel.uiState.value.userName)
+        assertEquals("Operations Manager", viewModel.uiState.value.userTitle)
+
+        auth.driver.value = auth.driver.value!!.copy(jobTitle = null)
+        advanceUntilIdle()
+        assertNull(viewModel.uiState.value.userTitle)
     }
 
     @Test

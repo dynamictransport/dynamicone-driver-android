@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -36,13 +38,21 @@ listOf(developmentApiBaseUrl, productionApiBaseUrl).forEach { url ->
 }
 
 // DynamicONE Mobile API (docs/15_MOBILE_APP_API.md): sign-in, modules and office attendance on the same host.
-// Until the backend serves it, `app.mobileApi=false` keeps signing drivers in through the Driver API.
+// Default since 30.09.2026; `app.mobileApi=false` falls back to signing drivers in through the Driver API.
 fun mobileApiBaseUrl(driverApiBaseUrl: String) = driverApiBaseUrl.removeSuffix("/api/driver/v1/") + "/api/mobile/v1/"
-val mobileApiEnabled = providers.gradleProperty("app.mobileApi").getOrElse("false").toBoolean()
+val mobileApiEnabled = providers.gradleProperty("app.mobileApi").getOrElse("true").toBoolean()
 
 // Driver daily shift (docs/16_DRIVER_SHIFT_REST_AND_VEHICLE_CHECK.md): tachograph rest, wake-up alarm, vehicle tag and
 // daily check. Until the backend serves the endpoints, `app.driverShift=false` keeps the shift "not connected".
 val driverShiftEnabled = providers.gradleProperty("app.driverShift").getOrElse("false").toBoolean()
+
+// Release signing (Intune line-of-business APK for the managed vehicle phones). The keystore and its passwords stay
+// outside Git: `keystore.properties` in the project root (Git-ignored) holds storeFile, storePassword, keyAlias and
+// keyPassword. Without it, release builds stay unsigned and cannot be installed.
+val releaseKeystoreFile = rootProject.file("keystore.properties")
+val releaseKeystore = Properties().apply {
+    if (releaseKeystoreFile.exists()) releaseKeystoreFile.inputStream().use { load(it) }
+}
 
 android {
     namespace = "com.dynamictransport.dynamicone"
@@ -63,6 +73,17 @@ android {
         buildConfigField("boolean", "DRIVER_SHIFT_ENABLED", driverShiftEnabled.toString())
     }
 
+    signingConfigs {
+        if (releaseKeystoreFile.exists()) {
+            create("release") {
+                storeFile = file(releaseKeystore.getProperty("storeFile"))
+                storePassword = releaseKeystore.getProperty("storePassword")
+                keyAlias = releaseKeystore.getProperty("keyAlias")
+                keyPassword = releaseKeystore.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         debug {
             buildConfigField("String", "API_ENVIRONMENT", "\"development\"")
@@ -71,6 +92,7 @@ android {
             buildConfigField("boolean", "DEMO_MODE", debugDemoMode.toString())
         }
         release {
+            signingConfigs.findByName("release")?.let { signingConfig = it }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -204,4 +226,6 @@ dependencies {
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    // Same pin as the unit tests: the Espresso 3.5.0 of Compose ui-test cannot inject input on SDK 37.
+    androidTestImplementation(libs.androidx.test.espresso.core)
 }

@@ -9,6 +9,9 @@ import java.time.Instant
 enum class AppModule(val wireName: String) {
     DRIVER("driver"),
     OFFICE_ATTENDANCE("officeAttendance"),
+
+    /** Personnel documents to sign (docs/17_HR_DOCUMENT_SIGNING.md). */
+    HR_DOCUMENTS("hrDocuments"),
     ;
 
     companion object {
@@ -31,7 +34,42 @@ data class UserProfile(
     val modules: Set<AppModule>,
     /** Driver API identity; null for accounts without the driver module. */
     val driverId: String?,
+    /** `me.assignedVehicle`: null when no vehicle is assigned to the account. */
+    val assignedVehicle: AssignedVehicle? = null,
+    /** `me.photoSha256` (docs/21): identifies the current HR photo; null when there is none or the API has no photos. */
+    val photoSha256: String? = null,
+    /** `me.jobTitle` (docs/22): HR job title shown under the name; null when there is none. */
+    val jobTitle: String? = null,
 )
+
+/**
+ * The driver's current fleet vehicle (`me.assignedVehicle`). A trip's vehicle or the vehicle of a started shift can be a
+ * different one and never stands in for it.
+ */
+data class AssignedVehicle(
+    val vehicleId: String?,
+    /** DYNA code of the fleet master data (e.g. `Dyna042`); null when the vehicle has none. */
+    val companyCode: String?,
+    val registrationNumber: String?,
+)
+
+/** What the app knows about the signed-in account's assigned vehicle. */
+sealed interface AssignedVehicleState {
+    /** No answer from `me` for this account yet. */
+    data object Loading : AssignedVehicleState
+
+    /** `me` could not be read and no earlier answer for this account is known. */
+    data object Unavailable : AssignedVehicleState
+
+    /** `me` answered: no vehicle is assigned. */
+    data object NotAssigned : AssignedVehicleState
+
+    data class Assigned(val vehicle: AssignedVehicle) : AssignedVehicleState
+
+    companion object {
+        fun of(vehicle: AssignedVehicle?): AssignedVehicleState = if (vehicle == null) NotAssigned else Assigned(vehicle)
+    }
+}
 
 class AuthTokens(
     val accessToken: String,

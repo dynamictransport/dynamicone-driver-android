@@ -58,11 +58,10 @@ import com.dynamictransport.dynamicone.domain.repository.AppInfo
 import com.dynamictransport.dynamicone.domain.repository.SignedDocumentRepository
 import com.dynamictransport.dynamicone.feature.common.DriverFormats
 import com.dynamictransport.dynamicone.feature.common.MessageEffect
-import com.dynamictransport.dynamicone.feature.common.OpenDocumentEffect
-import com.dynamictransport.dynamicone.feature.common.SingleFlight
 import com.dynamictransport.dynamicone.feature.common.currentLocale
 import com.dynamictransport.dynamicone.feature.common.labelRes
 import com.dynamictransport.dynamicone.feature.common.messageRes
+import com.dynamictransport.dynamicone.feature.personnelfiles.FileToView
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -82,9 +81,7 @@ data class SignedDocumentsUiState(
     val stale: Boolean = false,
     val unavailable: Boolean = false,
     val isDemoMode: Boolean = false,
-    val opening: Boolean = false,
     @param:StringRes val message: Int? = null,
-    val openRequest: DocumentContentResult.Available? = null,
 )
 
 @HiltViewModel
@@ -97,19 +94,16 @@ class SignedDocumentsViewModel @Inject constructor(
     private val loadingMore = MutableStateFlow(false)
     private val lastRefresh = MutableStateFlow<RefreshResult?>(null)
     private val message = MutableStateFlow<Int?>(null)
-    private val openRequest = MutableStateFlow<DocumentContentResult.Available?>(null)
-    private val singleFlight = SingleFlight()
 
-    private val flags = combine(refreshing, loadingMore, singleFlight.busy) { a, b, c -> Triple(a, b, c) }
-    private val feedback = combine(message, openRequest, ::Pair)
+    private val flags = combine(refreshing, loadingMore, ::Pair)
 
     val uiState: StateFlow<SignedDocumentsUiState> = combine(
         repository.observeDocuments(),
         repository.observeCanLoadMore(),
         lastRefresh,
         flags,
-        feedback,
-    ) { documents, canLoadMore, refresh, (isRefreshing, isLoadingMore, opening), (currentMessage, open) ->
+        message,
+    ) { documents, canLoadMore, refresh, (isRefreshing, isLoadingMore), currentMessage ->
         val failed = refresh?.takeIf { it != RefreshResult.SUCCESS && it != RefreshResult.NOT_SUPPORTED }
         SignedDocumentsUiState(
             documents = documents,
@@ -120,9 +114,7 @@ class SignedDocumentsViewModel @Inject constructor(
             stale = failed != null && documents != null,
             unavailable = refresh == RefreshResult.NOT_SUPPORTED,
             isDemoMode = appInfo.isDemoMode,
-            opening = opening,
             message = currentMessage,
-            openRequest = open,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SignedDocumentsUiState(isDemoMode = appInfo.isDemoMode))
 
@@ -148,37 +140,19 @@ class SignedDocumentsViewModel @Inject constructor(
         }
     }
 
-    fun onOpen(document: SignedDocument) {
-        singleFlight.launch(viewModelScope) {
-            when (val result = repository.open(document.id)) {
-                is DocumentContentResult.Available -> openRequest.value = result
-                is DocumentContentResult.Unavailable -> message.value = result.reason.messageRes()
-            }
-        }
-    }
-
-    fun onOpenRequestHandled() {
-        openRequest.value = null
-    }
-
-    fun onOpenFailed() {
-        openRequest.value = null
-        message.value = R.string.documents_open_unavailable
-    }
-
     fun onMessageShown() {
         message.value = null
     }
 }
 
+/** [onOpenFile] shows the signed PDF in the app's own viewer, which downloads it; no PDF app is needed on the phone. */
 @Composable
-fun SignedDocumentsRoute(onBack: () -> Unit, viewModel: SignedDocumentsViewModel = hiltViewModel()) {
+fun SignedDocumentsRoute(onBack: () -> Unit, onOpenFile: (FileToView) -> Unit, viewModel: SignedDocumentsViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    OpenDocumentEffect(state.openRequest, viewModel::onOpenRequestHandled, viewModel::onOpenFailed)
     SignedDocumentsScreen(
         state = state,
         onBack = onBack,
-        onOpen = viewModel::onOpen,
+        onOpen = { document, title -> onOpenFile(FileToView(document.id, title, PDF_CONTENT_TYPE)) },
         onLoadMore = viewModel::onLoadMore,
         onRetry = viewModel::refresh,
         onMessageShown = viewModel::onMessageShown,
@@ -189,7 +163,8 @@ fun SignedDocumentsRoute(onBack: () -> Unit, viewModel: SignedDocumentsViewModel
 fun SignedDocumentsScreen(
     state: SignedDocumentsUiState,
     onBack: () -> Unit,
-    onOpen: (SignedDocument) -> Unit,
+    /** The row's document and its label, shown as the viewer's title. */
+    onOpen: (SignedDocument, String) -> Unit,
     onLoadMore: () -> Unit,
     onRetry: () -> Unit,
     onMessageShown: () -> Unit,
@@ -260,7 +235,7 @@ fun SignedDocumentsScreen(
                 }
                 else -> {
                     items(documents, key = { it.id }) { document ->
-                        SignedDocumentCard(document, enabled = !state.opening, onOpen = { onOpen(document) })
+                        SignedDocumentCard(document, onOpen = { title -> onOpen(document, title) })
                     }
                     if (state.canLoadMore) {
                         item(key = "more") {
@@ -280,14 +255,15 @@ fun SignedDocumentsScreen(
 }
 
 @Composable
-private fun SignedDocumentCard(document: SignedDocument, enabled: Boolean, onOpen: () -> Unit) {
+private fun SignedDocumentCard(document: SignedDocument, onOpen: (String) -> Unit) {
     val locale = currentLocale()
-    ClickableCard(onClick = { if (enabled) onOpen() }, modifier = Modifier.testTag("signed_document_${document.id}")) {
+    val title = stringResource(document.type.labelRes())
+    ClickableCard(onClick = { onOpen(title) }, modifier = Modifier.testTag("signed_document_${document.id}")) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.heightIn(min = 48.dp)) {
             Icon(Icons.Filled.PictureAsPdf, contentDescription = null, tint = DriverTheme.colors.brand, modifier = Modifier.size(28.dp))
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(stringResource(document.type.labelRes()), style = MaterialTheme.typography.titleMedium)
+                Text(title, style = MaterialTheme.typography.titleMedium)
                 Text(
                     text = document.signedAt?.let { stringResource(R.string.signed_at, DriverFormats.dayTime(it, locale)) }
                         ?: stringResource(R.string.value_unknown),
@@ -297,10 +273,12 @@ private fun SignedDocumentCard(document: SignedDocument, enabled: Boolean, onOpe
             }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.clickable(enabled = enabled, onClick = onOpen),
+                modifier = Modifier.clickable(onClick = { onOpen(title) }),
             ) {
                 Icon(Icons.Filled.Visibility, contentDescription = stringResource(R.string.signed_open), tint = DriverTheme.colors.brand)
             }
         }
     }
 }
+
+private const val PDF_CONTENT_TYPE = "application/pdf"

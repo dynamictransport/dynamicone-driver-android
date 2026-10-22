@@ -96,7 +96,7 @@ class RealSignedDocumentRepository @Inject constructor(
     }
 
     override suspend fun open(documentId: String): DocumentContentResult =
-        downloader.download("signed-$documentId", PDF) { api.signedDocumentContent(documentId) }
+        downloader.download("signed-$documentId", PDF, ProtectedFileDownloader.PRIVATE_VIEW_DIRECTORY) { api.signedDocumentContent(documentId) }
 
     fun clear() {
         documents.value = null

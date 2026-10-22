@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Документы для этапов рейса и координаты точек (docs/18). -->
+<resources>
+    <plurals name="exec_blocked_documents">
+        <item quantity="one">Сначала загрузите %d обязательный документ</item>
+        <item quantity="few">Сначала загрузите %d обязательных документа</item>
+        <item quantity="many">Сначала загрузите %d обязательных документов</item>
+        <item quantity="other">Сначала загрузите %d обязательного документа</item>
+    </plurals>
+    <string name="exec_blocked_generic">Сначала загрузите обязательные документы.</string>
+    <string name="exec_upload_documents">ЗАГРУЗИТЬ ДОКУМЕНТЫ</string>
+    <string name="required_documents_title">Нужно до следующего этапа</string>
+    <string name="required_documents_upload">Загрузить</string>
+    <string name="error_documents_required">Сначала загрузите обязательные документы. Этап не записан.</string>
+    <string name="coordinate_latitude">Широта</string>
+    <string name="coordinate_longitude">Долгота</string>
+    <string name="coordinates_copy">Копировать координаты</string>
+    <string name="coordinates_copied">Координаты скопированы.</string>
+</resources>

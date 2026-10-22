@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.CloudUpload
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Forum
@@ -36,6 +37,7 @@ import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.ReportProblem
+import androidx.compose.material.icons.filled.RvHookup
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material.icons.filled.SyncProblem
@@ -57,6 +59,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -77,6 +80,8 @@ import com.dynamictransport.dynamicone.core.design.theme.Dimens
 import com.dynamictransport.dynamicone.core.design.theme.DriverTheme
 import com.dynamictransport.dynamicone.domain.model.ActionReceipt
 import com.dynamictransport.dynamicone.domain.model.BreakState
+import com.dynamictransport.dynamicone.domain.model.DocumentSlot
+import com.dynamictransport.dynamicone.domain.model.DocumentSlotState
 import com.dynamictransport.dynamicone.domain.model.ExecutionAction
 import com.dynamictransport.dynamicone.domain.model.ExecutionActionCode
 import com.dynamictransport.dynamicone.domain.model.GeoPoint
@@ -86,6 +91,7 @@ import com.dynamictransport.dynamicone.domain.model.StopStatus
 import com.dynamictransport.dynamicone.domain.model.SyncState
 import com.dynamictransport.dynamicone.domain.model.Trip
 import com.dynamictransport.dynamicone.domain.model.TripActionType
+import com.dynamictransport.dynamicone.domain.model.TripExecution
 import com.dynamictransport.dynamicone.domain.model.TripLocation
 import com.dynamictransport.dynamicone.domain.model.TripStop
 import com.dynamictransport.dynamicone.domain.statemachine.PrimaryAction
@@ -100,6 +106,7 @@ import com.dynamictransport.dynamicone.feature.common.PRIMARY_ACTION_TAG
 import com.dynamictransport.dynamicone.feature.common.StatusUiBadge
 import com.dynamictransport.dynamicone.feature.common.SyncStateBadge
 import com.dynamictransport.dynamicone.feature.common.currentLocale
+import com.dynamictransport.dynamicone.feature.common.documentLabel
 import com.dynamictransport.dynamicone.feature.common.executionActionLabel
 import com.dynamictransport.dynamicone.feature.common.icon
 import com.dynamictransport.dynamicone.feature.common.labelRes
@@ -108,15 +115,18 @@ import com.dynamictransport.dynamicone.feature.common.receiptLabelRes
 import com.dynamictransport.dynamicone.feature.common.toActionUi
 import com.dynamictransport.dynamicone.feature.common.toStatusUi
 import com.dynamictransport.dynamicone.feature.common.tripContextLabel
+import com.dynamictransport.dynamicone.feature.common.vehicleLabel
 
 @Composable
 fun TripDetailRoute(
     onBack: () -> Unit,
-    onOpenDocuments: (String) -> Unit,
+    /** Trip id and, optionally, the checklist slot to select first. */
+    onOpenDocuments: (String, String?) -> Unit,
     onOpenMessages: (String) -> Unit,
     onReject: (String) -> Unit,
     onReportIncident: (String) -> Unit,
     onStartShift: () -> Unit = {},
+    onConfirmTrailer: (String) -> Unit = {},
     viewModel: TripDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -141,12 +151,18 @@ fun TripDetailRoute(
         },
         onResendPending = viewModel::onResendPending,
         onDiscardPending = viewModel::onDiscardPending,
-        onOpenDocuments = { state.trip?.let { onOpenDocuments(it.id) } },
+        onOpenDocuments = { slot -> state.trip?.let { onOpenDocuments(it.id, slot) } },
         onOpenMessages = { state.trip?.let { onOpenMessages(it.id) } },
         onOpenNavigation = { point, label ->
             if (!NavigationLinks.open(context, point, label)) viewModel.showMessage(R.string.navigation_unavailable)
         },
+        onCopyCoordinates = { point, label ->
+            if (CoordinateClipboard.copy(context, point, label.orEmpty()) && !CoordinateClipboard.systemConfirmsCopy) {
+                viewModel.showMessage(R.string.coordinates_copied)
+            }
+        },
         onReportIncident = { state.trip?.let { onReportIncident(it.id) } },
+        onConfirmTrailer = { state.trip?.let { onConfirmTrailer(it.id) } },
         onMessageShown = viewModel::onMessageShown,
         onRetry = viewModel::onRetry,
     )
@@ -158,7 +174,8 @@ fun TripDetailScreen(
     onBack: () -> Unit,
     onPrimaryAction: (PrimaryAction) -> Unit,
     onSecondaryAction: (TripActionType) -> Unit,
-    onOpenDocuments: () -> Unit,
+    /** Optionally with the checklist slot to select first. */
+    onOpenDocuments: (String?) -> Unit,
     onOpenNavigation: (GeoPoint, String?) -> Unit,
     onReportIncident: () -> Unit,
     onMessageShown: () -> Unit,
@@ -167,6 +184,8 @@ fun TripDetailScreen(
     onResendPending: () -> Unit = {},
     onDiscardPending: () -> Unit = {},
     onOpenMessages: () -> Unit = {},
+    onCopyCoordinates: (GeoPoint, String?) -> Unit = { _, _ -> },
+    onConfirmTrailer: () -> Unit = {},
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     MessageEffect(state.message, snackbarHostState, onMessageShown)
@@ -204,7 +223,7 @@ fun TripDetailScreen(
         ) {
             val loadError = state.loadError
             when {
-                trip != null -> TripDetailContent(trip, state, onOpenDocuments, onOpenMessages, onOpenNavigation, onReportIncident)
+                trip != null -> TripDetailContent(trip, state, onOpenDocuments, onOpenMessages, onOpenNavigation, onCopyCoordinates, onReportIncident)
 
                 state.loading -> LinearProgressIndicator(
                     modifier = Modifier
@@ -265,7 +284,11 @@ private fun TripActions(
     }
 }
 
-/** Trip action workflow: exactly the options of the server plan, or the stored action that must be resent first. */
+/**
+ * Trip action workflow: exactly the options of the server plan, or the stored action that must be resent first.
+ * A step the server blocks for missing evidence stays visible but cannot be confirmed; uploading becomes the
+ * dominant action (docs/18).
+ */
 @Composable
 private fun ExecutionActions(
     state: TripDetailUiState,
@@ -274,11 +297,27 @@ private fun ExecutionActions(
     onResendPending: () -> Unit,
     onDiscardPending: () -> Unit,
     onRetry: () -> Unit,
+    onOpenDocuments: (String?) -> Unit,
+    onConfirmTrailer: () -> Unit,
 ) {
     val pending = state.pendingAction
     val execution = state.execution
     when {
         pending != null -> PendingActionPanel(pending, trip, state.submitting, onResendPending, onDiscardPending)
+
+        // Starting is refused until the trailer under the truck is confirmed (docs/20): that is the one step.
+        state.trailerConfirmationRequired -> {
+            CenteredHint(stringResource(R.string.trailer_required_hint), Modifier.testTag("trailer_required"))
+            DriverActionButton(
+                text = stringResource(R.string.trailer_select_action),
+                icon = Icons.Filled.RvHookup,
+                tone = ActionTone.Neutral,
+                requiresHold = false,
+                onClick = onConfirmTrailer,
+                loading = state.submitting,
+                modifier = Modifier.testTag(PRIMARY_ACTION_TAG),
+            )
+        }
 
         execution == null -> if (state.planLoading) {
             LinearProgressIndicator(
@@ -306,13 +345,26 @@ private fun ExecutionActions(
                 }
                 DriverActionButton(
                     text = executionActionLabel(action),
-                    icon = action.code.icon(),
+                    icon = if (action.isBlocked) Icons.Filled.Lock else action.code.icon(),
                     tone = ActionTone.Positive,
-                    requiresHold = action.completesLastOpenStop(trip),
+                    requiresHold = action.completesLastOpenStop(trip) && !action.isBlocked,
                     onClick = { onExecutionAction(action) },
                     loading = state.submitting,
+                    enabled = !action.isBlocked,
                     modifier = Modifier.testTag(if (index == 0) PRIMARY_ACTION_TAG else "execution_action_$index"),
                 )
+                if (action.isBlocked) BlockedByDocuments(action, execution, Modifier.testTag("execution_blocked_$index"))
+            }
+            if (progress.any { it.isBlocked }) {
+                val upload = stringResource(R.string.exec_upload_documents)
+                val openFirst = { onOpenDocuments(state.blockingDocuments.firstOrNull()?.key) }
+                val uploadModifier = Modifier.testTag("execution_upload_documents")
+                // Dominant only while no step can be confirmed; otherwise the open step stays the one primary action.
+                if (progress.all { it.isBlocked }) {
+                    PrimaryActionButton(text = upload, onClick = openFirst, icon = Icons.Filled.UploadFile, enabled = !state.submitting, modifier = uploadModifier)
+                } else {
+                    SecondaryActionButton(text = upload, onClick = openFirst, icon = Icons.Filled.UploadFile, enabled = !state.submitting, modifier = uploadModifier)
+                }
             }
             execution.availableActions.filter { !it.isProgress }.forEach { action ->
                 SecondaryActionButton(
@@ -324,6 +376,23 @@ private fun ExecutionActions(
                 )
             }
         }
+    }
+}
+
+/** Why a step cannot be confirmed yet: icon and text, the number of evidence slots it waits for. */
+@Composable
+private fun BlockedByDocuments(action: ExecutionAction, execution: TripExecution, modifier: Modifier = Modifier) {
+    val count = execution.documents.count { it.key in action.blockingDocumentSlots }
+    Box(contentAlignment = Alignment.Center, modifier = modifier.fillMaxWidth()) {
+        StatusBadge(
+            text = if (count > 0) {
+                pluralStringResource(R.plurals.exec_blocked_documents, count, count)
+            } else {
+                stringResource(R.string.exec_blocked_generic)
+            },
+            icon = Icons.Filled.Lock,
+            tone = StatusTone.Warning,
+        )
     }
 }
 
@@ -383,9 +452,10 @@ private fun CenteredHint(text: String, modifier: Modifier = Modifier) {
 private fun TripDetailContent(
     trip: Trip,
     state: TripDetailUiState,
-    onOpenDocuments: () -> Unit,
+    onOpenDocuments: (String?) -> Unit,
     onOpenMessages: () -> Unit,
     onOpenNavigation: (GeoPoint, String?) -> Unit,
+    onCopyCoordinates: (GeoPoint, String?) -> Unit,
     onReportIncident: () -> Unit,
 ) {
     val locale = currentLocale()
@@ -424,7 +494,9 @@ private fun TripDetailContent(
         )
     }
 
-    state.navigationStop?.let { NextStopCard(it, onOpenNavigation) }
+    if (state.blockingDocuments.isNotEmpty()) RequiredDocumentsCard(state.blockingDocuments, trip, onOpenDocuments)
+
+    state.navigationStop?.let { NextStopCard(it, onOpenNavigation, onCopyCoordinates) }
 
     SectionCard {
         val start = trip.pickupName ?: trip.origin?.name
@@ -455,8 +527,18 @@ private fun TripDetailContent(
             trip.containerNo?.let { InfoRow(Icons.Filled.Inventory2, stringResource(R.string.trip_container), it) }
             trip.sealNo?.let { InfoRow(Icons.Filled.Lock, stringResource(R.string.trip_seal), it) }
         }
-        listOfNotNull(trip.vehiclePlate, trip.trailerPlate).joinToString(" / ").takeIf { it.isNotEmpty() }?.let {
-            InfoRow(Icons.Filled.LocalShipping, stringResource(R.string.trip_vehicle), it)
+        listOfNotNull(vehicleLabel(trip.vehicleCompanyCode, trip.vehiclePlate), trip.trailerPlate)
+            .joinToString(" / ")
+            .takeIf { it.isNotEmpty() }
+            ?.let { InfoRow(Icons.Filled.LocalShipping, stringResource(R.string.trip_vehicle), it, Modifier.testTag("trip_vehicle")) }
+        // The trailer the driver confirmed themselves, never the planned one (docs/20).
+        state.confirmedTrailer?.let { trailer ->
+            InfoRow(
+                icon = Icons.Filled.RvHookup,
+                label = stringResource(R.string.trailer_confirmed_label),
+                value = listOfNotNull(trailer.registrationNumber, trailer.companyCode).joinToString(" · "),
+                modifier = Modifier.testTag("trip_trailer"),
+            )
         }
     }
 
@@ -473,7 +555,7 @@ private fun TripDetailContent(
         }
     }
 
-    if (trip.stops.isNotEmpty()) StopsCard(trip.stops, onOpenNavigation)
+    if (trip.stops.isNotEmpty()) StopsCard(trip.stops, onOpenNavigation, onCopyCoordinates)
 
     if (state.timeline.isNotEmpty()) TimelineCard(state.timeline)
 
@@ -491,7 +573,7 @@ private fun TripDetailContent(
                 stringResource(R.string.nav_documents)
             },
             icon = Icons.Filled.Description,
-            onClick = onOpenDocuments,
+            onClick = { onOpenDocuments(null) },
             modifier = Modifier
                 .weight(1f)
                 .fillMaxHeight()
@@ -528,9 +610,58 @@ private fun TripDetailContent(
     }
 }
 
+/**
+ * The evidence the server requires before the offered step, each with its own upload button. The checklist
+ * and its states are the server's; nothing is recalculated here (docs/18).
+ */
+@Composable
+private fun RequiredDocumentsCard(slots: List<DocumentSlot>, trip: Trip, onUpload: (String?) -> Unit) {
+    val colors = DriverTheme.colors
+    SectionCard(modifier = Modifier.testTag("required_documents")) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Filled.Lock, contentDescription = null, tint = colors.brand)
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(R.string.required_documents_title), style = MaterialTheme.typography.titleMedium)
+        }
+        slots.forEachIndexed { index, slot ->
+            if (index > 0) LabeledDivider() else Spacer(Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.Top) {
+                Icon(slot.type.icon(), contentDescription = null, tint = colors.brand, modifier = Modifier.size(26.dp))
+                Spacer(Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(documentLabel(slot), style = MaterialTheme.typography.titleSmall)
+                    Text(
+                        text = tripContextLabel(trip, slot.stopId, slot.containerId) ?: stringResource(R.string.slot_trip_level),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.muted,
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    StatusUiBadge(slot.toStatusUi())
+                    slot.reviewNote?.takeIf { slot.state == DocumentSlotState.REJECTED }?.let {
+                        Text(stringResource(R.string.slot_review_note, it), style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+            SecondaryActionButton(
+                text = stringResource(R.string.required_documents_upload),
+                onClick = { onUpload(slot.key) },
+                icon = Icons.Filled.UploadFile,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("required_document_upload_${slot.key}"),
+            )
+        }
+    }
+}
+
 /** Planned location of the next stop. Navigation only with real coordinates. */
 @Composable
-private fun NextStopCard(stop: TripLocation, onOpenNavigation: (GeoPoint, String?) -> Unit) {
+private fun NextStopCard(
+    stop: TripLocation,
+    onOpenNavigation: (GeoPoint, String?) -> Unit,
+    onCopyCoordinates: (GeoPoint, String?) -> Unit,
+) {
     SectionCard(modifier = Modifier.testTag("next_stop")) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Filled.Place, contentDescription = null, tint = DriverTheme.colors.brand, modifier = Modifier.size(26.dp))
@@ -542,6 +673,8 @@ private fun NextStopCard(stop: TripLocation, onOpenNavigation: (GeoPoint, String
         }
         val point = stop.coordinates
         if (point != null) {
+            Spacer(Modifier.height(8.dp))
+            CoordinateBlock(point, stop.name, onCopyCoordinates, "next_stop_coordinates")
             Spacer(Modifier.height(8.dp))
             SecondaryActionButton(
                 text = stringResource(R.string.trip_navigation),
@@ -580,9 +713,16 @@ private fun StopBlock(label: String, name: String?, address: String?, icon: Imag
     }
 }
 
-/** Stops in backend order; planned and actual times are the backend's UTC values in local time. */
+/**
+ * Stops in backend order; planned and actual times are the backend's UTC values in local time. Every stop
+ * shows its planned coordinates for the truck navigation device, or that they are missing (docs/18).
+ */
 @Composable
-private fun StopsCard(stops: List<TripStop>, onOpenNavigation: (GeoPoint, String?) -> Unit) {
+private fun StopsCard(
+    stops: List<TripStop>,
+    onOpenNavigation: (GeoPoint, String?) -> Unit,
+    onCopyCoordinates: (GeoPoint, String?) -> Unit,
+) {
     val locale = currentLocale()
     val colors = DriverTheme.colors
     SectionCard(modifier = Modifier.testTag("trip_stops")) {
@@ -637,6 +777,38 @@ private fun StopsCard(stops: List<TripStop>, onOpenNavigation: (GeoPoint, String
                 }
             }
         }
+    }
+}
+
+/** Latitude and longitude labelled separately; the copy button copies both as one pair, latitude first. */
+@Composable
+private fun CoordinateBlock(point: GeoPoint, label: String?, onCopy: (GeoPoint, String?) -> Unit, tag: String) {
+    Column(modifier = Modifier.testTag(tag)) {
+        CoordinateLine(stringResource(R.string.coordinate_latitude), CoordinateFormat.decimal(point.latitude), "${tag}_latitude")
+        CoordinateLine(stringResource(R.string.coordinate_longitude), CoordinateFormat.decimal(point.longitude), "${tag}_longitude")
+        Spacer(Modifier.height(6.dp))
+        SecondaryActionButton(
+            text = stringResource(R.string.coordinates_copy),
+            onClick = { onCopy(point, label) },
+            icon = Icons.Filled.ContentCopy,
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("${tag}_copy"),
+        )
+    }
+}
+
+@Composable
+private fun CoordinateLine(label: String, value: String, tag: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 2.dp),
+    ) {
+        Text(label, style = MaterialTheme.typography.bodyMedium, color = DriverTheme.colors.muted, modifier = Modifier.weight(1f))
+        Spacer(Modifier.width(8.dp))
+        Text(value, style = MaterialTheme.typography.titleSmall, fontFamily = FontFamily.Monospace, modifier = Modifier.testTag(tag))
     }
 }
 

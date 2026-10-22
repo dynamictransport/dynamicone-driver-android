@@ -10,12 +10,20 @@ import com.dynamictransport.dynamicone.domain.model.CheckTemplate
 import com.dynamictransport.dynamicone.domain.model.Conversation
 import com.dynamictransport.dynamicone.domain.model.ConversationList
 import com.dynamictransport.dynamicone.domain.model.DocumentContentResult
+import com.dynamictransport.dynamicone.domain.model.DocumentRequirements
+import com.dynamictransport.dynamicone.domain.model.DrawnSignature
 import com.dynamictransport.dynamicone.domain.model.DriverTimes
 import com.dynamictransport.dynamicone.domain.model.ExecutionAction
+import com.dynamictransport.dynamicone.domain.model.HrContentProblem
+import com.dynamictransport.dynamicone.domain.model.HrContentResult
+import com.dynamictransport.dynamicone.domain.model.HrDocumentLists
+import com.dynamictransport.dynamicone.domain.model.HrDocumentLookup
+import com.dynamictransport.dynamicone.domain.model.HrSignResult
 import com.dynamictransport.dynamicone.domain.model.LocalPunch
 import com.dynamictransport.dynamicone.domain.model.LocalShiftCommand
 import com.dynamictransport.dynamicone.domain.model.MonthlyPayroll
 import com.dynamictransport.dynamicone.domain.model.PendingTripAction
+import com.dynamictransport.dynamicone.domain.model.PersonnelDocumentHistory
 import com.dynamictransport.dynamicone.domain.model.PunchResult
 import com.dynamictransport.dynamicone.domain.model.RefreshResult
 import com.dynamictransport.dynamicone.domain.model.ShiftCommandResult
@@ -32,9 +40,13 @@ import com.dynamictransport.dynamicone.domain.repository.PayrollRepository
 import com.dynamictransport.dynamicone.domain.repository.SignedDocumentRepository
 import com.dynamictransport.dynamicone.domain.repository.TripExecutionRepository
 import com.dynamictransport.dynamicone.domain.repository.VehicleCheckRepository
+import com.dynamictransport.dynamicone.domain.repository.VehicleDocumentRepository
+import com.dynamictransport.dynamicone.domain.repository.VehiclePositionRepository
+import java.io.File
+import java.time.Instant
+import java.time.YearMonth
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
-import java.time.YearMonth
 
 // Driver API features the in-app demo backend does not simulate. The demo shows them as unavailable
 // instead of inventing trip plans, pay, personnel documents or conversations.
@@ -48,6 +60,10 @@ object UnavailableTripExecutionRepository : TripExecutionRepository {
         ActionResult.Rejected(ActionRejection.NOT_SUPPORTED)
     override suspend fun resendPending(tripId: String): ActionResult = ActionResult.Rejected(ActionRejection.NOT_SUPPORTED)
     override suspend fun discardPending(tripId: String): RefreshResult = RefreshResult.NOT_SUPPORTED
+    override fun observeTrailers(tripId: String): Flow<TripTrailerState?> = flowOf(null)
+    override suspend fun refreshTrailers(tripId: String): RefreshResult = RefreshResult.NOT_SUPPORTED
+    override suspend fun confirmTrailer(tripId: String, trailerId: String): ActionResult =
+        ActionResult.Rejected(ActionRejection.NOT_SUPPORTED)
 }
 
 object UnavailablePayrollRepository : PayrollRepository {
@@ -113,3 +129,43 @@ object UnavailableAttendanceRepository : AttendanceRepository {
     override fun observeMonth(month: YearMonth): Flow<AttendanceMonth?> = flowOf(null)
     override suspend fun refreshMonth(month: YearMonth): RefreshResult = RefreshResult.NOT_SUPPORTED
 }
+
+/** Personnel documents come only from the Mobile API (docs/17); the demo invents none. */
+object UnavailableHrDocumentRepository : HrDocumentRepository {
+    override fun observeLists(): Flow<HrDocumentLists> = flowOf(HrDocumentLists.EMPTY)
+    override fun observeDocument(documentId: String): Flow<HrDocumentLookup> = flowOf(HrDocumentLookup.Missing)
+    override suspend fun refresh(): RefreshResult = RefreshResult.NOT_SUPPORTED
+    override suspend fun loadMoreSigned(): RefreshResult = RefreshResult.NOT_SUPPORTED
+    override suspend fun refreshDocument(documentId: String): RefreshResult = RefreshResult.NOT_SUPPORTED
+    override suspend fun content(documentId: String, languageCode: String): HrContentResult =
+        HrContentResult.Unavailable(HrContentProblem.NOT_FOUND)
+    override suspend fun sign(documentId: String, languageCode: String, contentSha256: String, signature: DrawnSignature): HrSignResult =
+        HrSignResult.NotLoggedIn
+    override suspend fun sendPending(): Boolean = true
+    override suspend fun openReceipt(documentId: String): DocumentContentResult = DocumentContentResult.Unavailable(ActionRejection.NOT_SUPPORTED)
+}
+
+/** The demo fleet has no tracking: no vehicle position is invented (docs/19). */
+object UnavailableVehiclePositionRepository : VehiclePositionRepository {
+    override fun observePosition(): Flow<VehiclePositionState> = flowOf(VehiclePositionState.NotSupported)
+    override suspend fun refresh(): RefreshResult = RefreshResult.NOT_SUPPORTED
+}
+
+/** Personnel and vehicle files come only from the Mobile API; the demo invents none. */
+object UnavailableMyDocumentRepository : MyDocumentRepository {
+    override fun observeHistory(): Flow<PersonnelDocumentHistory?> = flowOf(null)
+    override fun observeRequirements(): Flow<DocumentRequirements?> = flowOf(null)
+    override suspend fun refreshHistory(): RefreshResult = RefreshResult.NOT_SUPPORTED
+    override suspend fun loadMoreHistory(): RefreshResult = RefreshResult.NOT_SUPPORTED
+    override suspend fun refreshRequirements(): RefreshResult = RefreshResult.NOT_SUPPORTED
+    override suspend fun open(documentId: String, contentTypeHint: String?): DocumentContentResult =
+        DocumentContentResult.Unavailable(ActionRejection.NOT_SUPPORTED)
+}
+
+object UnavailableVehicleDocumentRepository : VehicleDocumentRepository {
+    override fun observe(): Flow<VehicleDocumentsSnapshot?> = flowOf(null)
+    override suspend fun refresh(): RefreshResult = RefreshResult.NOT_SUPPORTED
+    override suspend fun open(documentId: String, contentTypeHint: String?): DocumentContentResult =
+        DocumentContentResult.Unavailable(ActionRejection.NOT_SUPPORTED)
+}
+

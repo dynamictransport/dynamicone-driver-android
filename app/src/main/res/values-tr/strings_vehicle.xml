@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The driver's current fleet vehicle from me.assignedVehicle (home and profile) -->
+    <string name="assigned_vehicle_label">Atanmış araç</string>
+    <string name="assigned_vehicle_none">Atanmış araç yok</string>
+    <string name="assigned_vehicle_loading">Araç bilgisi yükleniyor…</string>
+    <string name="assigned_vehicle_unavailable">Araç bilgisi alınamadı</string>
+
+    <!-- Last reported position of the assigned vehicle (docs/19) -->
+    <string name="vehicle_position_label">Araç konumu</string>
+    <string name="vehicle_position_loading">Konum alınıyor…</string>
+    <string name="vehicle_position_unavailable">Konum alınamadı</string>
+    <string name="vehicle_position_no_data">Henüz konum bilgisi yok</string>
+    <string name="vehicle_position_not_linked">Filo takibine bağlı değil</string>
+    <string name="vehicle_position_just_now">az önce</string>
+    <string name="vehicle_position_ago">%1$s önce</string>
+    <string name="vehicle_position_minutes">%1$d dk</string>
+    <string name="vehicle_position_show_on_map">Haritada göster</string>
+</resources>

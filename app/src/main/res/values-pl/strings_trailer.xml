@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Potwierdzenie naczepy po przyjęciu przejazdu (docs/20_DRIVER_TRAILER_CONFIRMATION.md) -->
+    <string name="trailer_title">Naczepa</string>
+    <string name="trailer_question">Która naczepa jest pod Twoim ciągnikiem?</string>
+    <string name="trailer_change_hint">Wybierz inną naczepę, aby ją zmienić.</string>
+    <string name="trailer_planned">Zaplanowana</string>
+    <string name="trailer_search">Szukaj numeru rejestracyjnego</string>
+    <string name="trailer_search_clear">Wyczyść wyszukiwanie</string>
+    <string name="trailer_no_match">Brak naczepy pasującej do wyszukiwania.</string>
+    <string name="trailer_confirm">POTWIERDŹ NACZEPĘ</string>
+    <string name="trailer_confirmed_banner">Potwierdzona: %1$s</string>
+    <string name="trailer_confirmed_banner_at">Potwierdzona: %1$s · %2$s</string>
+    <string name="trailer_confirmed_label">Naczepa (potwierdzona)</string>
+    <string name="trailer_confirmed_message">Naczepa potwierdzona.</string>
+    <string name="trailer_locked">Przejazd się rozpoczął: naczepy nie można tu zmienić.</string>
+    <string name="trailer_none_title">Brak aktywnej naczepy na liście</string>
+    <string name="trailer_none_body">Zadzwoń do biura. Aplikacja nie może dodać naczepy.</string>
+
+    <!-- Ekran przejazdu, zanim przejazd może się rozpocząć -->
+    <string name="trailer_required_hint">Przed startem potwierdź naczepę pod ciągnikiem.</string>
+    <string name="trailer_select_action">WYBIERZ NACZEPĘ</string>
+</resources>

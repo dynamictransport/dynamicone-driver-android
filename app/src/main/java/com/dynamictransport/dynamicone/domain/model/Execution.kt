@@ -20,9 +20,22 @@ data class ExecutionAction(
     val label: String?,
     val stopId: String?,
     val containerId: String?,
+    /** Keys of the plan's document slots that must be uploaded before this action (docs/18). */
+    val blockingDocumentSlots: List<String> = emptyList(),
+    /** The server's `canExecute`; a backend that does not send it blocks nothing. */
+    val canExecute: Boolean = true,
+    /** docs/20: refused until the driver confirms the trailer under the truck; not an evidence problem. */
+    val blockedByTrailer: Boolean = false,
 ) {
     /** Start or a stop/container completion: moves the trip forward. */
     val isProgress: Boolean get() = code == ExecutionActionCode.START || code == ExecutionActionCode.COMPLETE_STOP
+
+    /** Offered, but not possible before the listed evidence is uploaded. A contradictory answer counts as blocked. */
+    val isBlocked: Boolean get() = !canExecute || blockingDocumentSlots.isNotEmpty()
+
+    /** The same step of the plan (code, stop and container); whether it is blocked may change meanwhile. */
+    fun isSameStep(other: ExecutionAction): Boolean =
+        code == other.code && stopId == other.stopId && containerId == other.containerId
 }
 
 /** Current execution plan of a trip (`GET trips/{tripId}/execution`). */
@@ -34,7 +47,19 @@ data class TripExecution(
     val workflow: TripWorkflow,
     val availableActions: List<ExecutionAction>,
     val documents: List<DocumentSlot>,
-)
+    /** The driver has to confirm the trailer under the truck before the trip can start (docs/20). */
+    val trailerConfirmationRequired: Boolean = false,
+) {
+    /**
+     * Slots that block a start or stop/container completion, in checklist order. The server decides which
+     * evidence blocks which step; keys that are not in the checklist cannot be shown and are left out.
+     */
+    val blockingSlots: List<DocumentSlot>
+        get() {
+            val keys = availableActions.filter { it.isProgress && it.isBlocked }.flatMapTo(HashSet()) { it.blockingDocumentSlots }
+            return documents.filter { it.key in keys }
+        }
+}
 
 /** Optional device evidence of an action. The app sends none unless every contract rule holds. */
 data class LocationEvidence(

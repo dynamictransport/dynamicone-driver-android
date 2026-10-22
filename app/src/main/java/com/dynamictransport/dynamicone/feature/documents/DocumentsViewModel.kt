@@ -39,6 +39,9 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/** Optional navigation argument: the checklist key to select when the screen opens. */
+const val DOCUMENT_SLOT_ARG = "slot"
+
 /** Opens the document scanner. [sourcePath] is a gallery photo that has to pass the same checks as a camera photo. */
 data class ScanRequest(val documentType: DocumentType, val sourcePath: String?)
 
@@ -87,7 +90,10 @@ class DocumentsViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val tripIdArgument: String? = savedStateHandle[TRIP_ID_ARG]
-    private val selectedSlotKey = MutableStateFlow(savedStateHandle.get<String>(KEY_SELECTED_SLOT))
+    /** The driver's own choice survives process death; otherwise the slot the trip screen asked for. */
+    private val selectedSlotKey = MutableStateFlow(
+        savedStateHandle.get<String>(KEY_SELECTED_SLOT) ?: savedStateHandle.get<String>(DOCUMENT_SLOT_ARG),
+    )
     private val scanRequest = MutableStateFlow<ScanRequest?>(null)
     private val openRequest = MutableStateFlow<DocumentContentResult.Available?>(null)
     private val uploading = MutableStateFlow(false)

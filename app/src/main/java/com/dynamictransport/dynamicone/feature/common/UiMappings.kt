@@ -358,6 +358,7 @@ fun ActionRejection.messageRes(): Int = when (this) {
     ActionRejection.PLAN_CHANGED -> R.string.error_plan_changed
     ActionRejection.OUTCOME_UNKNOWN -> R.string.error_outcome_unknown
     ActionRejection.PENDING_ACTION -> R.string.error_pending_action
+    ActionRejection.DOCUMENTS_REQUIRED -> R.string.error_documents_required
     ActionRejection.PHOTO_REQUIRED -> R.string.error_photo_required
     ActionRejection.OFFLINE -> R.string.error_offline
     ActionRejection.SERVICE_UNAVAILABLE -> R.string.refresh_service_unavailable

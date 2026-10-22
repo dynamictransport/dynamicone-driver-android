@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Sefer kabulünden sonra dorse onayı (docs/20_DRIVER_TRAILER_CONFIRMATION.md) -->
+    <string name="trailer_title">Dorse</string>
+    <string name="trailer_question">Çekicinin altındaki dorse hangisi?</string>
+    <string name="trailer_change_hint">Değiştirmek için başka bir dorse seçin.</string>
+    <string name="trailer_planned">Planlanan</string>
+    <string name="trailer_search">Plaka ara</string>
+    <string name="trailer_search_clear">Aramayı temizle</string>
+    <string name="trailer_no_match">Aramaya uyan dorse yok.</string>
+    <string name="trailer_confirm">DORSEYİ ONAYLA</string>
+    <string name="trailer_confirmed_banner">Onaylandı: %1$s</string>
+    <string name="trailer_confirmed_banner_at">Onaylandı: %1$s · %2$s</string>
+    <string name="trailer_confirmed_label">Dorse (onaylandı)</string>
+    <string name="trailer_confirmed_message">Dorse onaylandı.</string>
+    <string name="trailer_locked">Sefer başladı: dorse buradan değiştirilemez.</string>
+    <string name="trailer_none_title">Listede aktif dorse yok</string>
+    <string name="trailer_none_body">Ofisi arayın. Uygulama yeni dorse ekleyemez.</string>
+
+    <!-- Sefer ekranı, sefer henüz başlayamazken -->
+    <string name="trailer_required_hint">Başlamadan önce çekicinin altındaki dorseyi onaylayın.</string>
+    <string name="trailer_select_action">DORSEYİ SEÇ</string>
+</resources>

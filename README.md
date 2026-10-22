@@ -26,7 +26,7 @@ Dynamic Transport çalışanları için tek Android uygulaması (eski adı Dynam
 - Kaydın önce telefona yazılması; internet yokken bekleyip bağlantı gelince otomatik gönderilmesi (gönderildi / bekliyor / gönderilemedi ayrı gösterilir)
 - Aylık *Mesai kayıtlarım*: gün gün giriş/çıkış saatleri, gün durumu ve sunucunun hesapladığı çalışılan süre
 
-Backend sözleşmesi: [docs/15_MOBILE_APP_API.md](docs/15_MOBILE_APP_API.md). Mobile API yayına alınana kadar `app.mobileApi=false` ile giriş Driver API üzerinden yapılır (yalnızca şoför modülü); denemek için `gradlew.bat assembleDebug -Papp.mobileApi=true`. Yalnızca 400 ve 409 kalıcı hatadır; 403/404/429/5xx durumunda kayıt aynı `commandId` ile tekrar gönderilir (docs/15 §5.3).
+Backend sözleşmesi: [docs/15_MOBILE_APP_API.md](docs/15_MOBILE_APP_API.md). 30.09.2026'dan beri varsayılan `app.mobileApi=true`: şoförler dahil her hesap Mobile API ile girer ve modüllerini sunucudan alır. Eski yol (Driver API, yalnızca şoför modülü) için `gradlew.bat assembleDebug -Papp.mobileApi=false`. Yalnızca 400 ve 409 kalıcı hatadır; 403/404/429/5xx durumunda kayıt aynı `commandId` ile tekrar gönderilir (docs/15 §5.3).
 
 **Şoför günlük mesaisi (şoför modülünde, `app.driverShift`)** — takograf dinlenmesi ve günlük araç kontrolü:
 
@@ -36,6 +36,24 @@ Backend sözleşmesi: [docs/15_MOBILE_APP_API.md](docs/15_MOBILE_APP_API.md). Mo
 - Uzun seferde günlük dinlenme için mesaiyi bitirme; dinlenmeden sonra yeni mesaide aynı sefere devam
 
 Backend sözleşmesi ve Codex görevi: [docs/16_DRIVER_SHIFT_REST_AND_VEHICLE_CHECK.md](docs/16_DRIVER_SHIFT_REST_AND_VEHICLE_CHECK.md). Backend uçları yayına alınana kadar `app.driverShift=false` (varsayılan) ile bugünkü davranış sürer; denemek için `gradlew.bat assembleDebug -Papp.driverShift=true`.
+
+**Dorse onayı (şoför modülünde)** — sefer kabul edildikten sonra, başlamadan önce:
+
+- Ofisin aktif dorse listesinden seçim: plakalar büyük satırlarda, uzun listede plaka/şirket kodu araması
+- Planlanan dorse yalnızca *Planlanan* etiketiyle işaretlenir; otomatik onaylanmaz, şoför açıkça seçer
+- Onaylanana kadar sefer ekranında *Sefere başladım* yerine *DORSEYİ SEÇ* görünür; engellenen adım sunucuya gönderilmez
+- Onaylanan dorse sefer detayında görünür; sefer başladıktan sonra seçim kilitlenir
+
+Backend sözleşmesi: [docs/20_DRIVER_TRAILER_CONFIRMATION.md](docs/20_DRIVER_TRAILER_CONFIRMATION.md). Fotoğraf veya serbest plaka girişi yoktur; liste boşsa şoför ofise yönlendirilir. Onay çevrimdışı kuyruğa alınmaz: istek okunan listenin sürümünü taşır.
+
+**Personel evrakları modülü (`hrDocuments`)** — şoför ve ofis personeli için:
+
+- Ofisin gönderdiği evraklar (ör. RODO bilgilendirmesi) *Personel evraklarım* ekranında: imza bekleyenler son güne göre, altında imzalananlar; ana ekranda ve mesai ekranında "İmzanızı bekleyen evrak" kartı
+- PDF uygulama içinde, dil seçerek (PL/TR/EN/AZ…) okunur; belgenin sonunda beyan kutusu ve parmakla imza → *İMZALA VE GÖNDER*
+- İmza önce telefona yazılır, internet yoksa sonra aynı `commandId` ile gönderilir; sunucu onaylayana kadar "gönderilmeyi bekliyor"
+- Yeni evrak, son gün yaklaşınca ve geçince bildirim; dokununca evrak açılır. Son gün geçse de imza atılabilir, hiçbir ekran kilitlenmez
+
+Backend sözleşmesi ve Codex görevi: [docs/17_HR_DOCUMENT_SIGNING.md](docs/17_HR_DOCUMENT_SIGNING.md). Ekranlar sunucu `me.modules` içinde `hrDocuments` gönderince açılır (Mobile API, `app.mobileApi=true` gerekir); ayrı bir ayar yoktur.
 
 ## İlk platform
 
@@ -201,7 +219,8 @@ UI (Compose) → ViewModel → UseCase (gerektiğinde) → Repository (domain ar
 - `data/real/RealDocumentRepository`, `RealPersonnelRepositories`, `RealMessageRepository` — evrak slotları, ücret ve imzalı evrak, mesajlar.
 - `app/navigation/AppShell` — hesabın modüllerinden alt menü (en fazla 5 öğe) ve ilk ekran; `data/real/AccountRemote` girişi Driver API veya Mobile API (`app.mobileApi`) üzerinden yapar.
 - `data/real/RealAttendanceRepository` + `core/nfc` — NFC etiketi okuma (reader mode), `attendance_punches` tablosu, `AttendanceSyncWorker` ile idempotent otomatik gönderim; kural: `domain/rules/AttendanceRules`.
-- Kararlar ve API boşlukları: `ASSUMPTIONS.md` (R1–R15, O1–O16, M1–M12), `docs/12_API_CONTRACT_GAPS.md`, `docs/15_MOBILE_APP_API.md`.
+- `data/real/RealHrDocumentRepository` + `core/pdf` — personel evrakları: `hr_signatures` (bekleyen imzalar) ve `hr_document_cache` tabloları, SHA-256 ile doğrulanan PDF deposu (`HrDocumentFileStore`), `HrDocumentSyncWorker`, uygulama içi PDF (`PdfRenderer`); kural: `domain/rules/HrDocumentRules`.
+- Kararlar ve API boşlukları: `ASSUMPTIONS.md` (R1–R15, O1–O16, M1–M12, D1–D15), `docs/12_API_CONTRACT_GAPS.md`, `docs/15_MOBILE_APP_API.md`, `docs/17_HR_DOCUMENT_SIGNING.md`.
 
 ### Logo ve uygulama ikonu
 

@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Будильник (docs/16) -->
+    <string name="rest_alarm_channel_alarm">Будильник</string>
+    <string name="rest_alarm_channel_alarm_description">Звонит сигналом будильника, когда заканчивается ваш ежедневный отдых.</string>
+    <string name="rest_alarm_channel_reminder">Напоминания об отдыхе</string>
+    <string name="rest_alarm_channel_reminder_description">Уведомление, когда заканчивается ваш ежедневный отдых.</string>
+    <string name="rest_alarm_title">Отдых закончился</string>
+    <string name="rest_alarm_title_soon">Отдых скоро закончится</string>
+    <string name="rest_alarm_body_before">Ваш ежедневный отдых заканчивается в %1$s. Готовьтесь начать смену.</string>
+    <string name="rest_alarm_body_ended">Ваш ежедневный отдых закончился в %1$s. Можно начинать смену.</string>
+    <string name="rest_alarm_test_title">Пробный сигнал</string>
+    <string name="rest_alarm_test_body">Так звучит будильник.</string>
+    <string name="rest_alarm_start_shift">НАЧАТЬ СМЕНУ</string>
+    <string name="rest_alarm_snooze">Отложить на 10 мин</string>
+    <string name="rest_alarm_stop">Выключить</string>
+
+    <!-- Настройки будильника -->
+    <string name="rest_alarm_settings_title">Будильник отдыха</string>
+    <string name="rest_alarm_settings_intro">Приложение разбудит вас, когда по данным тахографа закончится ежедневный отдых. Будильник установлен на этом телефоне и звонит даже без интернета.</string>
+    <string name="rest_alarm_settings_mode">Как вас будить?</string>
+    <string name="rest_alarm_mode_alarm">Сигнал будильника (на весь экран)</string>
+    <string name="rest_alarm_mode_notification">Только уведомление</string>
+    <string name="rest_alarm_settings_when">Когда?</string>
+    <string name="rest_alarm_lead_at_end">Когда отдых закончится</string>
+    <string name="rest_alarm_lead_before">За %1$d мин до окончания</string>
+    <string name="rest_alarm_settings_permissions">Настройки телефона</string>
+    <string name="rest_alarm_permission_notifications">Уведомления</string>
+    <string name="rest_alarm_permission_exact">Будильники и напоминания (вовремя)</string>
+    <string name="rest_alarm_permission_full_screen">На весь экран на экране блокировки</string>
+    <string name="rest_alarm_permission_on">Разрешено</string>
+    <string name="rest_alarm_permission_off">Не разрешено – будильник может опоздать или не прозвучать</string>
+    <string name="rest_alarm_permission_open">РАЗРЕШИТЬ</string>
+    <string name="rest_alarm_settings_dnd">Режим «Не беспокоить» может заглушить будильник. Разрешите будильники в настройках режима «Не беспокоить».</string>
+    <string name="rest_alarm_try">Пробный сигнал</string>
+
+    <!-- Карточка тахографа -->
+    <string name="driver_day_title">Тахограф</string>
+    <string name="driver_day_rest">Ежедневный отдых</string>
+    <string name="driver_day_rest_over">Отдых закончился</string>
+    <string name="driver_day_rest_ends_at">Закончится в %1$s</string>
+    <string name="driver_day_rest_ended_at">Закончился в %1$s</string>
+    <string name="driver_day_rest_left">Осталось %1$s</string>
+    <string name="driver_day_rest_over_body">Можно начинать смену.</string>
+    <string name="driver_day_alarm_at">Будильник в %1$s</string>
+    <string name="driver_day_alarm_snoozed">Отложен до %1$s</string>
+    <string name="driver_day_alarm_off_for_rest">Выключить</string>
+    <string name="driver_day_alarm_dismissed">Будильник выключен на этот отдых</string>
+    <string name="driver_day_alarm_on_again">Включить</string>
+    <string name="driver_day_alarm_no_notifications">Уведомления выключены: будильник не сможет прозвучать.</string>
+    <string name="driver_day_alarm_inexact">«Будильники и напоминания» выключены: будильник может опоздать на несколько минут.</string>
+    <string name="driver_day_alarm_settings">Настройки</string>
+    <string name="driver_day_driving_left">Осталось вождения сегодня: %1$s</string>
+    <string name="driver_day_driving_exceeded">Время вождения превышено на %1$s</string>
+    <string name="driver_day_break_due">Следующий перерыв до %1$s</string>
+    <string name="driver_day_break_due_with">Следующий перерыв до %1$s (%2$s)</string>
+    <string name="driver_day_shift_latest_end">Смена должна закончиться до %1$s</string>
+    <string name="driver_day_infringement">Тахограф показывает нарушение.</string>
+    <string name="driver_day_as_of">Данные тахографа %1$s · ориентировочно</string>
+    <string name="driver_day_as_of_stale">Последние известные данные тахографа: %1$s · ориентировочно</string>
+    <string name="driver_day_indicative">Значения ориентировочные; решающими являются данные тахографа.</string>
+    <string name="driver_day_not_linked">Нет данных тахографа: ваша карта водителя не привязана в Webfleet, поэтому будильник отдыха нельзя установить. Свяжитесь с офисом.</string>
+    <string name="driver_day_no_data">Данных тахографа пока нет. Будильник отдыха установится, когда данные поступят.</string>
+
+    <!-- Начало смены: метка ТС и ежедневная проверка -->
+    <string name="start_shift_title">Начать смену</string>
+    <string name="check_title">Ежедневная проверка ТС</string>
+    <string name="start_shift_cancel">Отмена</string>
+    <string name="start_shift_rest_title">Ваш отдых ещё не закончился</string>
+    <string name="start_shift_rest_body">По данным тахографа ваш ежедневный отдых заканчивается в %1$s (осталось %2$s).</string>
+    <string name="start_shift_rest_note">Если вы начнёте сейчас, офис увидит, что смена началась до окончания отдыха.</string>
+    <string name="start_shift_rest_confirm">ВСЁ РАВНО НАЧАТЬ</string>
+    <string name="start_shift_rest_wait">Подождать</string>
+    <string name="start_shift_scan_title">Отсканируйте метку ТС</string>
+    <string name="start_shift_scan_body">Подойдите к тягачу и приложите заднюю сторону телефона к метке DynamicONE на транспортном средстве.</string>
+    <string name="start_shift_tag_help">Метка не считывается? Свяжитесь с офисом.</string>
+    <string name="start_shift_use_planned">Метка не считывается: использовать %1$s</string>
+    <string name="start_shift_tag_unknown">Эта метка не привязана к транспортному средству. Отсканируйте метку своего тягача или свяжитесь с офисом.</string>
+    <string name="start_shift_nfc_disabled">NFC выключен. Включите NFC, чтобы отсканировать метку ТС.</string>
+    <string name="start_shift_nfc_not_supported">В этом телефоне нет NFC, поэтому метку ТС отсканировать нельзя.</string>
+    <string name="start_shift_tag_read">Метка считана</string>
+    <string name="start_shift_vehicle_verified">Транспортное средство распознано.</string>
+    <string name="start_shift_vehicle_unverified">Нет связи: ТС будет проверено при отправке смены.</string>
+    <string name="start_shift_vehicle_manual">Метка не отсканирована: офис проверит ТС.</string>
+    <string name="start_shift_trailer">Прицеп: %1$s</string>
+    <string name="start_shift_other_vehicle">Это не запланированное для вас ТС (%1$s). Ваш логист это увидит.</string>
+    <string name="start_shift_begin_check">НАЧАТЬ ПРОВЕРКУ</string>
+    <string name="start_shift_rescan">Отсканировать другую метку</string>
+    <string name="check_progress">Пункт %1$d из %2$d</string>
+    <string name="check_ok">OK</string>
+    <string name="check_defect">ПРОБЛЕМА</string>
+    <string name="check_not_applicable">НЕ ОТНОСИТСЯ</string>
+    <string name="check_answer_ok">OK</string>
+    <string name="check_answer_defect">Проблема</string>
+    <string name="check_answer_not_applicable">Не относится</string>
+    <string name="check_defect_photo_required">Сфотографируйте проблему</string>
+    <string name="check_defect_photo_optional">Фото проблемы (необязательно)</string>
+    <string name="check_take_photo">Сделать фото</string>
+    <string name="check_photo_remove">Удалить фото</string>
+    <string name="check_note_optional">Короткая заметка (необязательно)</string>
+    <string name="check_defect_done">ДАЛЕЕ</string>
+    <string name="check_no_defect_after_all">Проблемы всё-таки нет</string>
+    <string name="check_photo_required">Сначала сфотографируйте проблему.</string>
+    <string name="check_photo_failed">Не удалось сохранить фото. Сделайте его ещё раз.</string>
+    <string name="check_camera_unavailable">На этом телефоне не найдено приложение камеры.</string>
+    <string name="check_camera_permission">Чтобы сделать фото, нужно разрешение на камеру.</string>
+    <plurals name="check_summary_items">
+        <item quantity="one">Проверен %d пункт</item>
+        <item quantity="few">Проверено %d пункта</item>
+        <item quantity="many">Проверено %d пунктов</item>
+        <item quantity="other">Проверено %d пункта</item>
+    </plurals>
+    <string name="check_summary_no_defects">Проблем нет</string>
+    <plurals name="check_summary_defects">
+        <item quantity="one">Сообщено о %d проблеме</item>
+        <item quantity="few">Сообщено о %d проблемах</item>
+        <item quantity="many">Сообщено о %d проблемах</item>
+        <item quantity="other">Сообщено о %d проблемы</item>
+    </plurals>
+    <plurals name="check_summary_not_applicable">
+        <item quantity="one">%d пункт не относится</item>
+        <item quantity="few">%d пункта не относятся</item>
+        <item quantity="many">%d пунктов не относятся</item>
+        <item quantity="other">%d пункта не относятся</item>
+    </plurals>
+    <plurals name="check_photo_count">
+        <item quantity="one">%d фото</item>
+        <item quantity="few">%d фото</item>
+        <item quantity="many">%d фото</item>
+        <item quantity="other">%d фото</item>
+    </plurals>
+    <string name="check_edit">Изменить</string>
+    <string name="check_summary_defects_note">Проблемы не блокируют смену: офис получит их вместе с фото и примет решение по ТС.</string>
+    <string name="start_shift_summary_rest">Начата до окончания отдыха</string>
+    <string name="start_shift_submit">ОТПРАВИТЬ ПРОВЕРКУ И НАЧАТЬ СМЕНУ</string>
+    <string name="start_shift_start_over">НАЧАТЬ ЗАНОВО</string>
+    <string name="start_shift_recorded">Смена начата</string>
+    <string name="start_shift_saved">Сохранено на этом телефоне</string>
+    <string name="start_shift_saved_body">Смена и проверка будут отправлены автоматически, когда появится интернет.</string>
+    <plurals name="start_shift_defects_reported">
+        <item quantity="one">В офис отправлено сообщение о %d проблеме.</item>
+        <item quantity="few">В офис отправлено сообщение о %d проблемах.</item>
+        <item quantity="many">В офис отправлено сообщение о %d проблемах.</item>
+        <item quantity="other">В офис отправлено сообщение о %d проблемы.</item>
+    </plurals>
+    <string name="start_shift_done">OK</string>
+
+    <!-- Экран смены (ежедневная смена) -->
+    <string name="shift_end_during_trip">Рейс выполняется. Вы можете завершить смену на ежедневный отдых и продолжить рейс в следующую смену.</string>
+    <string name="shift_ended_by">Кем завершена</string>
+    <string name="shift_ended_by_tachograph">Тахограф: начался ежедневный отдых</string>
+    <string name="shift_vehicle_identified">Транспортное средство</string>
+    <string name="shift_vehicle_manual">Метка не отсканирована – офис проверит</string>
+    <string name="shift_vehicle_check">Ежедневная проверка</string>
+    <string name="shift_rest_note">Отдых</string>
+    <string name="shift_started_before_rest_end">Начата до окончания отдыха</string>
+    <string name="shift_command_start">Начало смены %1$s</string>
+    <string name="shift_command_end">Конец смены %1$s</string>
+    <string name="shift_command_waiting">Ожидает на этом телефоне; будет отправлено автоматически.</string>
+    <plurals name="shift_photos_waiting">
+        <item quantity="one">%d фото ожидает отправки</item>
+        <item quantity="few">%d фото ожидают отправки</item>
+        <item quantity="many">%d фото ожидают отправки</item>
+        <item quantity="other">%d фото ожидают отправки</item>
+    </plurals>
+    <plurals name="shift_photos_failed">
+        <item quantity="one">%d фото не принято сервером</item>
+        <item quantity="few">%d фото не приняты сервером</item>
+        <item quantity="many">%d фото не приняты сервером</item>
+        <item quantity="other">%d фото не приняты сервером</item>
+    </plurals>
+    <string name="shift_hold_access">Не отправлено: для этой учётной записи не включён доступ водителя. Данные хранятся на этом телефоне и будут отправлены, как только офис его включит.</string>
+    <string name="shift_failure_tag_unknown">Не записано: отсканированная метка не привязана к транспортному средству.</string>
+    <string name="shift_failure_check_invalid">Не записано: список проверки изменился. Начните заново.</string>
+    <string name="shift_failure_time">Не записано: на телефоне неверное время или запись слишком старая.</string>
+    <string name="shift_failure_already_active">Не записано: уже идёт другая смена.</string>
+    <string name="shift_failure_not_active">Не записано: смена уже была завершена.</string>
+    <string name="shift_failure_rejected">Не записано: сервер отклонил запись.</string>
+
+    <!-- Рейс -->
+    <string name="trip_shift_start_first">Прежде чем продолжить, начните смену у транспортного средства.</string>
+</resources>

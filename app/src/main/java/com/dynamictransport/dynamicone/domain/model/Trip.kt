@@ -130,6 +130,8 @@ data class Trip(
     val pickupAddress: String? = null,
     val deliveryAddress: String? = null,
     val vehiclePlate: String? = null,
+    /** DYNA code of this trip's vehicle; can differ from the driver's assigned vehicle. */
+    val vehicleCompanyCode: String? = null,
     val trailerPlate: String? = null,
     val sealNo: String? = null,
     val instructions: String? = null,

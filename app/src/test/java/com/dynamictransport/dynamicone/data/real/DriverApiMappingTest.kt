@@ -20,6 +20,7 @@ import com.dynamictransport.dynamicone.domain.model.TripActionType
 import com.dynamictransport.dynamicone.domain.model.TripState
 import com.dynamictransport.dynamicone.domain.model.TripWorkflow
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -123,6 +124,47 @@ class DriverApiMappingTest {
         assertTrue(legacy.availableActions.isEmpty())
         assertEquals(TripWorkflow.UNRESOLVED, DriverApiMapping.execution("t1", DriverExecutionResponseDto(version = "x", workflow = "Robots")).workflow)
         assertTrue(runCatching { DriverApiMapping.execution("t1", DriverExecutionResponseDto(version = " ")) }.exceptionOrNull() is RemoteException.InvalidResponse)
+    }
+
+    @Test
+    fun `blocked steps keep the server's evidence keys and older backends block nothing`() {
+        val execution = DriverApiMapping.execution(
+            "t1",
+            DriverExecutionResponseDto(
+                version = "v1",
+                workflow = "TripActions",
+                availableActions = listOf(
+                    DriverAvailableActionDto(
+                        "CompleteStop", null, "s1", "c1",
+                        canExecute = false,
+                        blockingDocumentSlots = listOf("Interchange:s1:c1", " ", "Interchange:s1:c1", "Cmr:trip:all"),
+                    ),
+                    DriverAvailableActionDto("CompleteStop", null, "s1", "c2", canExecute = true, blockingDocumentSlots = emptyList()),
+                    DriverAvailableActionDto("CompleteStop", null, "s2", null),
+                    DriverAvailableActionDto("CompleteStop", null, "s3", null, canExecute = false),
+                    DriverAvailableActionDto("Rest", "Report a break", null, null, canExecute = true, blockingDocumentSlots = listOf("Cmr:trip:all")),
+                ),
+                documents = listOf(
+                    DriverDocumentSlotDto(slot = "Cmr:trip:all", type = "Cmr", required = true, state = "Missing"),
+                    DriverDocumentSlotDto(slot = "Seal:s1:c2", type = "Seal", stopId = "s1", containerId = "c2", required = true, state = "PendingReview"),
+                    DriverDocumentSlotDto(slot = "Interchange:s1:c1", type = "Interchange", stopId = "s1", containerId = "c1", required = true, state = "Rejected"),
+                ),
+            ),
+        )
+        val (blocked, open, olderBackend, withoutKeys, rest) = execution.availableActions
+
+        assertEquals(listOf("Interchange:s1:c1", "Cmr:trip:all"), blocked.blockingDocumentSlots)
+        assertTrue(blocked.isBlocked)
+        assertFalse(open.isBlocked)
+        assertTrue(olderBackend.canExecute)
+        assertFalse(olderBackend.isBlocked)
+        assertTrue(withoutKeys.isBlocked)
+        // A contradictory answer counts as blocked.
+        assertTrue(rest.isBlocked)
+        // Checklist order; only slots blocking a start or stop/container completion.
+        assertEquals(listOf("Cmr:trip:all", "Interchange:s1:c1"), execution.blockingSlots.map { it.key })
+        assertTrue(blocked.isSameStep(blocked.copy(blockingDocumentSlots = emptyList(), canExecute = true, label = "x")))
+        assertFalse(blocked.isSameStep(open))
     }
 
     @Test

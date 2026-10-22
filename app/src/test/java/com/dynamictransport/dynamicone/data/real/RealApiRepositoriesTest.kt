@@ -441,6 +441,38 @@ class RealApiRepositoriesTest {
     }
 
     @Test
+    fun `a legacy completion refused while required evidence is open asks for the documents`() = runBlocking {
+        h.signIn()
+        val uploaded = AtomicBoolean(false)
+        routeLegacyTrip({ "InProgress" }, { listOf("ArrivedAtLoading", "Departed") })
+        h.routes.on("GET", "/trips/t1/execution") {
+            jsonResponse(
+                DriverApiJson.execution(
+                    workflow = "LegacyStatuses",
+                    documents = listOf(DriverApiJson.slot("Cmr:trip:all", "Cmr", if (uploaded.get()) "PendingReview" else "Missing", required = true)),
+                ),
+            )
+        }
+        // The legacy path has no own code for the evidence gate (backend PR #130).
+        h.routes.on("POST", "/trips/t1/statuses") { problemResponse(409, "workflow_conflict") }
+        loadTrip()
+        assertEquals(TripState.AT_PICKUP, h.trips.currentTrips().single().state)
+
+        assertEquals(
+            ActionResult.Rejected(ActionRejection.DOCUMENTS_REQUIRED),
+            h.trips.submitAction(TripActionCommand("t1", TripActionType.COMPLETE_PICKUP)),
+        )
+
+        // With nothing open in the checklist a refusal stays a changed state.
+        uploaded.set(true)
+        assertEquals(
+            ActionResult.Rejected(ActionRejection.CONFLICT),
+            h.trips.submitAction(TripActionCommand("t1", TripActionType.COMPLETE_PICKUP)),
+        )
+        assertEquals(2, h.server.drainRequests().count { it.route == "POST /api/driver/v1/trips/t1/statuses" })
+    }
+
+    @Test
     fun `a legacy write with unknown outcome is not retried and the state is read again`() = runBlocking {
         h.signIn()
         routeLegacyTrip({ "Assigned" }, { emptyList() })

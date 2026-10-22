@@ -56,6 +56,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -92,7 +93,12 @@ import java.time.Instant
 import java.time.ZoneId
 
 @Composable
-fun AttendanceRoute(onOpenRecords: () -> Unit, viewModel: AttendanceViewModel = hiltViewModel()) {
+fun AttendanceRoute(
+    onOpenRecords: () -> Unit,
+    /** The card of personnel documents to sign; null without that module (docs/17). */
+    documentsToSignBanner: (@Composable () -> Unit)? = null,
+    viewModel: AttendanceViewModel = hiltViewModel(),
+) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     LifecycleResumeEffect(viewModel) {
@@ -115,6 +121,7 @@ fun AttendanceRoute(onOpenRecords: () -> Unit, viewModel: AttendanceViewModel = 
         onDismiss = viewModel::onDismiss,
         onOutcomeDismissed = viewModel::onOutcomeDismissed,
         onOpenRecords = onOpenRecords,
+        documentsToSignBanner = documentsToSignBanner,
     )
 }
 
@@ -129,6 +136,7 @@ fun AttendanceScreen(
     onDismiss: (LocalPunch) -> Unit,
     onOutcomeDismissed: () -> Unit,
     onOpenRecords: () -> Unit,
+    documentsToSignBanner: (@Composable () -> Unit)? = null,
     now: Instant = rememberCurrentInstant(),
 ) {
     Scaffold(
@@ -169,6 +177,7 @@ fun AttendanceScreen(
             val scanning = state.scanning
             if (scanning != null) ScanCard(scanning) else StatusCard(state, now)
             state.outcome?.let { OutcomeBanner(it, onOutcomeDismissed) }
+            documentsToSignBanner?.invoke()
             NfcBanner(state.nfc)
             state.refreshError?.let { error ->
                 StatusBanner(
@@ -276,6 +285,16 @@ private fun StatusCard(state: AttendanceUiState, now: Instant) {
             Column(modifier = Modifier.weight(1f)) {
                 state.userName?.let {
                     Text(it, style = MaterialTheme.typography.bodyMedium, color = DriverTheme.colors.muted)
+                }
+                state.userTitle?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = DriverTheme.colors.muted,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.testTag(ATTENDANCE_JOB_TITLE_TAG),
+                    )
                 }
                 Text(
                     text = stringResource(if (situation.checkedIn) R.string.attendance_state_in else R.string.attendance_state_out),
@@ -496,3 +515,4 @@ private fun AttendanceDirection.recordedRes(): Int =
 internal fun AttendanceDirection.icon() =
     if (this == AttendanceDirection.IN) Icons.AutoMirrored.Filled.Login else Icons.AutoMirrored.Filled.Logout
 
+const val ATTENDANCE_JOB_TITLE_TAG = "attendance_job_title"

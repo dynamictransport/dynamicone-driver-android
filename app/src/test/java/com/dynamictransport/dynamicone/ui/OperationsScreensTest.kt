@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.assertTextEquals
@@ -40,6 +41,7 @@ import com.dynamictransport.dynamicone.domain.model.TripContainer
 import com.dynamictransport.dynamicone.domain.model.TripExecution
 import com.dynamictransport.dynamicone.domain.model.TripLocation
 import com.dynamictransport.dynamicone.domain.model.TripState
+import com.dynamictransport.dynamicone.domain.model.TripStop
 import com.dynamictransport.dynamicone.domain.model.TripWorkflow
 import com.dynamictransport.dynamicone.domain.statemachine.ActionPlan
 import com.dynamictransport.dynamicone.domain.statemachine.PrimaryAction
@@ -77,6 +79,8 @@ class TripExecutionScreenTest {
 
     private val executed = mutableListOf<ExecutionAction>()
     private val navigations = mutableListOf<GeoPoint>()
+    private val openedDocuments = mutableListOf<String?>()
+    private val copied = mutableListOf<Pair<GeoPoint, String?>>()
     private var resent = 0
 
     private val stops = listOf(
@@ -90,15 +94,17 @@ class TripExecutionScreenTest {
         pending: PendingTripAction? = null,
         execution: TripExecution? = testExecution(actions = actions),
         refresh: RefreshResult = RefreshResult.SUCCESS,
+        tripStops: List<TripStop> = stops,
+        nextStop: TripLocation = TripLocation("s2", "Venlo", null),
     ) = TripDetailUiState(
         loading = false,
         trip = testTrip(
             state = TripState.STARTED,
             workflow = TripWorkflow.TRIP_ACTIONS,
             serverAllowedActions = emptySet(),
-            stops = stops,
+            stops = tripStops,
             containers = containers,
-            nextStop = TripLocation("s2", "Venlo", null),
+            nextStop = nextStop,
         ),
         execution = execution,
         pendingAction = pending,
@@ -113,15 +119,108 @@ class TripExecutionScreenTest {
                     onBack = {},
                     onPrimaryAction = {},
                     onSecondaryAction = {},
-                    onOpenDocuments = {},
+                    onOpenDocuments = { openedDocuments += it },
                     onOpenNavigation = { point, _ -> navigations += point },
                     onReportIncident = {},
                     onMessageShown = {},
                     onExecutionAction = { executed += it },
                     onResendPending = { resent++ },
+                    onCopyCoordinates = { point, label -> copied += point to label },
                 )
             }
         }
+    }
+
+    private val interchange = testSlot(
+        "Interchange:s1:c1", DocumentType.INTERCHANGE, DocumentSlotState.REJECTED, stopId = "s1", containerId = "c1", documentId = "d1", reviewNote = "Unreadable",
+    )
+    private val cmr = testSlot("Cmr:trip:all", DocumentType.CMR, DocumentSlotState.MISSING)
+    private val seal = testSlot("Seal:s1:c2", DocumentType.SEAL_PHOTO, DocumentSlotState.PENDING_REVIEW, stopId = "s1", containerId = "c2", documentId = "d2")
+
+    @Test
+    fun blockedStepCannotBeConfirmedAndUploadOpensTheBlockingSlot() {
+        val blocked = testAction(ExecutionActionCode.COMPLETE_STOP, "I picked up the full container", "s1", "c1")
+            .copy(blockingDocumentSlots = listOf("Interchange:s1:c1"), canExecute = false)
+        val open = testAction(ExecutionActionCode.COMPLETE_STOP, "I picked up the full container", "s1", "c2")
+        setScreen(state(listOf(blocked, open), execution = testExecution(actions = listOf(blocked, open), documents = listOf(cmr, interchange, seal))))
+
+        composeRule.onNodeWithTag(PRIMARY_ACTION_TAG).assertIsNotEnabled().performClick()
+        composeRule.onNode(hasAnyAncestor(hasTestTag("execution_blocked_0")) and hasText("Upload 1 required document first"), useUnmergedTree = true)
+            .assertExists()
+        composeRule.onNodeWithTag("execution_blocked_1").assertDoesNotExist()
+        composeRule.onNodeWithTag("execution_action_1").assertIsEnabled()
+        // Only the evidence that blocks the step is listed, with the server's state and rejection reason.
+        composeRule.onNodeWithTag("required_documents").assertExists()
+        composeRule.onNodeWithText("Reason: Unreadable").assertExists()
+        composeRule.onNodeWithTag("required_document_upload_Cmr:trip:all").assertDoesNotExist()
+        composeRule.onNodeWithTag("required_document_upload_Seal:s1:c2").assertDoesNotExist()
+
+        composeRule.onNodeWithTag("execution_upload_documents").assertTextContains("UPLOAD DOCUMENTS").performClick()
+        composeRule.onNodeWithTag("required_document_upload_Interchange:s1:c1").performScrollTo().performClick()
+        composeRule.onNodeWithTag("execution_action_1").performClick()
+
+        assertEquals(listOf("Interchange:s1:c1", "Interchange:s1:c1"), openedDocuments)
+        assertEquals(listOf(open), executed)
+    }
+
+    @Test
+    fun blockedStepWithoutKnownSlotsStillExplainsWhy() {
+        val blocked = testAction(ExecutionActionCode.COMPLETE_STOP, "Container unloading completed", "s1", null).copy(canExecute = false)
+        setScreen(state(listOf(blocked)))
+
+        composeRule.onNodeWithTag(PRIMARY_ACTION_TAG).assertIsNotEnabled()
+        composeRule.onNode(hasAnyAncestor(hasTestTag("execution_blocked_0")) and hasText("Upload the required documents first."), useUnmergedTree = true)
+            .assertExists()
+        composeRule.onNodeWithTag("required_documents").assertDoesNotExist()
+        composeRule.onNodeWithTag("execution_upload_documents").performClick()
+
+        assertEquals(listOf<String?>(null), openedDocuments)
+    }
+
+    @Test
+    fun everyStopShowsLabelledCoordinatesAndCopiesThePairLatitudeFirst() {
+        val zero = testStop("s3", 3, StopActivity.EMPTY_RETURN, "Null Island", coordinates = GeoPoint(0.0, 0.0))
+        setScreen(
+            state(
+                emptyList(),
+                tripStops = stops + zero,
+                nextStop = TripLocation("s1", "Rotterdam ECT Delta", GeoPoint(-33.918861, -18.4233)),
+            ),
+        )
+
+        composeRule.onNodeWithTag("next_stop_coordinates_latitude").assertTextEquals("-33.918861")
+        composeRule.onNodeWithTag("next_stop_coordinates_longitude").assertTextEquals("-18.423300")
+        composeRule.onNodeWithTag("next_stop_coordinates_copy").performClick()
+        composeRule.onNodeWithTag("stop_coordinates_s1_latitude").performScrollTo().assertTextEquals("51.900000")
+        composeRule.onNodeWithTag("stop_coordinates_s1_longitude").assertTextEquals("4.100000")
+        composeRule.onAllNodesWithText("Latitude").assertCountEquals(3)
+        composeRule.onAllNodesWithText("Longitude").assertCountEquals(3)
+        composeRule.onNodeWithTag("stop_coordinates_s1_copy").performScrollTo().performClick()
+        // A real zero is a coordinate; a missing one is never shown as 0,0.
+        composeRule.onNodeWithTag("stop_coordinates_s3_latitude").performScrollTo().assertTextEquals("0.000000")
+        composeRule.onNodeWithTag("stop_coordinates_s2").assertDoesNotExist()
+        composeRule.onNodeWithTag("stop_location_missing_s2").performScrollTo()
+        composeRule.onNode(
+            hasAnyAncestor(hasTestTag("stop_location_missing_s2")) and hasText("Coordinates missing — contact your planner"),
+            useUnmergedTree = true,
+        ).assertExists()
+
+        assertEquals(
+            listOf(GeoPoint(-33.918861, -18.4233) to "Rotterdam ECT Delta", GeoPoint(51.9, 4.1) to "Rotterdam ECT Delta"),
+            copied,
+        )
+    }
+
+    @Test
+    @Config(qualifiers = "tr-w411dp-h891dp")
+    fun coordinateLabelsAndMissingCoordinatesAreTranslated() {
+        setScreen(state(emptyList()))
+
+        composeRule.onNodeWithTag("stop_coordinates_s1").performScrollTo()
+        composeRule.onNodeWithText("Enlem").assertExists()
+        composeRule.onNodeWithText("Boylam").assertExists()
+        composeRule.onNodeWithTag("stop_coordinates_s1_copy").assertTextContains("Koordinatları kopyala")
+        composeRule.onAllNodesWithText("Koordinat eksik — planlamacıyla iletişime geçin").assertCountEquals(2)
     }
 
     @Test

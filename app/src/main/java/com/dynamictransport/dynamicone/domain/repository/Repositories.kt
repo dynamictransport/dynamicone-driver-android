@@ -2,6 +2,7 @@ package com.dynamictransport.dynamicone.domain.repository
 
 import com.dynamictransport.dynamicone.domain.model.ActionReceipt
 import com.dynamictransport.dynamicone.domain.model.ActionResult
+import com.dynamictransport.dynamicone.domain.model.AssignedVehicleState
 import com.dynamictransport.dynamicone.domain.model.AttendanceDirection
 import com.dynamictransport.dynamicone.domain.model.AttendanceMonth
 import com.dynamictransport.dynamicone.domain.model.AttendanceStatus
@@ -9,9 +10,15 @@ import com.dynamictransport.dynamicone.domain.model.CheckTemplate
 import com.dynamictransport.dynamicone.domain.model.Conversation
 import com.dynamictransport.dynamicone.domain.model.ConversationList
 import com.dynamictransport.dynamicone.domain.model.DocumentContentResult
+import com.dynamictransport.dynamicone.domain.model.DocumentRequirements
 import com.dynamictransport.dynamicone.domain.model.DocumentSlot
+import com.dynamictransport.dynamicone.domain.model.DrawnSignature
 import com.dynamictransport.dynamicone.domain.model.DriverTimes
 import com.dynamictransport.dynamicone.domain.model.ExecutionAction
+import com.dynamictransport.dynamicone.domain.model.HrContentResult
+import com.dynamictransport.dynamicone.domain.model.HrDocumentLists
+import com.dynamictransport.dynamicone.domain.model.HrDocumentLookup
+import com.dynamictransport.dynamicone.domain.model.HrSignResult
 import com.dynamictransport.dynamicone.domain.model.IncidentCategory
 import com.dynamictransport.dynamicone.domain.model.LocalPunch
 import com.dynamictransport.dynamicone.domain.model.LocalShiftCommand
@@ -19,6 +26,7 @@ import com.dynamictransport.dynamicone.domain.model.LoginResult
 import com.dynamictransport.dynamicone.domain.model.MonthlyPayroll
 import com.dynamictransport.dynamicone.domain.model.PasswordChangeResult
 import com.dynamictransport.dynamicone.domain.model.PendingTripAction
+import com.dynamictransport.dynamicone.domain.model.PersonnelDocumentHistory
 import com.dynamictransport.dynamicone.domain.model.PunchResult
 import com.dynamictransport.dynamicone.domain.model.RefreshResult
 import com.dynamictransport.dynamicone.domain.model.RejectReason
@@ -33,16 +41,21 @@ import com.dynamictransport.dynamicone.domain.model.TripActionRecord
 import com.dynamictransport.dynamicone.domain.model.TripActionType
 import com.dynamictransport.dynamicone.domain.model.TripDocument
 import com.dynamictransport.dynamicone.domain.model.TripExecution
+import com.dynamictransport.dynamicone.domain.model.TripTrailerState
 import com.dynamictransport.dynamicone.domain.model.UserProfile
+import com.dynamictransport.dynamicone.domain.model.VehicleDocumentsSnapshot
 import com.dynamictransport.dynamicone.domain.model.VehicleInfo
 import com.dynamictransport.dynamicone.domain.model.VehicleLookup
+import com.dynamictransport.dynamicone.domain.model.VehiclePositionState
 import com.dynamictransport.dynamicone.domain.rules.RestAlarmSettings
 import com.dynamictransport.dynamicone.domain.scan.ScanMode
 import com.dynamictransport.dynamicone.domain.scan.ScanOutcome
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
+import java.io.File
 import java.time.Instant
 import java.time.YearMonth
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flowOf
 
 interface AuthRepository {
     val sessionState: StateFlow<SessionState>
@@ -54,6 +67,15 @@ interface AuthRepository {
 
     fun observeProfile(): Flow<UserProfile?>
 
+    /** Path of the signed-in person's HR photo on the phone (docs/21); null when there is none. */
+    fun observePhoto(): Flow<String?> = flowOf(null)
+
+    /** The signed-in account's current fleet vehicle from `me`; trip and shift vehicles never stand in for it. */
+    fun observeAssignedVehicle(): Flow<AssignedVehicleState>
+
+    /** Reads `me` again (name, modules, assigned vehicle). A read that is already running is not repeated. */
+    suspend fun refreshProfile()
+
     suspend fun login(username: String, password: String, twoFactorCode: String? = null): LoginResult
 
     /** Revokes the server session (when supported) and always clears the local session. */
@@ -62,6 +84,14 @@ interface AuthRepository {
     suspend fun changePassword(currentPassword: String, newPassword: String): PasswordChangeResult
 
     suspend fun lastUsername(): String?
+}
+
+/** Last position of the signed-in driver's assigned vehicle (docs/19). Held in memory only. */
+interface VehiclePositionRepository {
+    fun observePosition(): Flow<VehiclePositionState>
+
+    /** A read that is already running is not repeated. */
+    suspend fun refresh(): RefreshResult
 }
 
 interface ShiftRepository {
@@ -193,6 +223,17 @@ interface TripExecutionRepository {
 
     /** Drops the stored command and reads the current plan. */
     suspend fun discardPending(tripId: String): RefreshResult
+
+    /** Trailer options and the confirmation of this trip; null until read (docs/20). */
+    fun observeTrailers(tripId: String): Flow<TripTrailerState?>
+
+    suspend fun refreshTrailers(tripId: String): RefreshResult
+
+    /**
+     * Confirms the trailer the driver picked from the list that was read. Needs a connection: the
+     * choice carries the version of that read and is never queued with an outdated version.
+     */
+    suspend fun confirmTrailer(tripId: String, trailerId: String): ActionResult
 }
 
 interface DocumentRepository {
@@ -306,6 +347,71 @@ interface AttendanceRepository {
     suspend fun refreshMonth(month: YearMonth): RefreshResult
 }
 
+/** Personnel documents to sign (docs/17_HR_DOCUMENT_SIGNING.md). */
+interface HrDocumentRepository {
+    /** Documents of the signed-in employee; the pending ones survive an app restart without network. */
+    fun observeLists(): Flow<HrDocumentLists>
+
+    fun observeDocument(documentId: String): Flow<HrDocumentLookup>
+
+    /** Reads the documents to sign and the first page of signed ones. */
+    suspend fun refresh(): RefreshResult
+
+    suspend fun loadMoreSigned(): RefreshResult
+
+    /** Reads one document, e.g. after a notification. */
+    suspend fun refreshDocument(documentId: String): RefreshResult
+
+    /** The PDF of one language version on the phone; downloaded and checked against its checksum when missing. */
+    suspend fun content(documentId: String, languageCode: String): HrContentResult
+
+    /** Stores the signature on the phone with a new command id first, then sends it. */
+    suspend fun sign(documentId: String, languageCode: String, contentSha256: String, signature: DrawnSignature): HrSignResult
+
+    /** Sends every waiting signature with its own command id. False: some must be tried again later. */
+    suspend fun sendPending(): Boolean
+
+    /** The signed proof PDF, downloaded for the in-app viewer. */
+    suspend fun openReceipt(documentId: String): DocumentContentResult
+}
+
+/**
+ * Files of the account's own personnel file: the history (module `hrDocuments`) and the driver's required documents
+ * (module `driver`). Read only and held in memory; a file is downloaded only to be viewed.
+ */
+interface MyDocumentRepository {
+    /** Null until read. */
+    fun observeHistory(): Flow<PersonnelDocumentHistory?>
+
+    /** Null until read. */
+    fun observeRequirements(): Flow<DocumentRequirements?>
+
+    /** Reads the first history page again. */
+    suspend fun refreshHistory(): RefreshResult
+
+    suspend fun loadMoreHistory(): RefreshResult
+
+    suspend fun refreshRequirements(): RefreshResult
+
+    /** The original file in a private temporary file for the in-app viewer. */
+    suspend fun open(documentId: String, contentTypeHint: String?): DocumentContentResult
+}
+
+/** Files of the driver's currently assigned vehicle; the server decides the vehicle on every read. */
+interface VehicleDocumentRepository {
+    /** Null until read; a stale answer of another vehicle than `me` names is never emitted. */
+    fun observe(): Flow<VehicleDocumentsSnapshot?>
+
+    suspend fun refresh(): RefreshResult
+
+    suspend fun open(documentId: String, contentTypeHint: String?): DocumentContentResult
+}
+
+/** Removes a file downloaded for viewing once the viewer closes: nothing is kept for offline use. */
+fun interface ViewedFileCleaner {
+    fun discard(filePath: String)
+}
+
 interface SyncRepository {
     fun observeOverview(): Flow<SyncOverview>
 
@@ -345,4 +451,8 @@ interface DemoBackendControls {
     fun setSimulateOffline(enabled: Boolean)
 
     suspend fun resetDemoData()
+}
+
+    /** Sends photos and failure reports waiting on the tablet. False when something must be tried again later. */
+    suspend fun sendPending(): Boolean
 }

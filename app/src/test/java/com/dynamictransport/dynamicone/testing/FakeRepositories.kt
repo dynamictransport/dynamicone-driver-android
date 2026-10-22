@@ -1,14 +1,17 @@
 package com.dynamictransport.dynamicone.testing
 
+import com.dynamictransport.dynamicone.core.location.PlaceNameResolver
 import com.dynamictransport.dynamicone.domain.model.ActionReceipt
 import com.dynamictransport.dynamicone.domain.model.ActionRejection
 import com.dynamictransport.dynamicone.domain.model.ActionResult
 import com.dynamictransport.dynamicone.domain.model.AppModule
+import com.dynamictransport.dynamicone.domain.model.AssignedVehicleState
 import com.dynamictransport.dynamicone.domain.model.Conversation
 import com.dynamictransport.dynamicone.domain.model.ConversationList
 import com.dynamictransport.dynamicone.domain.model.DocumentContentResult
 import com.dynamictransport.dynamicone.domain.model.DocumentSlot
 import com.dynamictransport.dynamicone.domain.model.ExecutionAction
+import com.dynamictransport.dynamicone.domain.model.GeoPoint
 import com.dynamictransport.dynamicone.domain.model.IncidentCategory
 import com.dynamictransport.dynamicone.domain.model.LoginResult
 import com.dynamictransport.dynamicone.domain.model.MonthlyPayroll
@@ -24,7 +27,9 @@ import com.dynamictransport.dynamicone.domain.model.Trip
 import com.dynamictransport.dynamicone.domain.model.TripActionRecord
 import com.dynamictransport.dynamicone.domain.model.TripDocument
 import com.dynamictransport.dynamicone.domain.model.TripExecution
+import com.dynamictransport.dynamicone.domain.model.TripTrailerState
 import com.dynamictransport.dynamicone.domain.model.UserProfile
+import com.dynamictransport.dynamicone.domain.model.VehiclePositionState
 import com.dynamictransport.dynamicone.domain.repository.AppInfo
 import com.dynamictransport.dynamicone.domain.repository.AuthRepository
 import com.dynamictransport.dynamicone.domain.repository.DocumentMediaStore
@@ -40,6 +45,7 @@ import com.dynamictransport.dynamicone.domain.repository.SyncRepository
 import com.dynamictransport.dynamicone.domain.repository.TripActionCommand
 import com.dynamictransport.dynamicone.domain.repository.TripExecutionRepository
 import com.dynamictransport.dynamicone.domain.repository.TripRepository
+import com.dynamictransport.dynamicone.domain.repository.VehiclePositionRepository
 import com.dynamictransport.dynamicone.domain.scan.ScanIssue
 import com.dynamictransport.dynamicone.domain.scan.ScanMode
 import com.dynamictransport.dynamicone.domain.scan.ScanOutcome
@@ -51,6 +57,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import java.time.Instant
 import java.time.YearMonth
+import java.util.Locale
 
 // Test doubles of the domain repositories. Test-only: never part of the app.
 
@@ -66,10 +73,18 @@ class FakeAuthRepository : AuthRepository {
     var logoutCalls = 0
     var passwordChangeResult = PasswordChangeResult.SUCCESS
     val passwordChanges = mutableListOf<Pair<String, String>>()
+    val assignedVehicle = MutableStateFlow<AssignedVehicleState>(AssignedVehicleState.Loading)
+    var profileRefreshes = 0
 
     override suspend fun restoreSession() = Unit
 
     override fun observeProfile(): Flow<UserProfile?> = driver
+
+    override fun observeAssignedVehicle(): Flow<AssignedVehicleState> = assignedVehicle
+
+    override suspend fun refreshProfile() {
+        profileRefreshes++
+    }
 
     override suspend fun login(username: String, password: String, twoFactorCode: String?): LoginResult {
         loginCalls++
@@ -159,13 +174,17 @@ class FakeTripExecutionRepository : TripExecutionRepository {
     val execution = MutableStateFlow<TripExecution?>(null)
     val pending = MutableStateFlow<PendingTripAction?>(null)
     val receipts = MutableStateFlow<List<ActionReceipt>>(emptyList())
+    val trailers = MutableStateFlow<TripTrailerState?>(null)
     val submitted = mutableListOf<Submitted>()
+    val confirmedTrailers = mutableListOf<Pair<String, String>>()
     var submitResult: ActionResult = ActionResult.Queued
     var resendResult: ActionResult = ActionResult.Queued
+    var confirmTrailerResult: ActionResult = ActionResult.Queued
     var gate: CompletableDeferred<Unit>? = null
     var resendCalls = 0
     var discardCalls = 0
     var receiptRefreshes = 0
+    var trailerRefreshes = 0
 
     override fun observeExecution(tripId: String): Flow<TripExecution?> = execution
 
@@ -193,6 +212,19 @@ class FakeTripExecutionRepository : TripExecutionRepository {
         discardCalls++
         pending.value = null
         return RefreshResult.SUCCESS
+    }
+
+    override fun observeTrailers(tripId: String): Flow<TripTrailerState?> = trailers
+
+    override suspend fun refreshTrailers(tripId: String): RefreshResult {
+        trailerRefreshes++
+        return RefreshResult.SUCCESS
+    }
+
+    override suspend fun confirmTrailer(tripId: String, trailerId: String): ActionResult {
+        confirmedTrailers += tripId to trailerId
+        gate?.await()
+        return confirmTrailerResult
     }
 }
 
@@ -228,6 +260,32 @@ class FakeSyncRepository : SyncRepository {
 class FakeNetworkMonitor(initiallyOnline: Boolean = true) : NetworkMonitor {
     val online = MutableStateFlow(initiallyOnline)
     override val isOnline: Flow<Boolean> = online
+}
+
+class FakeVehiclePositionRepository : VehiclePositionRepository {
+    val position = MutableStateFlow<VehiclePositionState>(VehiclePositionState.Loading)
+    var refreshes = 0
+
+    /** What the next reads answer; null keeps [position] as it is. */
+    var nextAnswer: VehiclePositionState? = null
+
+    override fun observePosition(): Flow<VehiclePositionState> = position
+
+    override suspend fun refresh(): RefreshResult {
+        refreshes++
+        nextAnswer?.let { position.value = it }
+        return RefreshResult.SUCCESS
+    }
+}
+
+/** Names points from a fixed table; a point without an entry has no name (coordinates are shown). */
+class FakePlaceNameResolver(private val names: Map<GeoPoint, String> = emptyMap()) : PlaceNameResolver {
+    val lookups = mutableListOf<GeoPoint>()
+
+    override suspend fun placeName(point: GeoPoint, locale: Locale): String? {
+        lookups += point
+        return names[point]
+    }
 }
 
 class FakeAppInfo(

@@ -22,6 +22,8 @@ import com.dynamictransport.dynamicone.core.network.DriverSlotStateNames
 import com.dynamictransport.dynamicone.core.network.DriverStatusNames
 import com.dynamictransport.dynamicone.core.network.DriverStatusResponseDto
 import com.dynamictransport.dynamicone.core.network.DriverStopResponseDto
+import com.dynamictransport.dynamicone.core.network.DriverTrailerOptionDto
+import com.dynamictransport.dynamicone.core.network.DriverTrailerStateDto
 import com.dynamictransport.dynamicone.core.network.DriverTripSummaryResponseDto
 import com.dynamictransport.dynamicone.core.network.RemoteException
 import com.dynamictransport.dynamicone.domain.model.ActionReceipt
@@ -43,6 +45,7 @@ import com.dynamictransport.dynamicone.domain.model.SignedDocumentType
 import com.dynamictransport.dynamicone.domain.model.StopActivity
 import com.dynamictransport.dynamicone.domain.model.StopStatus
 import com.dynamictransport.dynamicone.domain.model.SyncState
+import com.dynamictransport.dynamicone.domain.model.TrailerOption
 import com.dynamictransport.dynamicone.domain.model.Trip
 import com.dynamictransport.dynamicone.domain.model.TripActionRecord
 import com.dynamictransport.dynamicone.domain.model.TripActionType
@@ -52,6 +55,7 @@ import com.dynamictransport.dynamicone.domain.model.TripExecution
 import com.dynamictransport.dynamicone.domain.model.TripLocation
 import com.dynamictransport.dynamicone.domain.model.TripState
 import com.dynamictransport.dynamicone.domain.model.TripStop
+import com.dynamictransport.dynamicone.domain.model.TripTrailerState
 import com.dynamictransport.dynamicone.domain.model.TripWorkflow
 import java.time.LocalDate
 import java.time.YearMonth
@@ -169,10 +173,14 @@ internal object DriverApiMapping {
             workflow = workflow,
             availableActions = if (workflow == TripWorkflow.TRIP_ACTIONS) dto.availableActions.orEmpty().mapNotNull(::action) else emptyList(),
             documents = dto.documents.orEmpty().mapNotNull(::slot),
+            trailerConfirmationRequired = dto.trailerConfirmationRequired,
         )
     }
 
-    /** Unknown codes are dropped: an option whose meaning is unknown is never offered. */
+    /**
+     * Unknown codes are dropped: an option whose meaning is unknown is never offered. Without `canExecute`
+     * (backends before docs/18) the action is not blocked; the server still refuses it if evidence is missing.
+     */
     fun action(dto: DriverAvailableActionDto): ExecutionAction? {
         val code = actionCode(dto.code) ?: return null
         return ExecutionAction(
@@ -180,6 +188,35 @@ internal object DriverApiMapping {
             label = dto.label?.trim()?.takeIf { it.isNotEmpty() },
             stopId = dto.stopId,
             containerId = dto.containerId,
+            blockingDocumentSlots = dto.blockingDocumentSlots.orEmpty().filter { it.isNotBlank() }.distinct(),
+            canExecute = dto.canExecute ?: true,
+            blockedByTrailer = dto.blockingReason?.trim() == DriverExecutionNames.BLOCKED_TRAILER_CONFIRMATION,
+        )
+    }
+
+    /**
+     * Trailer options of a trip (docs/20). An option without a registration is dropped: the driver has to
+     * read the registration of the trailer in front of them.
+     */
+    fun trailerState(tripId: String, dto: DriverTrailerStateDto): TripTrailerState {
+        val version = dto.version?.takeIf { it.isNotBlank() } ?: throw RemoteException.InvalidResponse()
+        return TripTrailerState(
+            tripId = tripId,
+            version = version,
+            plannedTrailerId = dto.plannedTrailerId?.takeIf { it.isNotBlank() },
+            confirmedTrailerId = dto.confirmedTrailerId?.takeIf { it.isNotBlank() },
+            confirmedAt = dto.confirmedAtUtc?.toInstantOrNull(),
+            canConfirm = dto.canConfirm,
+            trailers = dto.trailers.orEmpty().mapNotNull(::trailerOption),
+        )
+    }
+
+    fun trailerOption(dto: DriverTrailerOptionDto): TrailerOption? {
+        val registration = dto.registrationNumber?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+        return TrailerOption(
+            id = dto.id,
+            registrationNumber = registration,
+            companyCode = dto.companyCode?.trim()?.takeIf { it.isNotEmpty() },
         )
     }
 
@@ -302,6 +339,7 @@ internal object DriverApiMapping {
             pickupAddress = pickup?.address,
             deliveryAddress = delivery?.address,
             vehiclePlate = summary.vehicleRegistration?.takeIf { it.isNotBlank() },
+            vehicleCompanyCode = summary.vehicleCompanyCode?.takeIf { it.isNotBlank() },
             trailerPlate = null,
             sealNo = units.firstNotNullOfOrNull { it.sealNumber },
             instructions = instructions?.takeIf { it.isNotBlank() },

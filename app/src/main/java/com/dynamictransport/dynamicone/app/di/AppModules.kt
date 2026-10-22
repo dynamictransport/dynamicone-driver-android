@@ -33,6 +33,7 @@ import com.dynamictransport.dynamicone.core.database.CheckPhotoDao
 import com.dynamictransport.dynamicone.core.database.DocumentDao
 import com.dynamictransport.dynamicone.core.database.DriverCacheDao
 import com.dynamictransport.dynamicone.core.database.DriverProfileDao
+import com.dynamictransport.dynamicone.core.database.HrDocumentDao
 import com.dynamictransport.dynamicone.core.database.PendingActionDao
 import com.dynamictransport.dynamicone.core.database.PendingCommandDao
 import com.dynamictransport.dynamicone.core.database.ShiftCommandDao
@@ -87,15 +88,21 @@ import com.dynamictransport.dynamicone.data.real.ApiDriverDaySessionData
 import com.dynamictransport.dynamicone.data.real.ApiDriverTimesRepository
 import com.dynamictransport.dynamicone.data.real.ApiShiftRepository
 import com.dynamictransport.dynamicone.data.real.ApiVehicleCheckRepository
-import com.dynamictransport.dynamicone.data.real.DriverDaySessionData
+import com.dynamictransport.dynamicone.data.real.ApiVehiclePositionRepository
+import com.dynamictransport.dynamicone.data.real.DownloadedFileCleaner
 import com.dynamictransport.dynamicone.data.real.DriverAccountRemote
+import com.dynamictransport.dynamicone.data.real.DriverDaySessionData
+import com.dynamictransport.dynamicone.data.real.FreeSpace
+import com.dynamictransport.dynamicone.data.real.HrDocumentSessionData
 import com.dynamictransport.dynamicone.data.real.MobileAccountRemote
 import com.dynamictransport.dynamicone.data.real.NoOpSyncRunner
 import com.dynamictransport.dynamicone.data.real.RealAttendanceRepository
 import com.dynamictransport.dynamicone.data.real.RealAuthRepository
 import com.dynamictransport.dynamicone.data.real.RealDocumentRepository
+import com.dynamictransport.dynamicone.data.real.RealHrDocumentRepository
 import com.dynamictransport.dynamicone.data.real.RealIncidentRepository
 import com.dynamictransport.dynamicone.data.real.RealMessageRepository
+import com.dynamictransport.dynamicone.data.real.RealMyDocumentRepository
 import com.dynamictransport.dynamicone.data.real.RealNetworkMonitor
 import com.dynamictransport.dynamicone.data.real.RealPayrollRepository
 import com.dynamictransport.dynamicone.data.real.RealPushRegistrar
@@ -104,6 +111,7 @@ import com.dynamictransport.dynamicone.data.real.RealSignedDocumentRepository
 import com.dynamictransport.dynamicone.data.real.RealSyncRepository
 import com.dynamictransport.dynamicone.data.real.RealTripExecutionRepository
 import com.dynamictransport.dynamicone.data.real.RealTripRepository
+import com.dynamictransport.dynamicone.data.real.RealVehicleDocumentRepository
 import com.dynamictransport.dynamicone.data.real.UnavailableDriverRemoteDataSource
 import com.dynamictransport.dynamicone.data.remote.DriverRemoteDataSource
 import com.dynamictransport.dynamicone.data.remote.fake.FakeDriverBackend
@@ -125,8 +133,10 @@ import com.dynamictransport.dynamicone.domain.repository.DocumentMediaStore
 import com.dynamictransport.dynamicone.domain.repository.DocumentRepository
 import com.dynamictransport.dynamicone.domain.repository.DocumentScanner
 import com.dynamictransport.dynamicone.domain.repository.DriverTimesRepository
+import com.dynamictransport.dynamicone.domain.repository.HrDocumentRepository
 import com.dynamictransport.dynamicone.domain.repository.IncidentRepository
 import com.dynamictransport.dynamicone.domain.repository.MessageRepository
+import com.dynamictransport.dynamicone.domain.repository.MyDocumentRepository
 import com.dynamictransport.dynamicone.domain.repository.NetworkMonitor
 import com.dynamictransport.dynamicone.domain.repository.PayrollRepository
 import com.dynamictransport.dynamicone.domain.repository.RestAlarmSettingsRepository
@@ -136,12 +146,20 @@ import com.dynamictransport.dynamicone.domain.repository.SyncRepository
 import com.dynamictransport.dynamicone.domain.repository.TripExecutionRepository
 import com.dynamictransport.dynamicone.domain.repository.TripRepository
 import com.dynamictransport.dynamicone.domain.repository.VehicleCheckRepository
+import com.dynamictransport.dynamicone.domain.repository.VehicleDocumentRepository
+import com.dynamictransport.dynamicone.domain.repository.VehiclePositionRepository
+import com.dynamictransport.dynamicone.domain.repository.ViewedFileCleaner
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import java.io.File
+import java.time.Clock
+import javax.inject.Provider
+import javax.inject.Qualifier
+import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -151,11 +169,6 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
-import java.io.File
-import java.time.Clock
-import javax.inject.Provider
-import javax.inject.Qualifier
-import javax.inject.Singleton
 
 /** Demo data is reachable only in debug builds that select it explicitly; release always uses the real API. */
 private fun isDemoMode(): Boolean = BackendModeResolver.current == BackendMode.DEMO
@@ -247,6 +260,10 @@ object DatabaseModule {
 
     @Provides
     fun provideDriverCacheDao(database: AppDatabase): DriverCacheDao = database.driverCacheDao()
+
+    @Provides
+    fun provideHrDocumentDao(database: AppDatabase): HrDocumentDao = database.hrDocumentDao()
+
 }
 
 @Module
@@ -429,6 +446,15 @@ object RepositoryModule {
     fun providePayrollRepository(real: Provider<RealPayrollRepository>): PayrollRepository =
         if (isDemoMode()) UnavailablePayrollRepository else real.get()
 
+    /** No flag: until the backend has docs/19 the endpoint answers 404 and the app shows no position. */
+    @Provides
+    fun provideVehiclePositionRepository(real: Provider<ApiVehiclePositionRepository>): VehiclePositionRepository =
+        if (isDemoMode()) UnavailableVehiclePositionRepository else real.get()
+
+    @Provides
+    @Singleton
+    fun providePlaceNameResolver(@ApplicationContext context: Context): PlaceNameResolver = GeocoderPlaceNameResolver(context)
+
     @Provides
     fun provideAttendanceRepository(real: Provider<RealAttendanceRepository>): AttendanceRepository =
         if (isDemoMode()) UnavailableAttendanceRepository else real.get()
@@ -448,6 +474,24 @@ object RepositoryModule {
     @Provides
     fun provideNetworkMonitor(demo: Provider<AppNetworkMonitor>, real: Provider<RealNetworkMonitor>): NetworkMonitor =
         if (isDemoMode()) demo.get() else real.get()
+
+    /** Personnel documents to sign come from the Mobile API only (docs/17); screens appear with the `hrDocuments` module. */
+    @Provides
+    fun provideHrDocumentRepository(real: Provider<RealHrDocumentRepository>): HrDocumentRepository =
+        if (isDemoMode()) UnavailableHrDocumentRepository else real.get()
+
+    @Provides
+    fun provideHrDocumentSessionData(real: Provider<RealHrDocumentRepository>): HrDocumentSessionData =
+        if (isDemoMode()) HrDocumentSessionData.None else real.get()
+
+    /** Personnel and vehicle files come from the Mobile API only; the demo invents none. */
+    @Provides
+    fun provideMyDocumentRepository(real: Provider<RealMyDocumentRepository>): MyDocumentRepository =
+        if (isDemoMode()) UnavailableMyDocumentRepository else real.get()
+
+    @Provides
+    fun provideVehicleDocumentRepository(real: Provider<RealVehicleDocumentRepository>): VehicleDocumentRepository =
+        if (isDemoMode()) UnavailableVehicleDocumentRepository else real.get()
 
     @Provides
     fun provideSyncRunner(demo: Provider<SyncEngine>): SyncRunner = if (isDemoMode()) demo.get() else NoOpSyncRunner
@@ -503,8 +547,29 @@ abstract class BindingsModule {
     abstract fun bindRestAlarmNotifier(impl: AndroidRestAlarmNotifier): RestAlarmNotifier
 
     @Binds
+    abstract fun bindProfilePhotoImages(impl: AndroidProfilePhotoImages): ProfilePhotoImages
+
+    @Binds
     abstract fun bindRestAlarmPermissions(impl: AndroidRestAlarmPermissions): RestAlarmPermissions
 
     @Binds
     abstract fun bindRestAlarmSettings(impl: DataStoreRestAlarmSettings): RestAlarmSettingsRepository
+
+    @Binds
+    abstract fun bindHrDocumentSyncScheduler(impl: WorkManagerHrDocumentSyncScheduler): HrDocumentSyncScheduler
+
+    @Binds
+    abstract fun bindFreeSpace(impl: AndroidFreeSpace): FreeSpace
+
+    @Binds
+    abstract fun bindHrDocumentNotifier(impl: AndroidHrDocumentNotifier): HrDocumentNotifier
+
+    @Binds
+    abstract fun bindPdfDocumentOpener(impl: AndroidPdfDocumentOpener): PdfDocumentOpener
+
+    @Binds
+    abstract fun bindViewedFileCleaner(impl: DownloadedFileCleaner): ViewedFileCleaner
+
+    @Binds
+    abstract fun bindImageDecoder(impl: AndroidDocumentImageDecoder): DocumentImageDecoder
 }

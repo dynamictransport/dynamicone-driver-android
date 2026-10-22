@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Trailer confirmation after accepting a trip (docs/20_DRIVER_TRAILER_CONFIRMATION.md) -->
+    <string name="trailer_title">Trailer</string>
+    <string name="trailer_question">Which trailer is under your truck?</string>
+    <string name="trailer_change_hint">Pick another trailer to change it.</string>
+    <string name="trailer_planned">Planned</string>
+    <string name="trailer_search">Search registration</string>
+    <string name="trailer_search_clear">Clear the search</string>
+    <string name="trailer_no_match">No trailer matches your search.</string>
+    <string name="trailer_confirm">CONFIRM THE TRAILER</string>
+    <string name="trailer_confirmed_banner">Confirmed: %1$s</string>
+    <string name="trailer_confirmed_banner_at">Confirmed: %1$s · %2$s</string>
+    <string name="trailer_confirmed_label">Trailer (confirmed)</string>
+    <string name="trailer_confirmed_message">Trailer confirmed.</string>
+    <string name="trailer_locked">The trip has started: the trailer cannot be changed here.</string>
+    <string name="trailer_none_title">No active trailer in the list</string>
+    <string name="trailer_none_body">Call the office. The app cannot add a trailer.</string>
+
+    <!-- Trip screen while the trip cannot start yet -->
+    <string name="trailer_required_hint">Confirm the trailer under your truck before you start.</string>
+    <string name="trailer_select_action">SELECT THE TRAILER</string>
+</resources>

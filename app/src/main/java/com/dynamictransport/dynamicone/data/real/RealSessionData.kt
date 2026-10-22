@@ -17,7 +17,11 @@ class RealSessionData @Inject constructor(
     private val downloader: ProtectedFileDownloader,
     private val commands: PendingCommandStore,
     private val attendance: RealAttendanceRepository,
+    private val vehiclePosition: ApiVehiclePositionRepository,
+    private val myDocuments: RealMyDocumentRepository,
+    private val vehicleDocuments: RealVehicleDocumentRepository,
     private val driverDay: DriverDaySessionData = DriverDaySessionData.None,
+    private val hrDocuments: HrDocumentSessionData = HrDocumentSessionData.None,
 ) {
     /** Server data held in memory plus temporary viewing files. */
     suspend fun clearServerData() {
@@ -30,7 +34,11 @@ class RealSessionData @Inject constructor(
         sync.reset()
         downloader.clear()
         attendance.clear()
+        vehiclePosition.clear()
+        myDocuments.clear()
+        vehicleDocuments.clear()
         driverDay.clear()
+        hrDocuments.clear()
     }
 
     /** Signing out or changing the password removes the driver's unconfirmed commands too. */
@@ -45,6 +53,7 @@ class RealSessionData @Inject constructor(
         if (driverId == null) commands.clear() else commands.keepOnly(driverId)
         attendance.keepOnly(profile.id)
         driverDay.keepOnly(driverId)
+        hrDocuments.keepOnly(profile.id)
     }
 }
 
@@ -85,5 +94,21 @@ class ApiDriverDaySessionData @Inject constructor(
             cache.keepOnly(driverId)
             shift.keepOnly(driverId)
         }
+    }
+}
+
+/**
+ * The personnel documents of the signed-in account (docs/17). Signatures waiting on the phone stay when the session
+ * ends, like attendance punches; another account signing in removes them.
+ */
+interface HrDocumentSessionData {
+    suspend fun clear()
+
+    suspend fun keepOnly(userId: String)
+
+    object None : HrDocumentSessionData {
+        override suspend fun clear() = Unit
+
+        override suspend fun keepOnly(userId: String) = Unit
     }
 }

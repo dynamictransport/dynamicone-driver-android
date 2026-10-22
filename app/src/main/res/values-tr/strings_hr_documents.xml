@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Personel evrakı imzalatma (docs/17_HR_DOCUMENT_SIGNING.md) -->
+    <string name="nav_hr_documents">Evraklarım</string>
+    <string name="hr_documents_title">Personel evraklarım</string>
+    <string name="hr_pending_header">İmzanızı bekleyenler</string>
+    <string name="hr_signed_header">İmzaladıklarınız</string>
+    <string name="hr_none_pending">İmzalanacak evrak yok.</string>
+    <string name="hr_none_signed">Uygulamadan henüz evrak imzalamadınız.</string>
+    <string name="hr_access_removed">Hesabınız artık uygulamadan evrak imzalayamıyor. Lütfen ofise başvurun.</string>
+
+    <string name="hr_due_later">Son gün: %1$s</string>
+    <string name="hr_due_today">Bugün son gün, %1$s</string>
+    <string name="hr_due_tomorrow">Yarın son gün, %1$s</string>
+    <string name="hr_overdue">Süresi geçti (%1$s)</string>
+    <string name="hr_no_deadline">Son gün yok</string>
+    <string name="hr_state_waiting">Telefonda imzalandı, gönderilmeyi bekliyor</string>
+    <string name="hr_state_waiting_access">Telefonda imzalandı. Sunucu bu hesaptan henüz evrak kabul etmiyor; daha sonra gönderilecek.</string>
+    <string name="hr_state_failed">Kabul edilmedi: yeniden imzalayın</string>
+    <string name="hr_withdrawn">Ofis bu evrakı geri çekti. İmzalamanız gerekmiyor.</string>
+    <string name="hr_missing">Bu evrak artık yok.</string>
+
+    <string name="hr_signed_at">İmzalandı: %1$s</string>
+    <string name="hr_signed_language">İmzalanan dil: %1$s</string>
+    <string name="hr_version">Sürüm %1$s</string>
+    <string name="hr_sent_at">Gönderildi: %1$s</string>
+    <string name="hr_reference_language">Dil sürümleri arasında fark olursa geçerli metin: %1$s.</string>
+    <string name="hr_language_label">Evrak dili</string>
+    <string name="hr_language_multi">Tüm diller</string>
+
+    <string name="hr_scroll_to_sign">İmzalamak için belgeyi sonuna kadar okuyun</string>
+    <string name="hr_page_of">Sayfa %1$d / %2$d</string>
+    <string name="hr_page_zoom">Büyütmek için sayfaya dokunun</string>
+    <string name="hr_zoom_close">Kapat</string>
+    <string name="hr_content_loading">Evrak yükleniyor…</string>
+    <string name="hr_content_offline">Evrak indirilemedi. İnternet bağlantısını kontrol edin.</string>
+    <string name="hr_content_integrity">İndirilen dosya bozuk. Tekrar deneyin.</string>
+    <string name="hr_content_open_failed">Evrak bu telefonda gösterilemiyor. Lütfen ofise başvurun.</string>
+
+    <string name="hr_declaration_title">Beyan</string>
+    <string name="hr_declaration_accept">Belgeyi okudum ve anladım</string>
+    <string name="hr_signature_title">Parmağınızla imzalayın</string>
+    <string name="hr_signature_hint">İmzanızı kutunun içine çizin.</string>
+    <string name="hr_signature_pad">İmza alanı</string>
+    <string name="hr_signature_clear">Temizle</string>
+    <string name="hr_sign_action">İMZALA VE GÖNDER</string>
+    <string name="hr_sign_needs">Devam etmek için kutuyu işaretleyin ve imzalayın.</string>
+
+    <string name="hr_signed_success">İmzanız kaydedildi.</string>
+    <string name="hr_saved_offline">Telefona kaydedildi. İnternet gelince otomatik gönderilecek.</string>
+    <string name="hr_already_signed">Bu evrak zaten imzalanmış.</string>
+    <string name="hr_failure_changed">Ofis evrakı değiştirdi. Yeni sürümü okuyup yeniden imzalayın.</string>
+    <string name="hr_failure_signature">İmza kabul edilmedi. Yeniden imzalayın.</string>
+    <string name="hr_failure_language">Bu dil sürümü artık yok. Başka bir dil seçin.</string>
+    <string name="hr_failure_rejected">Sunucu imzayı kabul etmedi. Yeniden imzalayın veya ofise başvurun.</string>
+
+    <string name="hr_open_receipt">İMZALI PDF\'İ AÇ</string>
+    <string name="hr_receipt_pending">İmzalı PDF hazırlanıyor. Birkaç dakika sonra tekrar deneyin.</string>
+
+    <plurals name="hr_banner_pending">
+        <item quantity="one">İmzanızı bekleyen %1$d evrak var</item>
+        <item quantity="other">İmzanızı bekleyen %1$d evrak var</item>
+    </plurals>
+    <string name="hr_banner_open">Aç</string>
+    <plurals name="hr_badge">
+        <item quantity="one">İmzalanacak %1$d evrak</item>
+        <item quantity="other">İmzalanacak %1$d evrak</item>
+    </plurals>
+
+    <string name="notification_channel_hr_documents">İmzalanacak evraklar</string>
+    <string name="push_hr_document_title">İmzanızı bekleyen yeni evrak</string>
+    <string name="push_hr_document_body">Okumak ve imzalamak için dokunun.</string>
+    <string name="push_hr_document_reminder_title">Hatırlatma: imza bekleyen evrak</string>
+    <string name="push_hr_document_reminder_body">İmza için son gün yaklaşıyor.</string>
+    <string name="push_hr_document_overdue_title">İmza süresi geçti</string>
+    <string name="push_hr_document_overdue_body">Lütfen evrakı okuyup imzalayın.</string>
+</resources>

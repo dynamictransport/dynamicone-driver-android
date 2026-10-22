@@ -124,7 +124,8 @@ internal fun RemoteException.toActionRejection(): ActionRejection = when (this) 
     is RemoteException.Unauthorized -> ActionRejection.SESSION_EXPIRED
     is RemoteException.Forbidden -> ActionRejection.FORBIDDEN
     is RemoteException.NotFound -> if (isApiDisabled) ActionRejection.SERVICE_UNAVAILABLE else ActionRejection.NOT_FOUND
-    is RemoteException.Conflict -> ActionRejection.CONFLICT
+    is RemoteException.Conflict ->
+        if (problem?.code == DriverErrorCodes.REQUIRED_DOCUMENTS_MISSING) ActionRejection.DOCUMENTS_REQUIRED else ActionRejection.CONFLICT
     is RemoteException.Validation -> when (problem?.code) {
         DriverErrorCodes.INVALID_DOCUMENT_SIZE -> ActionRejection.FILE_TOO_LARGE
         DriverErrorCodes.DOCUMENT_REJECTED -> ActionRejection.UNSUPPORTED_FILE

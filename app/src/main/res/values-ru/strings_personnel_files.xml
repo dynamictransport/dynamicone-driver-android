@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Own personnel file and assigned vehicle files (Mobile API me/documents, me/assigned-vehicle/documents). -->
+    <string name="nav_my_documents">Мои файлы</string>
+    <string name="my_documents_title">Мои документы</string>
+    <string name="vehicle_documents_title">Документы ТС</string>
+    <string name="my_documents_required">Обязательные документы</string>
+    <string name="my_documents_history">История документов</string>
+    <string name="my_documents_no_upload">Документы добавляет офис. По поводу отсутствующего или нового документа обратитесь в офис.</string>
+    <string name="documents_summary_valid">Действительны</string>
+    <string name="documents_summary_expiring">Скоро истекают</string>
+    <string name="documents_summary_expired">Просрочены</string>
+    <string name="documents_summary_missing">Нет или неполные</string>
+    <string name="requirement_status_missing">Отсутствует</string>
+    <string name="requirement_status_incomplete">Неполный</string>
+    <string name="requirement_status_expired">Просрочен</string>
+    <string name="requirement_status_expiring">Скоро истекает</string>
+    <string name="requirement_status_valid">Действителен</string>
+    <string name="requirement_status_unknown">Статус неизвестен</string>
+    <string name="document_expires_on">Действителен до %1$s</string>
+    <string name="document_expired_on">Истёк %1$s</string>
+    <string name="document_uploaded_on">Загружен %1$s</string>
+    <string name="document_current">Текущий</string>
+    <string name="document_open">Открыть</string>
+    <string name="document_no_file">Нет файла</string>
+    <string name="personnel_type_other">Документ</string>
+    <string name="my_documents_history_empty">В вашем личном деле пока нет документов.</string>
+    <string name="my_documents_requirements_empty">Обязательные документы не указаны.</string>
+    <string name="personnel_type_passport">Паспорт</string>
+    <string name="personnel_type_residence_permit">Вид на жительство</string>
+    <string name="personnel_type_visa">Виза</string>
+    <string name="personnel_type_work_permit">Разрешение на работу</string>
+    <string name="personnel_type_employment_contract">Трудовой договор</string>
+    <string name="personnel_type_a1">Сертификат A1</string>
+    <string name="personnel_type_code95">Код 95</string>
+    <string name="personnel_type_driving_licence">Водительское удостоверение</string>
+    <string name="personnel_type_red_document">Красный документ</string>
+    <string name="personnel_type_tachograph_card">Карта тахографа</string>
+    <string name="personnel_type_adr">Свидетельство ДОПОГ (ADR)</string>
+    <string name="personnel_type_occupational_safety">Удостоверение по охране труда</string>
+    <string name="personnel_type_psychotechnical">Психотехническое заключение</string>
+    <string name="personnel_type_medical">Медицинская справка</string>
+    <string name="personnel_type_ehic">Европейская карта медицинского страхования</string>
+    <string name="vehicle_type_insurance">Страховка</string>
+    <string name="vehicle_type_transport_license">Транспортная лицензия</string>
+    <string name="vehicle_type_registration">Свидетельство о регистрации</string>
+    <string name="vehicle_document_available">Есть</string>
+    <string name="vehicle_documents_other">Другие файлы</string>
+    <string name="vehicle_documents_none_title">За вами не закреплено ТС</string>
+    <string name="vehicle_documents_none_body">Когда офис закрепит за вами ТС, его документы появятся здесь.</string>
+    <string name="document_viewer_loading">Открываем документ…</string>
+    <string name="document_viewer_not_found">Файл не найден, или у вас больше нет к нему доступа.</string>
+    <string name="document_viewer_storage_unavailable">Сейчас документ прочитать нельзя. Попробуйте чуть позже.</string>
+    <string name="document_viewer_unreadable">Этот файл нельзя показать на телефоне.</string>
+    <string name="document_viewer_image">Изображение документа</string>
+</resources>

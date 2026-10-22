@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Кадровые документы на подпись (docs/17_HR_DOCUMENT_SIGNING.md) -->
+    <string name="nav_hr_documents">Документы</string>
+    <string name="hr_documents_title">Мои кадровые документы</string>
+    <string name="hr_pending_header">Ждут вашей подписи</string>
+    <string name="hr_signed_header">Подписанные</string>
+    <string name="hr_none_pending">Нет документов на подпись.</string>
+    <string name="hr_none_signed">Вы ещё не подписали ни одного документа в приложении.</string>
+    <string name="hr_access_removed">С вашей учётной записи больше нельзя подписывать документы в приложении. Обратитесь в офис.</string>
+
+    <string name="hr_due_later">Подписать до %1$s</string>
+    <string name="hr_due_today">Последний день сегодня, %1$s</string>
+    <string name="hr_due_tomorrow">Последний день завтра, %1$s</string>
+    <string name="hr_overdue">Срок истёк (%1$s)</string>
+    <string name="hr_no_deadline">Без срока</string>
+    <string name="hr_state_waiting">Подписано в телефоне, ожидает отправки</string>
+    <string name="hr_state_waiting_access">Подписано в телефоне. Сервер пока не принимает документы с этой учётной записи; документ будет отправлен позже.</string>
+    <string name="hr_state_failed">Не принято: подпишите снова</string>
+    <string name="hr_withdrawn">Офис отозвал этот документ. Подписывать его не нужно.</string>
+    <string name="hr_missing">Этот документ больше недоступен.</string>
+
+    <string name="hr_signed_at">Подписано: %1$s</string>
+    <string name="hr_signed_language">Подписанная версия: %1$s</string>
+    <string name="hr_version">Версия %1$s</string>
+    <string name="hr_sent_at">Отправлено: %1$s</string>
+    <string name="hr_reference_language">При расхождении языковых версий действует версия: %1$s.</string>
+    <string name="hr_language_label">Язык документа</string>
+    <string name="hr_language_multi">Все языки</string>
+
+    <string name="hr_scroll_to_sign">Прочитайте документ до конца, чтобы подписать его</string>
+    <string name="hr_page_of">Страница %1$d из %2$d</string>
+    <string name="hr_page_zoom">Нажмите на страницу, чтобы увеличить её</string>
+    <string name="hr_zoom_close">Закрыть</string>
+    <string name="hr_content_loading">Загрузка документа…</string>
+    <string name="hr_content_offline">Не удалось загрузить документ. Проверьте подключение к интернету.</string>
+    <string name="hr_content_integrity">Загруженный файл повреждён. Попробуйте снова.</string>
+    <string name="hr_content_open_failed">Этот документ нельзя показать на этом телефоне. Обратитесь в офис.</string>
+
+    <string name="hr_declaration_title">Заявление</string>
+    <string name="hr_declaration_accept">Я прочитал(а) документ и понимаю его</string>
+    <string name="hr_signature_title">Подпишите пальцем</string>
+    <string name="hr_signature_hint">Нарисуйте подпись в рамке.</string>
+    <string name="hr_signature_pad">Поле подписи</string>
+    <string name="hr_signature_clear">Очистить</string>
+    <string name="hr_sign_action">ПОДПИСАТЬ И ОТПРАВИТЬ</string>
+    <string name="hr_sign_needs">Отметьте поле и подпишите, чтобы продолжить.</string>
+
+    <string name="hr_signed_success">Ваша подпись сохранена.</string>
+    <string name="hr_saved_offline">Сохранено в телефоне. Будет отправлено автоматически, когда появится интернет.</string>
+    <string name="hr_already_signed">Этот документ уже подписан.</string>
+    <string name="hr_failure_changed">Офис изменил документ. Прочитайте новую версию и подпишите снова.</string>
+    <string name="hr_failure_signature">Подпись не принята. Подпишите снова.</string>
+    <string name="hr_failure_language">Эта языковая версия больше недоступна. Выберите другой язык.</string>
+    <string name="hr_failure_rejected">Сервер не принял подпись. Подпишите снова или обратитесь в офис.</string>
+
+    <string name="hr_open_receipt">ОТКРЫТЬ ПОДПИСАННЫЙ PDF</string>
+    <string name="hr_receipt_pending">Подписанный PDF готовится. Попробуйте через несколько минут.</string>
+
+    <plurals name="hr_banner_pending">
+        <item quantity="one">%1$d документ ждёт вашей подписи</item>
+        <item quantity="few">%1$d документа ждут вашей подписи</item>
+        <item quantity="many">%1$d документов ждут вашей подписи</item>
+        <item quantity="other">%1$d документа ждут вашей подписи</item>
+    </plurals>
+    <string name="hr_banner_open">Открыть</string>
+    <plurals name="hr_badge">
+        <item quantity="one">%1$d документ на подпись</item>
+        <item quantity="few">%1$d документа на подпись</item>
+        <item quantity="many">%1$d документов на подпись</item>
+        <item quantity="other">%1$d документа на подпись</item>
+    </plurals>
+
+    <!-- Уведомления; ключи push_hr_document_* также использует системное уведомление бэкенда. -->
+    <string name="notification_channel_hr_documents">Документы на подпись</string>
+    <string name="push_hr_document_title">Новый документ на подпись</string>
+    <string name="push_hr_document_body">Нажмите, чтобы прочитать и подписать.</string>
+    <string name="push_hr_document_reminder_title">Напоминание: документ на подпись</string>
+    <string name="push_hr_document_reminder_body">Срок подписания приближается.</string>
+    <string name="push_hr_document_overdue_title">Срок подписания истёк</string>
+    <string name="push_hr_document_overdue_body">Прочитайте и подпишите документ.</string>
+</resources>

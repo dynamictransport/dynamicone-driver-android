@@ -19,3 +19,4 @@ secrets.properties
 google-services.json
 # Machine-specific ASP.NET Core development certificate for debug builds (tools/Export-DevHttpsCertificate.ps1)
 /app/dev-https/res/raw/
+keystore.properties

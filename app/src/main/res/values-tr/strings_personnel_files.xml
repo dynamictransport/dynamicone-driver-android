@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Own personnel file and assigned vehicle files (Mobile API me/documents, me/assigned-vehicle/documents). -->
+    <string name="nav_my_documents">Belgelerim</string>
+    <string name="my_documents_title">Belgelerim</string>
+    <string name="vehicle_documents_title">Araç belgeleri</string>
+    <string name="my_documents_required">Zorunlu belgeler</string>
+    <string name="my_documents_history">Belge geçmişi</string>
+    <string name="my_documents_no_upload">Belgeleri ofis ekler. Eksik ya da yeni belge için ofisle iletişime geçin.</string>
+    <string name="documents_summary_valid">Geçerli</string>
+    <string name="documents_summary_expiring">Süresi yaklaşıyor</string>
+    <string name="documents_summary_expired">Süresi dolmuş</string>
+    <string name="documents_summary_missing">Eksik veya tamamlanmamış</string>
+    <string name="requirement_status_missing">Eksik</string>
+    <string name="requirement_status_incomplete">Tamamlanmamış</string>
+    <string name="requirement_status_expired">Süresi dolmuş</string>
+    <string name="requirement_status_expiring">Süresi yaklaşıyor</string>
+    <string name="requirement_status_valid">Geçerli</string>
+    <string name="requirement_status_unknown">Durumu bilinmiyor</string>
+    <string name="document_expires_on">Geçerlilik: %1$s</string>
+    <string name="document_expired_on">Süresi doldu: %1$s</string>
+    <string name="document_uploaded_on">Yüklendi: %1$s</string>
+    <string name="document_current">Güncel</string>
+    <string name="document_open">Aç</string>
+    <string name="document_no_file">Dosya yok</string>
+    <string name="personnel_type_other">Belge</string>
+    <string name="my_documents_history_empty">Personel dosyanızda henüz belge yok.</string>
+    <string name="my_documents_requirements_empty">Listelenen zorunlu belge yok.</string>
+    <string name="personnel_type_passport">Pasaport</string>
+    <string name="personnel_type_residence_permit">Oturma izni</string>
+    <string name="personnel_type_visa">Vize</string>
+    <string name="personnel_type_work_permit">Çalışma izni</string>
+    <string name="personnel_type_employment_contract">İş sözleşmesi</string>
+    <string name="personnel_type_a1">A1 belgesi</string>
+    <string name="personnel_type_code95">Kod 95</string>
+    <string name="personnel_type_driving_licence">Sürücü belgesi</string>
+    <string name="personnel_type_red_document">Kırmızı belge</string>
+    <string name="personnel_type_tachograph_card">Takograf kartı</string>
+    <string name="personnel_type_adr">ADR belgesi</string>
+    <string name="personnel_type_occupational_safety">İş güvenliği belgesi</string>
+    <string name="personnel_type_psychotechnical">Psikoteknik belgesi</string>
+    <string name="personnel_type_medical">Sağlık raporu</string>
+    <string name="personnel_type_ehic">Avrupa Sağlık Sigortası Kartı</string>
+    <string name="vehicle_type_insurance">Sigorta</string>
+    <string name="vehicle_type_transport_license">Taşıma lisansı</string>
+    <string name="vehicle_type_registration">Ruhsat</string>
+    <string name="vehicle_document_available">Mevcut</string>
+    <string name="vehicle_documents_other">Diğer dosyalar</string>
+    <string name="vehicle_documents_none_title">Size atanmış araç yok</string>
+    <string name="vehicle_documents_none_body">Ofis size araç atadığında belgeleri burada görünür.</string>
+    <string name="document_viewer_loading">Belge açılıyor…</string>
+    <string name="document_viewer_not_found">Dosya bulunamadı ya da artık erişiminiz yok.</string>
+    <string name="document_viewer_storage_unavailable">Belge şu anda okunamıyor. Biraz sonra tekrar deneyin.</string>
+    <string name="document_viewer_unreadable">Bu dosya telefonda gösterilemiyor.</string>
+    <string name="document_viewer_image">Belge görüntüsü</string>
+</resources>

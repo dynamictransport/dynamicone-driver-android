@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Trip step evidence and stop coordinates (docs/18). -->
+<resources>
+    <plurals name="exec_blocked_documents">
+        <item quantity="one">Najpierw prześlij %d wymagany dokument</item>
+        <item quantity="few">Najpierw prześlij %d wymagane dokumenty</item>
+        <item quantity="many">Najpierw prześlij %d wymaganych dokumentów</item>
+        <item quantity="other">Najpierw prześlij %d wymaganego dokumentu</item>
+    </plurals>
+    <string name="exec_blocked_generic">Najpierw prześlij wymagane dokumenty.</string>
+    <string name="exec_upload_documents">PRZEŚLIJ DOKUMENTY</string>
+    <string name="required_documents_title">Wymagane przed następnym krokiem</string>
+    <string name="required_documents_upload">Prześlij</string>
+    <string name="error_documents_required">Najpierw prześlij wymagane dokumenty. Krok nie został zapisany.</string>
+    <string name="coordinate_latitude">Szerokość geograficzna</string>
+    <string name="coordinate_longitude">Długość geograficzna</string>
+    <string name="coordinates_copy">Kopiuj współrzędne</string>
+    <string name="coordinates_copied">Skopiowano współrzędne.</string>
+</resources>

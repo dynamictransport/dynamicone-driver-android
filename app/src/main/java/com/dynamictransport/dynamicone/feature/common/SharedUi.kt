@@ -51,6 +51,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -259,7 +260,10 @@ fun TripSummaryCard(
             }
         }
         trip.plannedStartAt?.let { MetaItem(Icons.Filled.Schedule, DriverFormats.dayTime(it, locale)) }
-        trip.vehiclePlate?.let { MetaItem(Icons.Filled.LocalShipping, it) }
+        // This trip's vehicle, which can differ from the driver's assigned vehicle.
+        vehicleLabel(trip.vehicleCompanyCode, trip.vehiclePlate)?.let {
+            MetaItem(Icons.Filled.LocalShipping, it, Modifier.testTag("trip_card_vehicle_${trip.id}"))
+        }
         trip.containerNo?.let { MetaItem(Icons.Filled.Inventory2, it) }
         if (trip.syncState != SyncState.SYNCED) {
             Spacer(Modifier.size(8.dp))
@@ -326,9 +330,14 @@ fun NoteField(
 }
 
 @Composable
-fun LocalImageThumbnail(path: String, modifier: Modifier = Modifier) {
+fun LocalImageThumbnail(
+    path: String,
+    modifier: Modifier = Modifier,
+    shape: Shape = RoundedCornerShape(12.dp),
+    targetPx: Int = 160,
+) {
     val bitmap by produceState<ImageBitmap?>(initialValue = null, path) {
-        value = withContext(Dispatchers.IO) { decodeSampledBitmap(path, targetPx = 160) }
+        value = withContext(Dispatchers.IO) { decodeSampledBitmap(path, targetPx = targetPx) }
     }
     val current = bitmap
     if (current != null) {
@@ -336,10 +345,10 @@ fun LocalImageThumbnail(path: String, modifier: Modifier = Modifier) {
             bitmap = current,
             contentDescription = null,
             contentScale = ContentScale.Crop,
-            modifier = modifier.clip(RoundedCornerShape(12.dp)),
+            modifier = modifier.clip(shape),
         )
     } else {
-        Box(modifier.background(DriverTheme.colors.neutralContainer, RoundedCornerShape(12.dp)))
+        Box(modifier.background(DriverTheme.colors.neutralContainer, shape))
     }
 }
 
@@ -356,6 +365,7 @@ enum class AppLanguage(val tag: String?, @param:StringRes val label: Int) {
     ENGLISH("en", R.string.language_en),
     POLISH("pl", R.string.language_pl),
     TURKISH("tr", R.string.language_tr),
+    RUSSIAN("ru", R.string.language_ru),
     ;
 
     companion object {

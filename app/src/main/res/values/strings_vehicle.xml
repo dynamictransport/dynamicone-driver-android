@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The driver's current fleet vehicle from me.assignedVehicle (home and profile) -->
+    <string name="assigned_vehicle_label">Assigned vehicle</string>
+    <string name="assigned_vehicle_none">No vehicle assigned</string>
+    <string name="assigned_vehicle_loading">Loading vehicle…</string>
+    <string name="assigned_vehicle_unavailable">Vehicle could not be loaded</string>
+
+    <!-- Last reported position of the assigned vehicle (docs/19) -->
+    <string name="vehicle_position_label">Vehicle location</string>
+    <string name="vehicle_position_loading">Loading location…</string>
+    <string name="vehicle_position_unavailable">Location could not be loaded</string>
+    <string name="vehicle_position_no_data">No location reported yet</string>
+    <string name="vehicle_position_not_linked">Not connected to fleet tracking</string>
+    <string name="vehicle_position_just_now">just now</string>
+    <string name="vehicle_position_ago">%1$s ago</string>
+    <string name="vehicle_position_minutes">%1$d min</string>
+    <string name="vehicle_position_show_on_map">Show on map</string>
+</resources>

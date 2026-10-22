@@ -13,6 +13,7 @@ import com.dynamictransport.dynamicone.core.sync.SyncScheduler
 import com.dynamictransport.dynamicone.data.local.toDomain
 import com.dynamictransport.dynamicone.data.local.toEntity
 import com.dynamictransport.dynamicone.data.remote.DriverRemoteDataSource
+import com.dynamictransport.dynamicone.domain.model.AssignedVehicleState
 import com.dynamictransport.dynamicone.domain.model.LoginResult
 import com.dynamictransport.dynamicone.domain.model.PasswordChangeResult
 import com.dynamictransport.dynamicone.domain.model.SessionState
@@ -72,6 +73,21 @@ class AuthRepositoryImpl @Inject constructor(
             driverProfileDao.observe(session.userId).map { it?.toDomain() }
         } else {
             flowOf(null)
+        }
+    }
+
+    override fun observeAssignedVehicle(): Flow<AssignedVehicleState> =
+        sessionPreferences.assignedVehicleChanges.map { it ?: AssignedVehicleState.Loading }
+
+    /** Name and modules of the demo driver never change; only a session stored before the vehicle existed reads it. */
+    override suspend fun refreshProfile() {
+        if (sessionState.value !is SessionState.LoggedIn || sessionPreferences.assignedVehicle() != null) return
+        try {
+            sessionPreferences.updateProfile(remote.getProfile())
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: RemoteException) {
+            // Simulated offline: the next screen visit reads it again.
         }
     }
 

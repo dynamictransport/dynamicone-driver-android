@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Own personnel file and assigned vehicle files (Mobile API me/documents, me/assigned-vehicle/documents). -->
+    <string name="nav_my_documents">Moje pliki</string>
+    <string name="my_documents_title">Moje dokumenty</string>
+    <string name="vehicle_documents_title">Dokumenty pojazdu</string>
+    <string name="my_documents_required">Wymagane dokumenty</string>
+    <string name="my_documents_history">Historia dokumentów</string>
+    <string name="my_documents_no_upload">Dokumenty dodaje biuro. W sprawie brakującego lub nowego dokumentu skontaktuj się z biurem.</string>
+    <string name="documents_summary_valid">Ważne</string>
+    <string name="documents_summary_expiring">Wkrótce wygasają</string>
+    <string name="documents_summary_expired">Wygasłe</string>
+    <string name="documents_summary_missing">Brakujące lub niekompletne</string>
+    <string name="requirement_status_missing">Brak</string>
+    <string name="requirement_status_incomplete">Niekompletny</string>
+    <string name="requirement_status_expired">Wygasły</string>
+    <string name="requirement_status_expiring">Wkrótce wygasa</string>
+    <string name="requirement_status_valid">Ważny</string>
+    <string name="requirement_status_unknown">Status nieznany</string>
+    <string name="document_expires_on">Ważny do %1$s</string>
+    <string name="document_expired_on">Wygasł %1$s</string>
+    <string name="document_uploaded_on">Dodano %1$s</string>
+    <string name="document_current">Aktualny</string>
+    <string name="document_open">Otwórz</string>
+    <string name="document_no_file">Brak pliku</string>
+    <string name="personnel_type_other">Dokument</string>
+    <string name="my_documents_history_empty">W Twojej teczce osobowej nie ma jeszcze dokumentów.</string>
+    <string name="my_documents_requirements_empty">Brak wymaganych dokumentów na liście.</string>
+    <string name="personnel_type_passport">Paszport</string>
+    <string name="personnel_type_residence_permit">Karta pobytu</string>
+    <string name="personnel_type_visa">Wiza</string>
+    <string name="personnel_type_work_permit">Zezwolenie na pracę</string>
+    <string name="personnel_type_employment_contract">Umowa o pracę</string>
+    <string name="personnel_type_a1">Zaświadczenie A1</string>
+    <string name="personnel_type_code95">Kod 95</string>
+    <string name="personnel_type_driving_licence">Prawo jazdy</string>
+    <string name="personnel_type_red_document">Czerwony dokument</string>
+    <string name="personnel_type_tachograph_card">Karta kierowcy (tachograf)</string>
+    <string name="personnel_type_adr">Zaświadczenie ADR</string>
+    <string name="personnel_type_occupational_safety">Zaświadczenie BHP</string>
+    <string name="personnel_type_psychotechnical">Orzeczenie psychotechniczne</string>
+    <string name="personnel_type_medical">Orzeczenie lekarskie</string>
+    <string name="personnel_type_ehic">Europejska Karta Ubezpieczenia Zdrowotnego</string>
+    <string name="vehicle_type_insurance">Ubezpieczenie</string>
+    <string name="vehicle_type_transport_license">Licencja transportowa</string>
+    <string name="vehicle_type_registration">Dowód rejestracyjny</string>
+    <string name="vehicle_document_available">Dostępny</string>
+    <string name="vehicle_documents_other">Inne pliki</string>
+    <string name="vehicle_documents_none_title">Nie masz przydzielonego pojazdu</string>
+    <string name="vehicle_documents_none_body">Gdy biuro przydzieli Ci pojazd, jego dokumenty pojawią się tutaj.</string>
+    <string name="document_viewer_loading">Otwieranie dokumentu…</string>
+    <string name="document_viewer_not_found">Nie znaleziono pliku lub nie masz już do niego dostępu.</string>
+    <string name="document_viewer_storage_unavailable">Nie można teraz odczytać dokumentu. Spróbuj za chwilę.</string>
+    <string name="document_viewer_unreadable">Tego pliku nie można wyświetlić na telefonie.</string>
+    <string name="document_viewer_image">Obraz dokumentu</string>
+</resources>

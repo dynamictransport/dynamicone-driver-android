@@ -40,6 +40,9 @@ enum class ActionRejection {
     /** An earlier action of this trip still has to be resent or discarded. */
     PENDING_ACTION,
 
+    /** The step needs its required evidence uploaded first; it was not recorded (docs/18). */
+    DOCUMENTS_REQUIRED,
+
     /** Container and seal evidence must be a JPEG or PNG photo. */
     PHOTO_REQUIRED,
 

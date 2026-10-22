@@ -225,6 +225,184 @@ class RealOperationsRepositoriesTest {
         assertTrue(h.server.drainRequests().none { it.method == "POST" })
     }
 
+    // --- Step evidence (docs/18) ---
+
+    private val evidence = listOf(
+        DriverApiJson.slot("Cmr:trip:all", "Cmr", "Missing", required = true),
+        DriverApiJson.slot("Interchange:s1:c1", "Interchange", "Rejected", true, "s1", "c1", documentId = "d2", reviewNote = "Unreadable"),
+        DriverApiJson.slot("Interchange:s1:c2", "Interchange", "PendingReview", true, "s1", "c2", documentId = "d3"),
+    )
+
+    @Test
+    fun `a step blocked by missing evidence is never sent, and is sent unchanged once the plan allows it`() = runBlocking {
+        val uploaded = AtomicInteger()
+        routeTrip {
+            val first = if (uploaded.get() == 0) listOf("Interchange:s1:c1") else emptyList()
+            DriverApiJson.execution(
+                version = "v${7 + uploaded.get()}",
+                actions = listOf(
+                    DriverApiJson.action("CompleteStop", "I picked up the full container", "s1", "c1", blockingSlots = first),
+                    DriverApiJson.action("CompleteStop", "I picked up the full container", "s1", "c2", blockingSlots = emptyList()),
+                ),
+                documents = evidence,
+            )
+        }
+        h.routes.on("POST", "/trips/t1/actions") { jsonResponse(DriverApiJson.result()) }
+        loadTrip()
+        val blocked = h.trips.currentExecution("t1")!!.availableActions.first()
+        assertTrue(blocked.isBlocked)
+        assertEquals(listOf("Interchange:s1:c1"), h.trips.currentExecution("t1")!!.blockingSlots.map { it.key })
+
+        assertEquals(ActionResult.Rejected(ActionRejection.DOCUMENTS_REQUIRED), h.executions.submit("t1", blocked, null))
+        assertTrue(postBodies("/trips/t1/actions").isEmpty())
+        assertTrue(h.commandDao.all.isEmpty())
+
+        // A replacement was uploaded: the plan read again no longer blocks the step. The step shown earlier
+        // is looked up in the current plan and sent with its current version.
+        uploaded.set(1)
+        assertEquals(RefreshResult.SUCCESS, h.trips.refreshTrip("t1"))
+        assertEquals(ActionResult.Queued, h.executions.submit("t1", blocked, null))
+        assertEquals(
+            listOf("""{"commandId":"cmd-1","expectedVersion":"v8","action":"CompleteStop","stopId":"s1","containerId":"c1"}"""),
+            postBodies("/trips/t1/actions"),
+        )
+    }
+
+    @Test
+    fun `a step the server refuses for missing evidence is dropped, not done, and the checklist is read again`() = runBlocking {
+        val refused = AtomicInteger()
+        routeTrip {
+            val blocking = if (refused.get() == 0) emptyList() else listOf("Cmr:trip:all")
+            DriverApiJson.execution(
+                version = "v7",
+                actions = listOf(DriverApiJson.action("CompleteStop", "I picked up the full container", "s1", "c1", blockingSlots = blocking)),
+                documents = evidence,
+            )
+        }
+        h.routes.on("POST", "/trips/t1/actions") {
+            refused.incrementAndGet()
+            problemResponse(409, "required_documents_missing")
+        }
+        loadTrip()
+
+        assertEquals(
+            ActionResult.Rejected(ActionRejection.DOCUMENTS_REQUIRED),
+            h.executions.submit("t1", h.trips.currentExecution("t1")!!.availableActions.single(), null),
+        )
+
+        assertTrue(h.commandDao.all.isEmpty())
+        assertNull(h.executions.observePendingAction("t1").first())
+        val plan = h.trips.currentExecution("t1")!!
+        assertTrue(plan.availableActions.single().isBlocked)
+        assertEquals(listOf("Cmr:trip:all"), plan.blockingSlots.map { it.key })
+        assertEquals(1, postBodies("/trips/t1/actions").size)
+    }
+
+    @Test
+    fun `a resent command the server now refuses for missing evidence is dropped`() = runBlocking {
+        routeTrip { DriverApiJson.execution(version = "v9", actions = pickupOptions, documents = evidence) }
+        h.routes.on("POST", "/trips/t1/actions") { problemResponse(409, "required_documents_missing") }
+        h.commandDao.insert(h.storedCommand("cmd-9", state = PendingCommandState.OUTCOME_UNKNOWN))
+        loadTrip()
+
+        assertEquals(ActionResult.Rejected(ActionRejection.DOCUMENTS_REQUIRED), h.executions.resendPending("t1"))
+
+        assertTrue(h.commandDao.all.isEmpty())
+        assertEquals(1, postBodies("/trips/t1/actions").size)
+    }
+
+    // --- Trailer confirmation (docs/20) ---
+
+    private val trailerOptions = listOf(
+        DriverApiJson.trailerOption("tr1", "WGM 45T2", "DYNA-120"),
+        DriverApiJson.trailerOption("tr2", "WGM 88X1"),
+        DriverApiJson.trailerOption("tr3", null),
+    )
+
+    private fun routeAcceptedTripWithTrailers(trailers: () -> String) {
+        routeTrip(status = "Assigned") {
+            DriverApiJson.execution(
+                version = "v7",
+                status = "Assigned",
+                actions = listOf(DriverApiJson.action("Start", "I started the trip", blockingReason = "trailer_confirmation_required")),
+                trailerConfirmationRequired = true,
+            )
+        }
+        h.routes.on("GET", "/trips/t1/trailers") { jsonResponse(trailers()) }
+    }
+
+    @Test
+    fun `the driver chooses from the active list and the choice carries the version of that read`() = runBlocking {
+        routeAcceptedTripWithTrailers {
+            DriverApiJson.trailers(version = "v7", plannedTrailerId = "tr2", trailers = trailerOptions)
+        }
+        h.routes.on("POST", "/trips/t1/trailer-confirmation") { jsonResponse(DriverApiJson.result(version = "v8")) }
+        loadTrip()
+        assertEquals(RefreshResult.SUCCESS, h.executions.refreshTrailers("t1"))
+
+        val state = h.executions.observeTrailers("t1").first()!!
+        // A trailer without a registration is dropped; the planned one is offered first.
+        assertEquals(listOf("tr1", "tr2"), state.trailers.map { it.id })
+        assertEquals(listOf("tr2", "tr1"), state.ordered.map { it.id })
+        assertEquals("DYNA-120", state.trailers.first().companyCode)
+        assertTrue(state.canConfirm)
+
+        // A trailer that is not in the list never reaches the server.
+        assertEquals(ActionResult.Rejected(ActionRejection.NOT_FOUND), h.executions.confirmTrailer("t1", "tr9"))
+        assertEquals(ActionResult.Queued, h.executions.confirmTrailer("t1", "tr1"))
+        assertEquals(
+            listOf("""{"trailerId":"tr1","expectedVersion":"v7"}"""),
+            postBodies("/trips/t1/trailer-confirmation"),
+        )
+    }
+
+    @Test
+    fun `a trip that cannot choose any more is never sent a confirmation`() = runBlocking {
+        routeAcceptedTripWithTrailers {
+            DriverApiJson.trailers(version = "v7", canConfirm = false, confirmedTrailerId = "tr1", trailers = trailerOptions)
+        }
+        loadTrip()
+
+        assertEquals(RefreshResult.SUCCESS, h.executions.refreshTrailers("t1"))
+        assertEquals(ActionResult.Rejected(ActionRejection.NOT_ALLOWED), h.executions.confirmTrailer("t1", "tr1"))
+
+        assertTrue(h.server.drainRequests().none { it.method == "POST" })
+    }
+
+    @Test
+    fun `a changed plan makes the driver choose again from the current list`() = runBlocking {
+        val reads = AtomicInteger(0)
+        routeAcceptedTripWithTrailers {
+            if (reads.getAndIncrement() == 0) {
+                DriverApiJson.trailers(version = "v7", trailers = trailerOptions)
+            } else {
+                DriverApiJson.trailers(version = "v9", trailers = listOf(DriverApiJson.trailerOption("tr2", "WGM 88X1")))
+            }
+        }
+        h.routes.on("POST", "/trips/t1/trailer-confirmation") { problemResponse(409, "conflict") }
+        loadTrip()
+        assertEquals(RefreshResult.SUCCESS, h.executions.refreshTrailers("t1"))
+
+        assertEquals(ActionResult.Rejected(ActionRejection.PLAN_CHANGED), h.executions.confirmTrailer("t1", "tr1"))
+        val state = h.executions.observeTrailers("t1").first()!!
+        assertEquals("v9", state.version)
+        assertEquals(listOf("tr2"), state.trailers.map { it.id })
+    }
+
+    @Test
+    fun `starting is not offered and never sent while the trailer is not confirmed`() = runBlocking {
+        routeAcceptedTripWithTrailers { DriverApiJson.trailers(version = "v7", trailers = trailerOptions) }
+        loadTrip()
+
+        val execution = h.trips.currentExecution("t1")!!
+        assertTrue(execution.trailerConfirmationRequired)
+        val start = execution.availableActions.single { it.code == ExecutionActionCode.START }
+        assertTrue(start.blockedByTrailer)
+
+        assertEquals(ActionResult.Rejected(ActionRejection.NOT_ALLOWED), h.executions.submit("t1", start, null))
+        assertTrue(h.server.drainRequests().none { it.method == "POST" })
+    }
+
     // --- Documents ---
 
     private fun routeChecklist() {

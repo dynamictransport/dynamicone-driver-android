@@ -4,22 +4,26 @@ import com.dynamictransport.dynamicone.app.navigation.AppSection.ATTENDANCE
 import com.dynamictransport.dynamicone.app.navigation.AppSection.ATTENDANCE_RECORDS
 import com.dynamictransport.dynamicone.app.navigation.AppSection.DOCUMENTS
 import com.dynamictransport.dynamicone.app.navigation.AppSection.HOME
+import com.dynamictransport.dynamicone.app.navigation.AppSection.HR_DOCUMENTS
 import com.dynamictransport.dynamicone.app.navigation.AppSection.MESSAGES
+import com.dynamictransport.dynamicone.app.navigation.AppSection.MY_DOCUMENTS
 import com.dynamictransport.dynamicone.app.navigation.AppSection.PROFILE
 import com.dynamictransport.dynamicone.app.navigation.AppSection.TRIPS
+import com.dynamictransport.dynamicone.app.navigation.AppSection.VEHICLE_DOCUMENTS
 import com.dynamictransport.dynamicone.domain.model.AppModule
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AppShellTest {
 
     @Test
-    fun `drivers keep their navigation`() {
+    fun `drivers keep their navigation and reach their own and vehicle files from the profile`() {
         val layout = AppShell.layout(setOf(AppModule.DRIVER))
 
         assertEquals(listOf(HOME, TRIPS, DOCUMENTS, MESSAGES, PROFILE), layout.bottomBar)
-        assertTrue(layout.overflow.isEmpty())
+        assertEquals(listOf(MY_DOCUMENTS, VEHICLE_DOCUMENTS), layout.overflow)
         assertEquals(HOME, layout.start)
     }
 
@@ -38,7 +42,35 @@ class AppShellTest {
 
         assertEquals(AppShell.MAX_BOTTOM_BAR_ITEMS, layout.bottomBar.size)
         assertEquals(listOf(HOME, TRIPS, MESSAGES, ATTENDANCE, PROFILE), layout.bottomBar)
-        assertEquals(listOf(DOCUMENTS, ATTENDANCE_RECORDS), layout.overflow)
+        assertEquals(listOf(DOCUMENTS, ATTENDANCE_RECORDS, MY_DOCUMENTS, VEHICLE_DOCUMENTS), layout.overflow)
+    }
+
+    @Test
+    fun `office staff find their documents to sign and their personnel file in the bar`() {
+        val layout = AppShell.layout(setOf(AppModule.OFFICE_ATTENDANCE, AppModule.HR_DOCUMENTS))
+
+        assertEquals(listOf(ATTENDANCE, ATTENDANCE_RECORDS, HR_DOCUMENTS, MY_DOCUMENTS, PROFILE), layout.bottomBar)
+        assertTrue(layout.overflow.isEmpty())
+        assertEquals(ATTENDANCE, layout.start)
+    }
+
+    @Test
+    fun `drivers keep their bar and reach documents to sign from the profile`() {
+        val layout = AppShell.layout(setOf(AppModule.DRIVER, AppModule.HR_DOCUMENTS))
+
+        assertEquals(listOf(HOME, TRIPS, DOCUMENTS, MESSAGES, PROFILE), layout.bottomBar)
+        assertEquals(listOf(HR_DOCUMENTS, MY_DOCUMENTS, VEHICLE_DOCUMENTS), layout.overflow)
+        assertEquals(setOf(AppModule.HR_DOCUMENTS), AppModule.fromWire(listOf("hrDocuments")))
+    }
+
+    @Test
+    fun `vehicle files are for drivers only, the personnel file for either module`() {
+        val office = AppShell.layout(setOf(AppModule.OFFICE_ATTENDANCE))
+        assertFalse(MY_DOCUMENTS in office.bottomBar + office.overflow)
+        assertFalse(VEHICLE_DOCUMENTS in office.bottomBar + office.overflow)
+
+        val hrOnly = AppShell.layout(setOf(AppModule.HR_DOCUMENTS))
+        assertEquals(listOf(HR_DOCUMENTS, MY_DOCUMENTS, PROFILE), hrOnly.bottomBar)
     }
 
     @Test

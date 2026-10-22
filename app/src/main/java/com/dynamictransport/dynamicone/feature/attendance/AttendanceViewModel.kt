@@ -59,6 +59,8 @@ sealed interface PunchOutcome {
 data class AttendanceUiState(
     val loading: Boolean = true,
     val userName: String? = null,
+    /** HR job title under the name (docs/22). */
+    val userTitle: String? = null,
     val situation: AttendanceSituation? = null,
     val nfc: NfcAvailability = NfcAvailability.AVAILABLE,
     /** Waiting for a tag for this direction. */
@@ -131,6 +133,7 @@ class AttendanceViewModel @Inject constructor(
             // Until the first read finishes, only what the phone knows can be shown.
             loading = status == null && result == null && local.isEmpty(),
             userName = profile?.displayName?.takeIf { it.isNotBlank() },
+            userTitle = profile?.jobTitle,
             situation = situation,
             nfc = control.nfc,
             scanning = control.scanning,

@@ -98,6 +98,11 @@ Additive migration ile `DriverDevices`: `Id`, `UserId`, `DriverProfileId`, `Inst
 - **18.09.2026 (öneri, docs/16 §11):** `type = driver.times` yalnızca veri push'u; şoförün takograf dinlenmesi değişince
   gönderilir. Uygulama (`app.driverShift=true`) `driver-times` ve `shift`'i okur, uyandırma alarmını yeniden kurar;
   bildirim göstermez. Dinlenme alarmı push değildir: telefonda kurulur (kanallar `rest_alarm`, `rest_reminder`).
+- **18.09.2026 (öneri, docs/17 §6):** `type = hr.document` (`documentId`, `reason`: `Assigned` · `Reminder` · `Overdue` ·
+  `Withdrawn`); kanal `hr_documents` ("İmzalanacak evraklar"), etiket `hr-document-<id>`, anahtarlar `push_hr_document_*`.
+  Uygulama evrakı okur, hâlâ imza bekliyorsa kendi bildirimini gösterir, dokununca evrak açılır; `Withdrawn` bildirimi
+  kaldırır. Push artık `hrDocuments` modülü olan ofis hesaplarında da başlar; bu hesaplar Mobile API `me/devices` ile
+  kaydolur (backend'de henüz yok).
 - Backend hazır olmadan deneme: Firebase konsolu → Messaging → yeni bildirim kampanyası → hedef uygulama `com.dynamictransport.driver`. Özel veri olarak `type` = `driver.message` ve `tripId` = sefer kimliği eklenirse bildirime dokununca o seferin sohbeti açılır.
 
 ## 7. Kurulum adımları (şirket hesabı sahibi)

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="notification_channel_messages">Сообщения</string>
+    <string name="notification_new_message">Новое сообщение</string>
+    <string name="notifications_blocked">Уведомления выключены. Включите их, чтобы узнавать о новых сообщениях.</string>
+    <string name="notifications_enable">Включить</string>
+    <!-- Заголовки и текст уведомлений, которые система показывает из push (FCM title_loc_key / body_loc_key, docs/13). -->
+    <string name="push_message_title_trip" tools:ignore="UnusedResources">Рейс %1$s: новое сообщение</string>
+    <string name="push_message_title_general" tools:ignore="UnusedResources">Новое сообщение из офиса</string>
+    <string name="push_message_body" tools:ignore="UnusedResources">Нажмите, чтобы открыть.</string>
+</resources>

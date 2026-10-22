@@ -5,7 +5,6 @@ import com.dynamictransport.dynamicone.R
 import com.dynamictransport.dynamicone.core.push.OpenConversationTracker
 import com.dynamictransport.dynamicone.domain.model.ActionRejection
 import com.dynamictransport.dynamicone.domain.model.ActionResult
-import com.dynamictransport.dynamicone.domain.model.DocumentContentResult
 import com.dynamictransport.dynamicone.domain.model.DriverMessage
 import com.dynamictransport.dynamicone.domain.model.MessageDirection
 import com.dynamictransport.dynamicone.domain.model.MonthlyPayroll
@@ -119,21 +118,14 @@ class SignedDocumentsViewModelTest {
     private val document = SignedDocument("sd1", SignedDocumentType.COMPENSATION, TEST_NOW)
 
     @Test
-    fun `signed documents are listed and opened as the stored PDF`() = runTest {
+    fun `signed documents are listed without downloading anything`() = runTest {
         repository.server = listOf(document)
-        repository.openResult = DocumentContentResult.Available("/cache/document_view/signed-sd1.pdf", "application/pdf")
         val viewModel = SignedDocumentsViewModel(repository, FakeAppInfo())
         keepCollecting(viewModel.uiState)
 
         assertEquals(listOf(document), viewModel.uiState.value.documents)
-
-        viewModel.onOpen(document)
-        advanceUntilIdle()
-
-        assertEquals(listOf("sd1"), repository.opened)
-        assertEquals("application/pdf", viewModel.uiState.value.openRequest?.contentType)
-        viewModel.onOpenRequestHandled()
-        assertNull(viewModel.uiState.value.openRequest)
+        // The PDF is downloaded by the in-app viewer when a row is opened, not by the list.
+        assertTrue(repository.opened.isEmpty())
     }
 
     @Test

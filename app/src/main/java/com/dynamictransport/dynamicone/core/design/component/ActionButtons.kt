@@ -48,22 +48,25 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dynamictransport.dynamicone.core.design.theme.Dimens
+import com.dynamictransport.dynamicone.core.design.theme.DriverColors
 import com.dynamictransport.dynamicone.core.design.theme.DriverTheme
 import kotlinx.coroutines.launch
 
 enum class ActionTone { Positive, Neutral, Danger }
 
-private data class ToneColors(val container: Color, val content: Color)
+internal data class ToneColors(val container: Color, val content: Color)
 
-@Composable
-private fun toneColors(tone: ActionTone): ToneColors {
-    val colors = DriverTheme.colors
-    return when (tone) {
-        ActionTone.Positive -> ToneColors(colors.action, colors.onAction)
-        ActionTone.Neutral -> ToneColors(colors.neutralAction, colors.onNeutralAction)
-        ActionTone.Danger -> ToneColors(colors.danger, colors.onDanger)
+/**
+ * A disabled action is drawn grey with muted text so it never looks tappable, in either theme.
+ * While loading it keeps its tone: the driver just pressed it and the spinner must stay visible.
+ */
+internal fun actionColors(tone: ActionTone, active: Boolean, loading: Boolean, colors: DriverColors): ToneColors =
+    when {
+        !active && !loading -> ToneColors(colors.neutralContainer, colors.muted)
+        tone == ActionTone.Positive -> ToneColors(colors.action, colors.onAction)
+        tone == ActionTone.Neutral -> ToneColors(colors.neutralAction, colors.onNeutralAction)
+        else -> ToneColors(colors.danger, colors.onDanger)
     }
-}
 
 private val ActionShape = RoundedCornerShape(16.dp)
 
@@ -78,7 +81,7 @@ fun PrimaryActionButton(
     loading: Boolean = false,
     tone: ActionTone = ActionTone.Positive,
 ) {
-    val colors = toneColors(tone)
+    val colors = actionColors(tone, active = enabled && !loading, loading = loading, colors = DriverTheme.colors)
     Button(
         onClick = onClick,
         enabled = enabled && !loading,
@@ -90,6 +93,8 @@ fun PrimaryActionButton(
         colors = ButtonDefaults.buttonColors(
             containerColor = colors.container,
             contentColor = colors.content,
+            disabledContainerColor = colors.container,
+            disabledContentColor = colors.content,
         ),
     ) {
         ActionContent(text = text, icon = icon, loading = loading, contentColor = colors.content)
@@ -113,12 +118,12 @@ fun HoldToConfirmButton(
     tone: ActionTone = ActionTone.Positive,
     holdDurationMillis: Int = 900,
 ) {
-    val colors = toneColors(tone)
     val active = enabled && !loading
+    val colors = actionColors(tone, active = active, loading = loading, colors = DriverTheme.colors)
     val progress = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
     val latestOnConfirmed by rememberUpdatedState(onConfirmed)
-    val container = if (active) colors.container else colors.container.copy(alpha = 0.4f)
+    val container = colors.container
     val overlay = Color.Black.copy(alpha = 0.22f)
 
     Column(modifier = modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {

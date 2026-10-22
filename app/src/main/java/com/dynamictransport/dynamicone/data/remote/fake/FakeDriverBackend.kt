@@ -2,6 +2,7 @@ package com.dynamictransport.dynamicone.data.remote.fake
 
 import com.dynamictransport.dynamicone.core.network.RemoteException
 import com.dynamictransport.dynamicone.domain.model.AppModule
+import com.dynamictransport.dynamicone.domain.model.AssignedVehicle
 import com.dynamictransport.dynamicone.domain.model.AuthTokens
 import com.dynamictransport.dynamicone.domain.model.BreakState
 import com.dynamictransport.dynamicone.domain.model.DocumentType
@@ -210,6 +211,8 @@ class FakeDriverBackend(
             preferredLanguage = "tr",
             modules = setOf(AppModule.DRIVER),
             driverId = "drv-demo-1027",
+            // The demo fleet has no DYNA codes: the plate alone is shown.
+            assignedVehicle = AssignedVehicle(vehicleId = "veh-demo-1", companyCode = null, registrationNumber = DEMO_VEHICLE),
         )
     }
 }

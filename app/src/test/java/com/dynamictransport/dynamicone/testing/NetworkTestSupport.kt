@@ -214,8 +214,19 @@ object DriverApiJson {
 
     const val COMMAND_OK = """{"succeeded":true,"message":"OK"}"""
 
-    fun action(code: String, label: String, stopId: String? = null, containerId: String? = null) =
-        """{"code":"$code","label":"$label","stopId":${q(stopId)},"containerId":${q(containerId)}}"""
+    /** Without [blockingSlots] the action has the shape of backends before docs/18 (no `canExecute`). */
+    fun action(
+        code: String,
+        label: String,
+        stopId: String? = null,
+        containerId: String? = null,
+        blockingSlots: List<String>? = null,
+        blockingReason: String? = null,
+    ) = """{"code":"$code","label":"$label","stopId":${q(stopId)},"containerId":${q(containerId)}""" +
+        (blockingSlots?.let { keys -> ""","blockingDocumentSlots":[${keys.joinToString(",") { q(it) }}]""" } ?: "") +
+        (blockingReason?.let { ""","blockingReason":${q(it)}""" } ?: "") +
+        (if (blockingSlots == null && blockingReason == null) "" else ""","canExecute":${blockingSlots.isNullOrEmpty() && blockingReason == null}""") +
+        "}"
 
     fun slot(
         key: String,
@@ -235,7 +246,24 @@ object DriverApiJson {
         workflow: String = "TripActions",
         actions: List<String> = emptyList(),
         documents: List<String> = emptyList(),
-    ) = """{"tripId":"$tripId","version":"$version","status":"$status","availableActions":[${actions.joinToString(",")}],"documents":[${documents.joinToString(",")}],"workflow":"$workflow"}"""
+        trailerConfirmationRequired: Boolean = false,
+    ) = """{"tripId":"$tripId","version":"$version","status":"$status","availableActions":[${actions.joinToString(",")}],""" +
+        """"documents":[${documents.joinToString(",")}],"workflow":"$workflow","trailerConfirmationRequired":$trailerConfirmationRequired}"""
+
+    fun trailerOption(id: String, registrationNumber: String?, companyCode: String? = null) =
+        """{"id":"$id","registrationNumber":${q(registrationNumber)},"companyCode":${q(companyCode)}}"""
+
+    fun trailers(
+        tripId: String = "t1",
+        version: String = "v1",
+        plannedTrailerId: String? = null,
+        confirmedTrailerId: String? = null,
+        confirmedAtUtc: String? = null,
+        canConfirm: Boolean = true,
+        trailers: List<String> = emptyList(),
+    ) = """{"tripId":"$tripId","version":"$version","plannedTrailerId":${q(plannedTrailerId)},""" +
+        """"confirmedTrailerId":${q(confirmedTrailerId)},"confirmedAtUtc":${q(confirmedAtUtc)},""" +
+        """"canConfirm":$canConfirm,"trailers":[${trailers.joinToString(",")}]}"""
 
     fun result(code: String = "recorded", version: String? = "v2") =
         """{"succeeded":true,"code":"$code","message":"Action recorded.","version":${q(version)}}"""

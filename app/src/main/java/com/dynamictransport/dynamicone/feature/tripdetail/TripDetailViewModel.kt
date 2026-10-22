@@ -8,17 +8,20 @@ import com.dynamictransport.dynamicone.R
 import com.dynamictransport.dynamicone.domain.model.ActionReceipt
 import com.dynamictransport.dynamicone.domain.model.ActionResult
 import com.dynamictransport.dynamicone.domain.model.BreakState
+import com.dynamictransport.dynamicone.domain.model.DocumentSlot
 import com.dynamictransport.dynamicone.domain.model.ExecutionAction
 import com.dynamictransport.dynamicone.domain.model.ExecutionActionCode
 import com.dynamictransport.dynamicone.domain.model.PendingCommandState
 import com.dynamictransport.dynamicone.domain.model.PendingTripAction
 import com.dynamictransport.dynamicone.domain.model.RefreshResult
 import com.dynamictransport.dynamicone.domain.model.RejectReason
+import com.dynamictransport.dynamicone.domain.model.TrailerOption
 import com.dynamictransport.dynamicone.domain.model.Trip
 import com.dynamictransport.dynamicone.domain.model.TripActionType
 import com.dynamictransport.dynamicone.domain.model.TripExecution
 import com.dynamictransport.dynamicone.domain.model.TripLocation
 import com.dynamictransport.dynamicone.domain.model.TripState
+import com.dynamictransport.dynamicone.domain.model.TripTrailerState
 import com.dynamictransport.dynamicone.domain.model.TripWorkflow
 import com.dynamictransport.dynamicone.domain.repository.AppInfo
 import com.dynamictransport.dynamicone.domain.repository.MessageRepository
@@ -72,6 +75,8 @@ data class TripDetailUiState(
     val unreadMessages: Int = 0,
     /** Daily shift (docs/16): starting it opens the flow at the vehicle instead of a single tap. */
     val shiftStartsAtVehicle: Boolean = false,
+    /** Trailer choice of this trip (docs/20); null until read or for trips without the endpoint. */
+    val trailers: TripTrailerState? = null,
 ) {
     /** Work on this trip waits for the daily shift; a stored action is still resolved first. */
     val shiftStartRequired: Boolean get() = shiftStartsAtVehicle && plan.primary == PrimaryAction.StartShift && pendingAction == null
@@ -82,8 +87,23 @@ data class TripDetailUiState(
 
     val isLegacyWorkflow: Boolean get() = trip?.workflow == TripWorkflow.LEGACY_STATUSES
 
-    /** Start or stop/container completions, exactly as offered by the server. */
-    val progressActions: List<ExecutionAction> get() = execution?.availableActions.orEmpty().filter { it.isProgress }
+    /**
+     * Start or stop/container completions, exactly as offered by the server. A step that waits for the
+     * trailer confirmation is left out: the trailer is its own step (docs/20).
+     */
+    val progressActions: List<ExecutionAction>
+        get() = execution?.availableActions.orEmpty().filter { it.isProgress && !it.blockedByTrailer }
+
+    /**
+     * The trip cannot start before the driver confirms the trailer under the truck (docs/20). Reported by
+     * the plan itself and by the Start option it blocks, so an older field alone never hides the step.
+     */
+    val trailerConfirmationRequired: Boolean
+        get() = execution?.trailerConfirmationRequired == true ||
+            execution?.availableActions.orEmpty().any { it.blockedByTrailer }
+
+    /** The trailer the driver confirmed for this trip, once the list has been read. */
+    val confirmedTrailer: TrailerOption? get() = trailers?.confirmed
 
     val restAction: ExecutionAction? get() = execution?.availableActions?.firstOrNull { it.code == ExecutionActionCode.REST }
 
@@ -95,6 +115,10 @@ data class TripDetailUiState(
 
     /** Evidence slots that need an upload according to the server checklist; null when not read. */
     val openDocumentCount: Int? get() = execution?.documents?.count { it.needsUpload }
+
+    /** Evidence the server requires before an offered step can be confirmed (docs/18), in checklist order. */
+    val blockingDocuments: List<DocumentSlot>
+        get() = if (usesServerActions) execution?.blockingSlots.orEmpty() else emptyList()
 
     val navigationStop: TripLocation?
         get() {
@@ -234,6 +258,10 @@ class TripDetailViewModel @Inject constructor(
             lastRefresh.value = result
             val trip = tripRepository.observeTrip(tripId).first()
             if (trip?.workflow == TripWorkflow.TRIP_ACTIONS) executionRepository.refreshReceipts(tripId)
+            // Only an accepted trip can still choose its trailer; a running one keeps the recorded choice.
+            if (trip?.workflow == TripWorkflow.TRIP_ACTIONS && trip.state == TripState.ACCEPTED) {
+                executionRepository.refreshTrailers(tripId)
+            }
             // With a trip on screen a failed reload is only a hint; the last loaded state stays visible.
             result.messageRes()?.let { if (trip != null) message.value = it }
         }

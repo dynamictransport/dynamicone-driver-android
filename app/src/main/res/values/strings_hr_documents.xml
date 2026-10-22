@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Personnel documents to sign (docs/17_HR_DOCUMENT_SIGNING.md) -->
+    <string name="nav_hr_documents">Documents</string>
+    <string name="hr_documents_title">My HR documents</string>
+    <string name="hr_pending_header">Waiting for your signature</string>
+    <string name="hr_signed_header">Signed</string>
+    <string name="hr_none_pending">No documents to sign.</string>
+    <string name="hr_none_signed">You have not signed any documents in the app yet.</string>
+    <string name="hr_access_removed">Your account cannot sign documents in the app any more. Please contact the office.</string>
+
+    <string name="hr_due_later">Sign by %1$s</string>
+    <string name="hr_due_today">Last day today, %1$s</string>
+    <string name="hr_due_tomorrow">Last day tomorrow, %1$s</string>
+    <string name="hr_overdue">Deadline passed (%1$s)</string>
+    <string name="hr_no_deadline">No deadline</string>
+    <string name="hr_state_waiting">Signed on the phone, waiting to be sent</string>
+    <string name="hr_state_waiting_access">Signed on the phone. The server does not accept documents from this account yet; it will be sent later.</string>
+    <string name="hr_state_failed">Not accepted: sign again</string>
+    <string name="hr_withdrawn">The office withdrew this document. You do not need to sign it.</string>
+    <string name="hr_missing">This document is no longer available.</string>
+
+    <string name="hr_signed_at">Signed: %1$s</string>
+    <string name="hr_signed_language">Signed version: %1$s</string>
+    <string name="hr_version">Version %1$s</string>
+    <string name="hr_sent_at">Sent: %1$s</string>
+    <string name="hr_reference_language">If the language versions differ, the %1$s version applies.</string>
+    <string name="hr_language_label">Document language</string>
+    <string name="hr_language_multi">All languages</string>
+
+    <string name="hr_scroll_to_sign">Read to the end of the document to sign it</string>
+    <string name="hr_page_of">Page %1$d of %2$d</string>
+    <string name="hr_page_zoom">Tap a page to enlarge it</string>
+    <string name="hr_zoom_close">Close</string>
+    <string name="hr_content_loading">Loading the document…</string>
+    <string name="hr_content_offline">The document could not be downloaded. Check the internet connection.</string>
+    <string name="hr_content_integrity">The downloaded file is damaged. Try again.</string>
+    <string name="hr_content_open_failed">The document cannot be shown on this phone. Please contact the office.</string>
+
+    <string name="hr_declaration_title">Declaration</string>
+    <string name="hr_declaration_accept">I have read and understood the document</string>
+    <string name="hr_signature_title">Sign with your finger</string>
+    <string name="hr_signature_hint">Draw your signature in the box.</string>
+    <string name="hr_signature_pad">Signature box</string>
+    <string name="hr_signature_clear">Clear</string>
+    <string name="hr_sign_action">SIGN AND SEND</string>
+    <string name="hr_sign_needs">Tick the box and sign to continue.</string>
+
+    <string name="hr_signed_success">Your signature was recorded.</string>
+    <string name="hr_saved_offline">Saved on the phone. It is sent automatically when there is internet.</string>
+    <string name="hr_already_signed">This document was already signed.</string>
+    <string name="hr_failure_changed">The office changed the document. Read the new version and sign again.</string>
+    <string name="hr_failure_signature">The signature was not accepted. Sign again.</string>
+    <string name="hr_failure_language">This language version is no longer available. Choose another language.</string>
+    <string name="hr_failure_rejected">The server did not accept the signature. Sign again or contact the office.</string>
+
+    <string name="hr_open_receipt">OPEN SIGNED PDF</string>
+    <string name="hr_receipt_pending">The signed PDF is being prepared. Try again in a few minutes.</string>
+
+    <plurals name="hr_banner_pending">
+        <item quantity="one">%1$d document is waiting for your signature</item>
+        <item quantity="other">%1$d documents are waiting for your signature</item>
+    </plurals>
+    <string name="hr_banner_open">Open</string>
+    <plurals name="hr_badge">
+        <item quantity="one">%1$d document to sign</item>
+        <item quantity="other">%1$d documents to sign</item>
+    </plurals>
+
+    <!-- Notifications; the push_hr_document_* keys are also looked up by the backend's system notification. -->
+    <string name="notification_channel_hr_documents">Documents to sign</string>
+    <string name="push_hr_document_title">New document to sign</string>
+    <string name="push_hr_document_body">Tap to read and sign it.</string>
+    <string name="push_hr_document_reminder_title">Reminder: document to sign</string>
+    <string name="push_hr_document_reminder_body">The signing deadline is approaching.</string>
+    <string name="push_hr_document_overdue_title">Signing deadline passed</string>
+    <string name="push_hr_document_overdue_body">Please read and sign the document.</string>
+</resources>

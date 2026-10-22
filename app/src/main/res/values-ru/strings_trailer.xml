@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Подтверждение прицепа после принятия рейса (docs/20_DRIVER_TRAILER_CONFIRMATION.md) -->
+    <string name="trailer_title">Прицеп</string>
+    <string name="trailer_question">Какой прицеп у вашего тягача?</string>
+    <string name="trailer_change_hint">Чтобы изменить прицеп, выберите другой.</string>
+    <string name="trailer_planned">Запланирован</string>
+    <string name="trailer_search">Поиск по номеру</string>
+    <string name="trailer_search_clear">Очистить поиск</string>
+    <string name="trailer_no_match">По вашему запросу прицепов не найдено.</string>
+    <string name="trailer_confirm">ПОДТВЕРДИТЬ ПРИЦЕП</string>
+    <string name="trailer_confirmed_banner">Подтверждён: %1$s</string>
+    <string name="trailer_confirmed_banner_at">Подтверждён: %1$s · %2$s</string>
+    <string name="trailer_confirmed_label">Прицеп (подтверждён)</string>
+    <string name="trailer_confirmed_message">Прицеп подтверждён.</string>
+    <string name="trailer_locked">Рейс начат: здесь прицеп изменить нельзя.</string>
+    <string name="trailer_none_title">В списке нет активных прицепов</string>
+    <string name="trailer_none_body">Позвоните в офис. Приложение не может добавить прицеп.</string>
+
+    <!-- Экран рейса, пока рейс ещё нельзя начать -->
+    <string name="trailer_required_hint">Перед началом подтвердите прицеп вашего тягача.</string>
+    <string name="trailer_select_action">ВЫБРАТЬ ПРИЦЕП</string>
+</resources>

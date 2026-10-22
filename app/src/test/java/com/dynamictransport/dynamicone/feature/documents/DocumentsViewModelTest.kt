@@ -79,6 +79,26 @@ class DocumentsViewModelTest {
     }
 
     @Test
+    fun `the slot the trip screen asked for is selected first, the driver's own choice wins`() = runTest {
+        val handle = SavedStateHandle(mapOf(TRIP_ID_ARG to "trip-1", DOCUMENT_SLOT_ARG to seal.key))
+        val viewModel = viewModel(handle)
+        keepCollecting(viewModel.uiState)
+        assertEquals(seal.key, viewModel.uiState.value.selectedSlotKey)
+
+        viewModel.onSelectSlot(cmr.key)
+        assertEquals(cmr.key, viewModel.uiState.value.selectedSlotKey)
+        // Recreated after process death: the driver's choice is restored, not the navigation argument.
+        val restored = viewModel(handle)
+        keepCollecting(restored.uiState)
+        assertEquals(cmr.key, restored.uiState.value.selectedSlotKey)
+
+        // A slot that is no longer in the checklist falls back to the first one that needs an upload.
+        val stale = viewModel(SavedStateHandle(mapOf(TRIP_ID_ARG to "trip-1", DOCUMENT_SLOT_ARG to "Seal:s9:c9")))
+        keepCollecting(stale.uiState)
+        assertEquals(rejectedInterchange.key, stale.uiState.value.selectedSlotKey)
+    }
+
+    @Test
     fun `requirements are the server's, never recalculated on the device`() = runTest {
         val viewModel = viewModel()
         keepCollecting(viewModel.uiState)

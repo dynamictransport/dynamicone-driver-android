@@ -25,7 +25,16 @@ class ProtectedFileDownloader @Inject constructor(
     @param:IoDispatcher private val io: CoroutineDispatcher,
 ) {
 
-    suspend fun download(name: String, fallbackContentType: String?, request: suspend () -> ResponseBody): DocumentContentResult = try {
+    /**
+     * [directory]: [VIEW_DIRECTORY] for files handed to a viewer app (trip documents), [PRIVATE_VIEW_DIRECTORY] for files
+     * only the app's own viewer reads (personnel, vehicle and signed files are never shared with another app).
+     */
+    suspend fun download(
+        name: String,
+        fallbackContentType: String?,
+        directory: String = VIEW_DIRECTORY,
+        request: suspend () -> ResponseBody,
+    ): DocumentContentResult = try {
         val body = tracker.call(request)
         val contentType = body.contentType()?.let { "${it.type}/${it.subtype}" } ?: fallbackContentType
         if (contentType == null) {
@@ -33,10 +42,10 @@ class ProtectedFileDownloader @Inject constructor(
             DocumentContentResult.Unavailable(ActionRejection.UNSUPPORTED_FILE)
         } else {
             val file = withContext(io) {
-                val directory = File(directories.cacheDir, VIEW_DIRECTORY).apply { mkdirs() }
-                directory.listFiles()?.forEach { it.delete() }
+                val folder = File(directories.cacheDir, directory).apply { mkdirs() }
+                folder.listFiles()?.forEach { it.delete() }
                 val safeName = name.filter { it.isLetterOrDigit() || it == '-' }
-                val target = File(directory, "$safeName.${extensionFor(contentType)}")
+                val target = File(folder, "$safeName.${extensionFor(contentType)}")
                 body.use { response -> response.byteStream().use { input -> target.outputStream().use { input.copyTo(it) } } }
                 target
             }
@@ -53,18 +62,31 @@ class ProtectedFileDownloader @Inject constructor(
 
     /** Removes every temporary viewing file (session end). */
     suspend fun clear() {
-        withContext(io) { File(directories.cacheDir, VIEW_DIRECTORY).deleteRecursively() }
+        withContext(io) {
+            File(directories.cacheDir, VIEW_DIRECTORY).deleteRecursively()
+            File(directories.cacheDir, PRIVATE_VIEW_DIRECTORY).deleteRecursively()
+        }
+    }
+
+    /** Removes one viewed file of the app's own viewer; files elsewhere are left alone. */
+    fun discard(filePath: String) {
+        val file = File(filePath)
+        if (file.parentFile?.canonicalPath == File(directories.cacheDir, PRIVATE_VIEW_DIRECTORY).canonicalPath) file.delete()
     }
 
     private fun extensionFor(contentType: String): String = when (contentType.substringBefore(';').trim().lowercase()) {
         "application/pdf" -> "pdf"
         "image/jpeg" -> "jpg"
         "image/png" -> "png"
+        "image/webp" -> "webp"
         else -> "bin"
     }
 
     companion object {
         /** Shared read-only with the viewer app through FileProvider (res/xml/file_paths.xml). */
         const val VIEW_DIRECTORY = "document_view"
+
+        /** Not in res/xml/file_paths.xml: no other app can be given these files. */
+        const val PRIVATE_VIEW_DIRECTORY = "private_document_view"
     }
 }

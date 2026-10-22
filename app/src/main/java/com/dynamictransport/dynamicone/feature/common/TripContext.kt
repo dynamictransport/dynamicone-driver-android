@@ -3,6 +3,7 @@ package com.dynamictransport.dynamicone.feature.common
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.dynamictransport.dynamicone.R
+import com.dynamictransport.dynamicone.domain.model.DocumentSlot
 import com.dynamictransport.dynamicone.domain.model.ExecutionAction
 import com.dynamictransport.dynamicone.domain.model.Trip
 import com.dynamictransport.dynamicone.domain.model.TripStop
@@ -11,6 +12,11 @@ import com.dynamictransport.dynamicone.domain.model.TripStop
 @Composable
 fun executionActionLabel(action: ExecutionAction): String =
     action.knownLabelRes()?.let { stringResource(it) } ?: action.label ?: stringResource(R.string.exec_stop_done)
+
+/** Localized document category; a category this app does not know is shown with the backend's label. */
+@Composable
+fun documentLabel(slot: DocumentSlot): String =
+    if (slot.type == null) slot.label ?: stringResource(slot.type.labelRes()) else stringResource(slot.type.labelRes())
 
 /** "2. Pickup · Rotterdam ECT Delta" */
 @Composable

@@ -33,6 +33,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -60,10 +61,12 @@ import com.dynamictransport.dynamicone.feature.common.DemoBadge
 import com.dynamictransport.dynamicone.feature.common.DriverActionButton
 import com.dynamictransport.dynamicone.feature.common.DriverFormats
 import com.dynamictransport.dynamicone.feature.common.MessageEffect
+import com.dynamictransport.dynamicone.feature.common.NavigationLinks
 import com.dynamictransport.dynamicone.feature.common.PRIMARY_ACTION_TAG
 import com.dynamictransport.dynamicone.feature.common.SyncBanners
 import com.dynamictransport.dynamicone.feature.common.SyncStateBadge
 import com.dynamictransport.dynamicone.feature.common.TripSummaryCard
+import com.dynamictransport.dynamicone.feature.common.VehiclePositionRow
 import com.dynamictransport.dynamicone.feature.common.currentLocale
 import com.dynamictransport.dynamicone.feature.common.formatDuration
 import com.dynamictransport.dynamicone.feature.common.rememberCurrentInstant
@@ -75,6 +78,8 @@ import java.time.Instant
 @Composable
 fun HomeRoute(
     onOpenTrip: (String) -> Unit,
+    /** The card of personnel documents to sign; null without that module (docs/17). */
+    documentsToSignBanner: (@Composable () -> Unit)? = null,
     onOpenTrips: () -> Unit,
     onOpenDocuments: () -> Unit,
     onOpenEarnings: () -> Unit,
@@ -85,9 +90,10 @@ fun HomeRoute(
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     LifecycleResumeEffect(viewModel) {
         viewModel.onResume()
-        onPauseOrDispose { }
+        onPauseOrDispose { viewModel.onPause() }
     }
     HomeScreen(
         state = state,
@@ -113,6 +119,10 @@ fun HomeRoute(
         onRetrySync = viewModel::onRetrySync,
         onMessageShown = viewModel::onMessageShown,
         onRefresh = viewModel::onRefresh,
+        documentsToSignBanner = documentsToSignBanner,
+        onRetryAssignedVehicle = viewModel::onRetryAssignedVehicle,
+        onRetryVehiclePosition = viewModel::onRetryVehiclePosition,
+        onShowVehicleOnMap = { point, label -> if (!NavigationLinks.open(context, point, label)) viewModel.onMapUnavailable() },
     )
 }
 
@@ -132,6 +142,10 @@ fun HomeScreen(
     onDismissRestAlarm: (RestWindow) -> Unit = {},
     onRestoreRestAlarm: () -> Unit = {},
     onOpenRestAlarmSettings: () -> Unit = {},
+    documentsToSignBanner: (@Composable () -> Unit)? = null,
+    onRetryAssignedVehicle: () -> Unit = {},
+    onRetryVehiclePosition: () -> Unit = {},
+    onShowVehicleOnMap: (GeoPoint, String?) -> Unit = { _, _ -> },
     now: Instant = rememberCurrentInstant(),
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -190,6 +204,7 @@ fun HomeScreen(
                     modifier = Modifier.testTag("home_refresh_error"),
                 )
             }
+            documentsToSignBanner?.invoke()
             state.newTrip?.let { trip ->
                 NewTripAlert(
                     trip = trip,
@@ -251,7 +266,14 @@ private fun HomePrimaryAction(state: HomeUiState, onPrimaryAction: (PrimaryActio
 }
 
 @Composable
-private fun DriverHeader(state: HomeUiState, now: Instant, onOpenShift: () -> Unit) {
+private fun DriverHeader(
+    state: HomeUiState,
+    now: Instant,
+    onOpenShift: () -> Unit,
+    onRetryAssignedVehicle: () -> Unit,
+    onRetryVehiclePosition: () -> Unit,
+    onShowVehicleOnMap: (GeoPoint, String?) -> Unit,
+) {
     Column {
         val firstName = state.driverName?.substringBefore(' ')
         Text(
@@ -261,6 +283,16 @@ private fun DriverHeader(state: HomeUiState, now: Instant, onOpenShift: () -> Un
                 stringResource(R.string.home_greeting_no_name)
             },
             style = MaterialTheme.typography.headlineSmall,
+        )
+        AssignedVehicleRow(state = state.assignedVehicle, onRetry = onRetryAssignedVehicle)
+        val vehicle = (state.assignedVehicle as? AssignedVehicleState.Assigned)?.vehicle
+        val mapLabel = vehicle?.let { vehicleLabel(it.companyCode, it.registrationNumber) }
+        VehiclePositionRow(
+            state = state.vehiclePosition,
+            placeName = state.vehiclePlace,
+            now = now,
+            onShowOnMap = { point -> onShowVehicleOnMap(point, mapLabel) },
+            onRetry = onRetryVehiclePosition,
         )
         Row(
             verticalAlignment = Alignment.CenterVertically,

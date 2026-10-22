@@ -81,6 +81,12 @@ Token uyumluluğu (zorunlu):
 | `preferredLanguageCode` | `en` / `pl` / `tr` veya `null`. |
 | `modules` | Açık modül anahtarları, sırasız, tekrarsız. `driver` ⇔ `driverId != null`. `officeAttendance` ⇔ kullanıcı ofis mesai takibine dahil (bkz. §5.1). |
 
+**19.09.2026 eki (backend PR #133, backend `docs/67_DriverAppApi.md` "Assigned vehicle identity"):** Mobile ve
+Driver API `me` yanıtında nullable `assignedVehicle: { vehicleId, companyCode, registrationNumber }` vardır:
+şoförün güncel filo araç ataması (`companyCode` = DYNA kodu, yoksa `null`). Atama yoksa ve ofis hesaplarında
+`null`. Sefer listesi öğeleri ve sefer detayındaki `trip` nesnesi nullable `vehicleCompanyCode` taşır (seferin aracı,
+güncel atamadan farklı olabilir). Uygulamadaki davranış: `ASSUMPTIONS.md` V1–V8.
+
 ## 5. Ofis mesaisi (NFC)
 
 ### 5.1 Kapsam ve mevcut Attendance modülüyle ilişki

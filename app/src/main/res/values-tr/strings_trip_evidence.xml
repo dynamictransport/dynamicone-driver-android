@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Trip step evidence and stop coordinates (docs/18). -->
+<resources>
+    <plurals name="exec_blocked_documents">
+        <item quantity="one">Önce %d zorunlu evrakı yükleyin</item>
+        <item quantity="other">Önce %d zorunlu evrakı yükleyin</item>
+    </plurals>
+    <string name="exec_blocked_generic">Önce gerekli evrakları yükleyin.</string>
+    <string name="exec_upload_documents">EVRAK YÜKLE</string>
+    <string name="required_documents_title">Sonraki adımdan önce gerekli evraklar</string>
+    <string name="required_documents_upload">Yükle</string>
+    <string name="error_documents_required">Önce gerekli evrakları yükleyin. Adım kaydedilmedi.</string>
+    <string name="coordinate_latitude">Enlem</string>
+    <string name="coordinate_longitude">Boylam</string>
+    <string name="coordinates_copy">Koordinatları kopyala</string>
+    <string name="coordinates_copied">Koordinatlar kopyalandı.</string>
+</resources>

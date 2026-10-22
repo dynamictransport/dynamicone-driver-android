@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dokumenty kadrowe do podpisu (docs/17_HR_DOCUMENT_SIGNING.md) -->
+    <string name="nav_hr_documents">Dokumenty</string>
+    <string name="hr_documents_title">Moje dokumenty kadrowe</string>
+    <string name="hr_pending_header">Czekają na Twój podpis</string>
+    <string name="hr_signed_header">Podpisane</string>
+    <string name="hr_none_pending">Brak dokumentów do podpisania.</string>
+    <string name="hr_none_signed">Nie podpisano jeszcze żadnego dokumentu w aplikacji.</string>
+    <string name="hr_access_removed">Twoje konto nie może już podpisywać dokumentów w aplikacji. Skontaktuj się z biurem.</string>
+
+    <string name="hr_due_later">Termin: %1$s</string>
+    <string name="hr_due_today">Ostatni dzień dzisiaj, %1$s</string>
+    <string name="hr_due_tomorrow">Ostatni dzień jutro, %1$s</string>
+    <string name="hr_overdue">Termin minął (%1$s)</string>
+    <string name="hr_no_deadline">Bez terminu</string>
+    <string name="hr_state_waiting">Podpisano w telefonie, czeka na wysłanie</string>
+    <string name="hr_state_waiting_access">Podpisano w telefonie. Serwer nie przyjmuje jeszcze dokumentów z tego konta; zostanie wysłany później.</string>
+    <string name="hr_state_failed">Nie przyjęto: podpisz ponownie</string>
+    <string name="hr_withdrawn">Biuro wycofało ten dokument. Nie musisz go podpisywać.</string>
+    <string name="hr_missing">Ten dokument nie jest już dostępny.</string>
+
+    <string name="hr_signed_at">Podpisano: %1$s</string>
+    <string name="hr_signed_language">Podpisana wersja: %1$s</string>
+    <string name="hr_version">Wersja %1$s</string>
+    <string name="hr_sent_at">Wysłano: %1$s</string>
+    <string name="hr_reference_language">W razie rozbieżności między wersjami językowymi obowiązuje wersja: %1$s.</string>
+    <string name="hr_language_label">Język dokumentu</string>
+    <string name="hr_language_multi">Wszystkie języki</string>
+
+    <string name="hr_scroll_to_sign">Przeczytaj dokument do końca, aby go podpisać</string>
+    <string name="hr_page_of">Strona %1$d z %2$d</string>
+    <string name="hr_page_zoom">Dotknij strony, aby ją powiększyć</string>
+    <string name="hr_zoom_close">Zamknij</string>
+    <string name="hr_content_loading">Wczytywanie dokumentu…</string>
+    <string name="hr_content_offline">Nie udało się pobrać dokumentu. Sprawdź połączenie z internetem.</string>
+    <string name="hr_content_integrity">Pobrany plik jest uszkodzony. Spróbuj ponownie.</string>
+    <string name="hr_content_open_failed">Nie można wyświetlić dokumentu na tym telefonie. Skontaktuj się z biurem.</string>
+
+    <string name="hr_declaration_title">Oświadczenie</string>
+    <string name="hr_declaration_accept">Przeczytałem(-am) i rozumiem dokument</string>
+    <string name="hr_signature_title">Podpisz palcem</string>
+    <string name="hr_signature_hint">Narysuj podpis w ramce.</string>
+    <string name="hr_signature_pad">Pole podpisu</string>
+    <string name="hr_signature_clear">Wyczyść</string>
+    <string name="hr_sign_action">PODPISZ I WYŚLIJ</string>
+    <string name="hr_sign_needs">Zaznacz pole i podpisz, aby kontynuować.</string>
+
+    <string name="hr_signed_success">Twój podpis został zapisany.</string>
+    <string name="hr_saved_offline">Zapisano w telefonie. Zostanie wysłany automatycznie, gdy będzie internet.</string>
+    <string name="hr_already_signed">Ten dokument jest już podpisany.</string>
+    <string name="hr_failure_changed">Biuro zmieniło dokument. Przeczytaj nową wersję i podpisz ponownie.</string>
+    <string name="hr_failure_signature">Podpis nie został przyjęty. Podpisz ponownie.</string>
+    <string name="hr_failure_language">Ta wersja językowa nie jest już dostępna. Wybierz inny język.</string>
+    <string name="hr_failure_rejected">Serwer nie przyjął podpisu. Podpisz ponownie lub skontaktuj się z biurem.</string>
+
+    <string name="hr_open_receipt">OTWÓRZ PODPISANY PDF</string>
+    <string name="hr_receipt_pending">Podpisany PDF jest przygotowywany. Spróbuj ponownie za kilka minut.</string>
+
+    <plurals name="hr_banner_pending">
+        <item quantity="one">%1$d dokument czeka na Twój podpis</item>
+        <item quantity="few">%1$d dokumenty czekają na Twój podpis</item>
+        <item quantity="many">%1$d dokumentów czeka na Twój podpis</item>
+        <item quantity="other">%1$d dokumentu czeka na Twój podpis</item>
+    </plurals>
+    <string name="hr_banner_open">Otwórz</string>
+    <plurals name="hr_badge">
+        <item quantity="one">%1$d dokument do podpisania</item>
+        <item quantity="few">%1$d dokumenty do podpisania</item>
+        <item quantity="many">%1$d dokumentów do podpisania</item>
+        <item quantity="other">%1$d dokumentu do podpisania</item>
+    </plurals>
+
+    <string name="notification_channel_hr_documents">Dokumenty do podpisu</string>
+    <string name="push_hr_document_title">Nowy dokument do podpisu</string>
+    <string name="push_hr_document_body">Dotknij, aby przeczytać i podpisać.</string>
+    <string name="push_hr_document_reminder_title">Przypomnienie: dokument do podpisu</string>
+    <string name="push_hr_document_reminder_body">Zbliża się termin podpisania.</string>
+    <string name="push_hr_document_overdue_title">Minął termin podpisania</string>
+    <string name="push_hr_document_overdue_body">Przeczytaj i podpisz dokument.</string>
+</resources>

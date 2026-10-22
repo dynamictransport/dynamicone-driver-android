@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Trip step evidence and stop coordinates (docs/18). -->
+<resources>
+    <plurals name="exec_blocked_documents">
+        <item quantity="one">Upload %d required document first</item>
+        <item quantity="other">Upload %d required documents first</item>
+    </plurals>
+    <string name="exec_blocked_generic">Upload the required documents first.</string>
+    <string name="exec_upload_documents">UPLOAD DOCUMENTS</string>
+    <string name="required_documents_title">Needed before the next step</string>
+    <string name="required_documents_upload">Upload</string>
+    <string name="error_documents_required">Upload the required documents first. The step was not recorded.</string>
+    <string name="coordinate_latitude">Latitude</string>
+    <string name="coordinate_longitude">Longitude</string>
+    <string name="coordinates_copy">Copy coordinates</string>
+    <string name="coordinates_copied">Coordinates copied.</string>
+</resources>

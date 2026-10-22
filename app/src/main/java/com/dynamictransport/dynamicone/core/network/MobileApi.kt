@@ -1,11 +1,15 @@
 package com.dynamictransport.dynamicone.core.network
 
 import kotlinx.serialization.Serializable
+import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Path
 import retrofit2.http.Query
+import retrofit2.http.Streaming
 
 /**
  * DynamicONE Mobile API v1, relative to `/api/mobile/v1/` (docs/15_MOBILE_APP_API.md). Sign-in and `me` for every
@@ -27,6 +31,11 @@ interface MobileApi {
     @GET("me")
     suspend fun me(): MobileProfileResponseDto
 
+    /** The account's current HR photo (docs/21_EMPLOYEE_PHOTO.md); `404 photo_not_found` when there is none. */
+    @Streaming
+    @GET("me/photo")
+    suspend fun mePhoto(): ResponseBody
+
     // --- Office attendance ---
 
     @GET("attendance/status")
@@ -42,6 +51,75 @@ interface MobileApi {
         @Query("from") from: String,
         @Query("to") to: String,
     ): AttendanceDaysResponseDto
+
+    // --- Push devices of accounts without the driver module (docs/17 §5.6, same body as the Driver API) ---
+
+    /** 204. The same installation id updates its registration. */
+    @POST("me/devices")
+    suspend fun registerDevice(@Body body: DriverDeviceRequestDto): Response<Unit>
+
+    /** 204, also when nothing is registered. */
+    @DELETE("me/devices/{installationId}")
+    suspend fun deleteDevice(@Path("installationId") installationId: String): Response<Unit>
+
+    // --- Personnel documents to sign (docs/17_HR_DOCUMENT_SIGNING.md) ---
+
+    /** [state]: `Pending` (all documents to sign) or `Signed` (paged, newest first). */
+    @GET("hr-documents")
+    suspend fun hrDocuments(
+        @Query("state") state: String,
+        @Query("page") page: Int,
+        @Query("pageSize") pageSize: Int,
+    ): DriverPageDto<HrDocumentDto>
+
+    @GET("hr-documents/{documentId}")
+    suspend fun hrDocument(@Path("documentId") documentId: String): HrDocumentDto
+
+    /** The PDF of one language version; `ETag` is its SHA-256. */
+    @Streaming
+    @GET("hr-documents/{documentId}/content")
+    suspend fun hrDocumentContent(
+        @Path("documentId") documentId: String,
+        @Query("languageCode") languageCode: String,
+    ): ResponseBody
+
+    /** 201 for a new signature, 200 with the first result when the same `commandId` is sent again. */
+    @POST("hr-documents/{documentId}/signature")
+    suspend fun signHrDocument(
+        @Path("documentId") documentId: String,
+        @Body body: HrSignatureRequestDto,
+    ): HrSignatureResultDto
+
+    /** The signed PDF: original pages plus the signature page. */
+    @Streaming
+    @GET("hr-documents/{documentId}/receipt")
+    suspend fun hrDocumentReceipt(@Path("documentId") documentId: String): ResponseBody
+
+    // --- Files of the personnel file and of the assigned vehicle (read only, no upload) ---
+
+    /** Every file of the account's own personnel file, newest first. [pageSize] 1–100; module `hrDocuments`. */
+    @GET("me/documents")
+    suspend fun myDocuments(
+        @Query("page") page: Int,
+        @Query("pageSize") pageSize: Int,
+    ): PersonnelDocumentPageDto
+
+    /** The driver's required documents and their state; module `driver`. */
+    @GET("me/documents/requirements")
+    suspend fun myDocumentRequirements(): DocumentRequirementsDto
+
+    /** The original file (PDF, JPEG, PNG or WebP), `private, no-store`. */
+    @Streaming
+    @GET("me/documents/{documentId}/content")
+    suspend fun myDocumentContent(@Path("documentId") documentId: String): ResponseBody
+
+    /** Files of the driver's currently assigned vehicle; `assignedVehicle` null and empty lists without one. */
+    @GET("me/assigned-vehicle/documents")
+    suspend fun assignedVehicleDocuments(): VehicleDocumentsResponseDto
+
+    @Streaming
+    @GET("me/assigned-vehicle/documents/{documentId}/content")
+    suspend fun assignedVehicleDocumentContent(@Path("documentId") documentId: String): ResponseBody
 }
 
 @Serializable
@@ -52,6 +130,12 @@ data class MobileProfileResponseDto(
     val displayName: String? = null,
     val preferredLanguageCode: String? = null,
     val modules: List<String>? = null,
+    /** The driver's current fleet vehicle; always null for accounts without the driver module. */
+    val assignedVehicle: AssignedVehicleDto? = null,
+    /** SHA-256 of the current HR photo (docs/21); null when the account has none. */
+    val photoSha256: String? = null,
+    /** HR job title (docs/22); null when the account has none. */
+    val jobTitle: String? = null,
 )
 
 @Serializable
@@ -128,6 +212,7 @@ object AttendanceWireNames {
 /** Problem `code` values of the Mobile API (docs/15_MOBILE_APP_API.md). */
 object MobileErrorCodes {
     const val MOBILE_ACCESS_REQUIRED = "mobile_access_required"
+    const val PHOTO_NOT_FOUND = "photo_not_found"
     const val ATTENDANCE_ACCESS_REQUIRED = "attendance_access_required"
     const val ATTENDANCE_TAG_UNKNOWN = "attendance_tag_unknown"
     const val ATTENDANCE_TAG_DIRECTION_MISMATCH = "attendance_tag_direction_mismatch"
@@ -135,4 +220,7 @@ object MobileErrorCodes {
     const val ATTENDANCE_PUNCH_TOO_OLD = "attendance_punch_too_old"
     const val COMMAND_CONFLICT = "command_conflict"
     const val INVALID_DATE_RANGE = "invalid_date_range"
+    const val HR_DOCUMENTS_ACCESS_REQUIRED = "hr_documents_access_required"
+    const val DOCUMENT_NOT_FOUND = "document_not_found"
+    const val DOCUMENT_STORAGE_UNAVAILABLE = "document_storage_unavailable"
 }

@@ -5,4 +5,4 @@
     resource shrinking would otherwise remove them.
 -->
 <resources xmlns:tools="http://schemas.android.com/tools"
-    tools:keep="@string/push_message_*" />
+    tools:keep="@string/push_message_*,@string/push_hr_document_*" />

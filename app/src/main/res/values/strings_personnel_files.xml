@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Own personnel file and assigned vehicle files (Mobile API me/documents, me/assigned-vehicle/documents). -->
+    <string name="nav_my_documents">My files</string>
+    <string name="my_documents_title">My documents</string>
+    <string name="vehicle_documents_title">Vehicle documents</string>
+    <string name="my_documents_required">Required documents</string>
+    <string name="my_documents_history">Document history</string>
+    <string name="my_documents_no_upload">Documents are added by the office. Contact the office for a missing or new document.</string>
+    <string name="documents_summary_valid">Valid</string>
+    <string name="documents_summary_expiring">Expiring soon</string>
+    <string name="documents_summary_expired">Expired</string>
+    <string name="documents_summary_missing">Missing or incomplete</string>
+    <string name="requirement_status_missing">Missing</string>
+    <string name="requirement_status_incomplete">Incomplete</string>
+    <string name="requirement_status_expired">Expired</string>
+    <string name="requirement_status_expiring">Expiring soon</string>
+    <string name="requirement_status_valid">Valid</string>
+    <string name="requirement_status_unknown">Status unknown</string>
+    <string name="document_expires_on">Valid until %1$s</string>
+    <string name="document_expired_on">Expired on %1$s</string>
+    <string name="document_uploaded_on">Uploaded %1$s</string>
+    <string name="document_current">Current</string>
+    <string name="document_open">Open</string>
+    <string name="document_no_file">No file</string>
+    <string name="personnel_type_other">Document</string>
+    <string name="my_documents_history_empty">There are no documents in your personnel file yet.</string>
+    <string name="my_documents_requirements_empty">No required documents are listed.</string>
+    <string name="personnel_type_passport">Passport</string>
+    <string name="personnel_type_residence_permit">Residence permit</string>
+    <string name="personnel_type_visa">Visa</string>
+    <string name="personnel_type_work_permit">Work permit</string>
+    <string name="personnel_type_employment_contract">Employment contract</string>
+    <string name="personnel_type_a1">A1 certificate</string>
+    <string name="personnel_type_code95">Code 95</string>
+    <string name="personnel_type_driving_licence">Driving licence</string>
+    <string name="personnel_type_red_document">Red document</string>
+    <string name="personnel_type_tachograph_card">Tachograph card</string>
+    <string name="personnel_type_adr">ADR certificate</string>
+    <string name="personnel_type_occupational_safety">Occupational safety certificate</string>
+    <string name="personnel_type_psychotechnical">Psychotechnical certificate</string>
+    <string name="personnel_type_medical">Medical certificate</string>
+    <string name="personnel_type_ehic">European Health Insurance Card</string>
+    <string name="vehicle_type_insurance">Insurance</string>
+    <string name="vehicle_type_transport_license">Transport licence</string>
+    <string name="vehicle_type_registration">Registration certificate</string>
+    <string name="vehicle_document_available">Available</string>
+    <string name="vehicle_documents_other">Other files</string>
+    <string name="vehicle_documents_none_title">No vehicle is assigned to you</string>
+    <string name="vehicle_documents_none_body">When the office assigns you a vehicle, its documents appear here.</string>
+    <string name="document_viewer_loading">Opening the document…</string>
+    <string name="document_viewer_not_found">The file was not found or you no longer have access to it.</string>
+    <string name="document_viewer_storage_unavailable">The document cannot be read right now. Try again in a moment.</string>
+    <string name="document_viewer_unreadable">This file cannot be shown on the phone.</string>
+    <string name="document_viewer_image">Document image</string>
+</resources>

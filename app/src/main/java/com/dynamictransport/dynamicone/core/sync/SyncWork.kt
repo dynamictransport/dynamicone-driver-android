@@ -222,3 +222,42 @@ class DriverDayRefreshWorker @AssistedInject constructor(
         else -> Result.success()
     }
 }
+
+/** Sends personnel document signatures stored on the phone once the server can be reached (docs/17 §5.4). */
+interface HrDocumentSyncScheduler {
+    /** [delaySeconds]: the server's `Retry-After` when it asked to be left alone for a while (429). */
+    fun requestSend(delaySeconds: Long = 0)
+}
+
+@Singleton
+class WorkManagerHrDocumentSyncScheduler @Inject constructor(
+    @param:ApplicationContext private val context: Context,
+) : HrDocumentSyncScheduler {
+
+    override fun requestSend(delaySeconds: Long) {
+        val request = OneTimeWorkRequestBuilder<HrDocumentSyncWorker>()
+            .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, HR_BACKOFF_SECONDS, TimeUnit.SECONDS)
+            .setInitialDelay(delaySeconds.coerceIn(0, MAX_RETRY_AFTER_SECONDS), TimeUnit.SECONDS)
+            .build()
+        // Every signature carries its own command id and the server is idempotent: restarting a running send is safe.
+        WorkManager.getInstance(context).enqueueUniqueWork(UNIQUE_WORK_NAME, ExistingWorkPolicy.REPLACE, request)
+    }
+
+    companion object {
+        const val UNIQUE_WORK_NAME = "hr-document-sync"
+        private const val HR_BACKOFF_SECONDS = 30L
+        private const val MAX_RETRY_AFTER_SECONDS = 15 * 60L
+    }
+}
+
+@HiltWorker
+class HrDocumentSyncWorker @AssistedInject constructor(
+    @Assisted context: Context,
+    @Assisted params: WorkerParameters,
+    private val hrDocumentRepository: HrDocumentRepository,
+) : CoroutineWorker(context, params) {
+
+    override suspend fun doWork(): Result = if (hrDocumentRepository.sendPending()) Result.success() else Result.retry()
+}
+

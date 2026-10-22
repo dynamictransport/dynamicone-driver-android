@@ -13,6 +13,7 @@ import com.dynamictransport.dynamicone.core.push.PushRegistrar
 import com.dynamictransport.dynamicone.core.security.SessionEvent
 import com.dynamictransport.dynamicone.core.security.SessionPreferences
 import com.dynamictransport.dynamicone.core.security.TokenManager
+import com.dynamictransport.dynamicone.domain.model.AssignedVehicleState
 import com.dynamictransport.dynamicone.domain.model.LoginResult
 import com.dynamictransport.dynamicone.domain.model.PasswordChangeResult
 import com.dynamictransport.dynamicone.domain.model.SessionState
@@ -26,8 +27,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
 import java.time.Clock
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -47,6 +51,7 @@ class RealAuthRepository @Inject constructor(
     private val pushRegistrar: PushRegistrar,
     private val clock: Clock,
     @param:ApplicationScope private val appScope: CoroutineScope,
+    private val photos: EmployeePhotoStore,
 ) : AuthRepository {
 
     private val state = MutableStateFlow<SessionState>(SessionState.Loading)
@@ -56,6 +61,10 @@ class RealAuthRepository @Inject constructor(
         sessionPreferences.sessionExpired.stateIn(appScope, SharingStarted.Eagerly, false)
 
     private val profile = MutableStateFlow<UserProfile?>(null)
+    private val profileRead = Mutex()
+
+    /** The latest `me` read of this session failed; matters only while no answer for the account is stored. */
+    private val profileReadFailed = MutableStateFlow(false)
 
     init {
         appScope.launch {
@@ -86,18 +95,36 @@ class RealAuthRepository @Inject constructor(
                 profile.value = UserProfile(
                     id = userId,
                     displayName = sessionPreferences.displayName().orEmpty(),
+                    jobTitle = sessionPreferences.jobTitle(),
                     personnelNo = null,
                     preferredLanguage = null,
                     modules = modules,
                     driverId = sessionPreferences.driverId(),
+                    assignedVehicle = (sessionPreferences.assignedVehicle() as? AssignedVehicleState.Assigned)?.vehicle,
                 )
-                appScope.launch { refreshProfile(userId) }
+                appScope.launch {
+                    photos.load()
+                    readProfile(userId)
+                }
                 SessionState.LoggedIn(userId, modules)
             }
         }
     }
 
     override fun observeProfile(): Flow<UserProfile?> = profile
+
+    override fun observePhoto(): Flow<String?> = photos.observe()
+
+    /** The last answer of `me` stays shown (also offline) until a newer answer or another account replaces it. */
+    override fun observeAssignedVehicle(): Flow<AssignedVehicleState> =
+        combine(sessionPreferences.assignedVehicleChanges, profileReadFailed) { stored, failed ->
+            stored ?: if (failed) AssignedVehicleState.Unavailable else AssignedVehicleState.Loading
+        }.distinctUntilChanged()
+
+    override suspend fun refreshProfile() {
+        val session = state.value as? SessionState.LoggedIn ?: return
+        readProfile(session.userId)
+    }
 
     override suspend fun login(username: String, password: String, twoFactorCode: String?): LoginResult {
         val user = username.trim()
@@ -181,19 +208,45 @@ class RealAuthRepository @Inject constructor(
 
     private suspend fun startSession(signedIn: UserProfile) {
         sessionData.clearServerData()
+        photos.clear()
         sessionData.keepStoredDataOf(signedIn)
         sessionPreferences.setLoggedInUser(signedIn)
+        profileReadFailed.value = false
         profile.value = signedIn
         state.value = SessionState.LoggedIn(signedIn.id, signedIn.modules)
+        syncPhoto(signedIn)
     }
 
-    /** Name and modules can change on the server while a session is stored (e.g. a module was granted). */
-    private suspend fun refreshProfile(userId: String) {
+    /** In the background: the photo never holds up signing in or reading `me`. */
+    private fun syncPhoto(current: UserProfile) {
+        appScope.launch { photos.sync(current.photoSha256) }
+    }
+
+    /** Overlapping reads (restored session, screens coming back, a retry tapped twice) share the one that is running. */
+    private suspend fun readProfile(userId: String) {
+        if (!profileRead.tryLock()) return
         try {
-            val current = tracker.call { account.me() } ?: return
+            loadProfile(userId)
+        } finally {
+            profileRead.unlock()
+        }
+    }
+
+    /**
+     * Name, modules and the assigned vehicle can change on the server while a session is stored (e.g. a module was
+     * granted, the vehicle assignment was ended). An answer that arrives after the account changed is dropped.
+     */
+    private suspend fun loadProfile(userId: String) {
+        profileReadFailed.value = false
+        try {
+            val current = tracker.call { account.me() }
             val session = state.value as? SessionState.LoggedIn ?: return
             if (session.userId != userId) return
-            if (current.id != userId && !current.isDriverSessionOf(userId)) return
+            if (current == null || (current.id != userId && !current.isDriverSessionOf(userId))) {
+                // No usable answer for this account: nothing of it is taken over.
+                profileReadFailed.value = true
+                return
+            }
             if (current.modules.isEmpty()) {
                 // Access was removed: the app has nothing left to show for this account.
                 logout()
@@ -206,20 +259,23 @@ class RealAuthRepository @Inject constructor(
                 sessionPreferences.setLoggedInUser(current)
                 profile.value = current
                 state.value = SessionState.LoggedIn(current.id, current.modules)
+                syncPhoto(current)
                 return
             }
             sessionPreferences.updateProfile(current)
             profile.value = current
+            syncPhoto(current)
             if (current.modules != session.modules) state.value = SessionState.LoggedIn(userId, current.modules)
         } catch (e: CancellationException) {
             throw e
         } catch (e: RemoteException) {
+            if ((state.value as? SessionState.LoggedIn)?.userId != userId) return
             // The Mobile API answers `me` with 403 once an account has no module left: same as an empty module list.
             // Anything else (offline, ended session) is reported by session events and the screens.
-            if (e is RemoteException.Forbidden && e.problem?.code == MobileErrorCodes.MOBILE_ACCESS_REQUIRED &&
-                (state.value as? SessionState.LoggedIn)?.userId == userId
-            ) {
+            if (e is RemoteException.Forbidden && e.problem?.code == MobileErrorCodes.MOBILE_ACCESS_REQUIRED) {
                 logout()
+            } else {
+                profileReadFailed.value = true
             }
         }
     }
@@ -244,7 +300,9 @@ class RealAuthRepository @Inject constructor(
         tokenManager.clear()
         sessionPreferences.clearLoggedInUser(expired)
         sessionData.clearServerData()
+        photos.clear()
         if (!expired) sessionData.clearStoredCommands()
+        profileReadFailed.value = false
         profile.value = null
         state.value = SessionState.LoggedOut
     }

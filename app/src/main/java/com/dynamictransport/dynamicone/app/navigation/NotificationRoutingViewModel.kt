@@ -23,9 +23,14 @@ class NotificationRoutingViewModel @Inject constructor(
     /** The wake-up alarm opened the app on the daily shift start. */
     val startShiftRequest: StateFlow<Boolean> = navigation.startShiftRequested
 
+    /** A personnel document notification asked to open this document (docs/17). */
+    val documentRequest: StateFlow<String?> = navigation.documentRequest
+
     fun onOpenRequestHandled() = navigation.consume()
 
     fun onStartShiftRequestHandled() = navigation.consumeStartShift()
+
+    fun onDocumentRequestHandled() = navigation.consumeDocument()
 
     /** Android 13+, push set up for the real backend, not allowed yet, and not asked before in this process. */
     fun shouldAskForNotificationPermission(): Boolean =

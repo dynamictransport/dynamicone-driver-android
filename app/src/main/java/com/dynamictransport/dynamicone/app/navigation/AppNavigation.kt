@@ -18,9 +18,11 @@ import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Topic
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -38,6 +40,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
@@ -62,17 +65,27 @@ import com.dynamictransport.dynamicone.feature.documents.DocumentsRoute
 import com.dynamictransport.dynamicone.feature.documents.scan.DocumentScanRoute
 import com.dynamictransport.dynamicone.feature.documents.scan.SCAN_RESULT_KEY
 import com.dynamictransport.dynamicone.feature.home.HomeRoute
+import com.dynamictransport.dynamicone.feature.hrdocuments.HrDocumentDetailRoute
+import com.dynamictransport.dynamicone.feature.hrdocuments.HrDocumentsRoute
+import com.dynamictransport.dynamicone.feature.hrdocuments.PendingSignaturesBanner
+import com.dynamictransport.dynamicone.feature.hrdocuments.PendingSignaturesViewModel
 import com.dynamictransport.dynamicone.feature.incident.ReportIncidentRoute
 import com.dynamictransport.dynamicone.feature.messages.ConversationsRoute
 import com.dynamictransport.dynamicone.feature.messages.MessageBadgeViewModel
 import com.dynamictransport.dynamicone.feature.messages.MessagesRoute
 import com.dynamictransport.dynamicone.feature.payroll.PayrollRoute
 import com.dynamictransport.dynamicone.feature.personnel.SignedDocumentsRoute
+import com.dynamictransport.dynamicone.feature.personnelfiles.DocumentViewerRoute
+import com.dynamictransport.dynamicone.feature.personnelfiles.FileToView
+import com.dynamictransport.dynamicone.feature.personnelfiles.MyDocumentsRoute
+import com.dynamictransport.dynamicone.feature.personnelfiles.VehicleDocumentsRoute
+import com.dynamictransport.dynamicone.feature.personnelfiles.ViewedFileSource
 import com.dynamictransport.dynamicone.feature.profile.ProfileLink
 import com.dynamictransport.dynamicone.feature.profile.ProfileRoute
 import com.dynamictransport.dynamicone.feature.restalarm.RestAlarmSettingsRoute
 import com.dynamictransport.dynamicone.feature.shift.ShiftRoute
 import com.dynamictransport.dynamicone.feature.shiftstart.StartShiftRoute
+import com.dynamictransport.dynamicone.feature.trailer.ConfirmTrailerRoute
 import com.dynamictransport.dynamicone.feature.tripdetail.RejectTripRoute
 import com.dynamictransport.dynamicone.feature.tripdetail.TripDetailRoute
 import com.dynamictransport.dynamicone.feature.trips.TripsRoute
@@ -121,6 +134,35 @@ data object PayrollDestination
 @Serializable
 data object SignedDocumentsDestination
 
+/** Personnel documents to sign and signed ones (docs/17). */
+@Serializable
+data object HrDocumentsDestination
+
+/** One personnel document: reading and signing. Argument name matches HR_DOCUMENT_ID_ARG ("documentId"). */
+@Serializable
+data class HrDocumentDetailDestination(val documentId: String)
+
+/** Files of the own personnel file: required documents (driver) and history (`hrDocuments`). */
+@Serializable
+data object MyDocumentsDestination
+
+/** Files of the driver's assigned vehicle. */
+@Serializable
+data object VehicleDocumentsDestination
+
+/**
+ * One file in the in-app viewer (personnel, vehicle, signed document or signed proof). Argument names match
+ * VIEWER_SOURCE_ARG, VIEWER_DOCUMENT_ID_ARG and VIEWER_CONTENT_TYPE_ARG; [source] is a [ViewedFileSource] name, [title]
+ * the name shown in the bar.
+ */
+@Serializable
+data class DocumentViewerDestination(
+    val source: String,
+    val documentId: String,
+    val title: String,
+    val contentType: String? = null,
+)
+
 /** Voluntary password change from the profile. */
 @Serializable
 data object ChangePasswordDestination
@@ -128,8 +170,9 @@ data object ChangePasswordDestination
 @Serializable
 data class TripDetailDestination(val tripId: String)
 
+/** [slot]: checklist key to select first, e.g. evidence that blocks the current step (docs/18). */
 @Serializable
-data class TripDocumentsDestination(val tripId: String)
+data class TripDocumentsDestination(val tripId: String, val slot: String? = null)
 
 /** General conversation with the office. */
 @Serializable
@@ -148,6 +191,10 @@ data class RejectTripDestination(val tripId: String)
 @Serializable
 data class ReportIncidentDestination(val tripId: String? = null)
 
+/** Trailer choice of an accepted trip before it starts (docs/20). */
+@Serializable
+data class ConfirmTrailerDestination(val tripId: String)
+
 private val AppSection.destination: Any
     get() = when (this) {
         AppSection.HOME -> HomeDestination
@@ -156,6 +203,9 @@ private val AppSection.destination: Any
         AppSection.MESSAGES -> MessagesDestination
         AppSection.ATTENDANCE -> AttendanceDestination
         AppSection.ATTENDANCE_RECORDS -> AttendanceRecordsDestination
+        AppSection.HR_DOCUMENTS -> HrDocumentsDestination
+        AppSection.MY_DOCUMENTS -> MyDocumentsDestination
+        AppSection.VEHICLE_DOCUMENTS -> VehicleDocumentsDestination
         AppSection.PROFILE -> ProfileDestination
     }
 
@@ -168,7 +218,19 @@ private val AppSection.label: Int
         AppSection.MESSAGES -> R.string.nav_messages
         AppSection.ATTENDANCE -> R.string.nav_attendance
         AppSection.ATTENDANCE_RECORDS -> R.string.nav_attendance_records
+        AppSection.HR_DOCUMENTS -> R.string.nav_hr_documents
+        AppSection.MY_DOCUMENTS -> R.string.nav_my_documents
+        AppSection.VEHICLE_DOCUMENTS -> R.string.vehicle_documents_title
         AppSection.PROFILE -> R.string.nav_profile
+    }
+
+/** The profile lists areas without a place in the bar by their full name ("Documents" alone would mean trip documents). */
+@get:StringRes
+private val AppSection.linkLabel: Int
+    get() = when (this) {
+        AppSection.HR_DOCUMENTS -> R.string.hr_documents_title
+        AppSection.MY_DOCUMENTS -> R.string.my_documents_title
+        else -> label
     }
 
 private val AppSection.icon: ImageVector
@@ -179,6 +241,9 @@ private val AppSection.icon: ImageVector
         AppSection.MESSAGES -> Icons.Filled.Forum
         AppSection.ATTENDANCE -> Icons.Filled.Badge
         AppSection.ATTENDANCE_RECORDS -> Icons.AutoMirrored.Filled.EventNote
+        AppSection.HR_DOCUMENTS -> Icons.Filled.Draw
+        AppSection.MY_DOCUMENTS -> Icons.Filled.AssignmentInd
+        AppSection.VEHICLE_DOCUMENTS -> Icons.Filled.Topic
         AppSection.PROFILE -> Icons.Filled.Person
     }
 
@@ -238,10 +303,9 @@ private fun MainNavigation(modules: Set<AppModule>) {
         },
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
     ) { padding ->
-        NavHost(
-            navController = navController,
-            startDestination = layout.start.destination,
+        Row(
             modifier = Modifier
+                .fillMaxSize()
                 .padding(padding)
                 .consumeWindowInsets(padding),
         ) {
@@ -366,31 +430,55 @@ private fun rememberUnreadMessages(badgeViewModel: MessageBadgeViewModel = hiltV
     return unread
 }
 
-/** Driver module: message notifications open their conversation, and new messages need the notification permission. */
 @Composable
-private fun DriverNotificationEffects(
+private fun rememberDocumentsToSign(viewModel: PendingSignaturesViewModel = hiltViewModel()): Int {
+    val pending by viewModel.pending.collectAsStateWithLifecycle()
+    return pending?.count ?: 0
+}
+
+/**
+ * Notification taps of the account's modules: messages open their conversation and the wake-up alarm the shift start
+ * (driver), a personnel document opens that document (docs/17). New messages and documents can only be announced once
+ * notifications are allowed.
+ */
+@Composable
+private fun NotificationEffects(
     navController: NavHostController,
+    driver: Boolean,
+    hrDocuments: Boolean,
     routingViewModel: NotificationRoutingViewModel = hiltViewModel(),
 ) {
     val openRequest by routingViewModel.openRequest.collectAsStateWithLifecycle()
     val startShiftRequest by routingViewModel.startShiftRequest.collectAsStateWithLifecycle()
+    val documentRequest by routingViewModel.documentRequest.collectAsStateWithLifecycle()
 
     // A tapped message notification opens its conversation (also when it was tapped before signing in).
-    LaunchedEffect(openRequest) {
+    LaunchedEffect(openRequest, driver) {
         val request = openRequest ?: return@LaunchedEffect
+        if (!driver) {
+            routingViewModel.onOpenRequestHandled()
+            return@LaunchedEffect
+        }
         val tripId = request.tripId
         if (tripId == null) navController.navigate(GeneralMessagesDestination) else navController.navigate(TripMessagesDestination(tripId))
         routingViewModel.onOpenRequestHandled()
     }
 
     // The wake-up alarm opens the daily shift start.
-    LaunchedEffect(startShiftRequest) {
+    LaunchedEffect(startShiftRequest, driver) {
         if (!startShiftRequest) return@LaunchedEffect
-        navController.navigate(StartShiftDestination) { launchSingleTop = true }
+        if (driver) navController.navigate(StartShiftDestination) { launchSingleTop = true }
         routingViewModel.onStartShiftRequestHandled()
     }
 
-    // Android 13+: new messages can only be announced once the driver allows notifications.
+    // A tapped document notification opens that document.
+    LaunchedEffect(documentRequest, hrDocuments) {
+        val documentId = documentRequest ?: return@LaunchedEffect
+        if (hrDocuments) navController.navigate(HrDocumentDetailDestination(documentId)) { launchSingleTop = true }
+        routingViewModel.onDocumentRequestHandled()
+    }
+
+    // Android 13+: new messages and documents can only be announced once notifications are allowed.
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
     LaunchedEffect(Unit) {
         if (routingViewModel.shouldAskForNotificationPermission()) {
@@ -400,13 +488,12 @@ private fun DriverNotificationEffects(
     }
 }
 
-/** Navigation icon with the number of unread messages; read out as "N unread". */
+/** Navigation icon with a count (unread messages, documents to sign), read out with [description]. */
 @Composable
-private fun UnreadIcon(icon: ImageVector, count: Int) {
-    val description = pluralStringResource(R.plurals.messages_unread, count, count)
+private fun CountIcon(icon: ImageVector, count: Int, description: String, tag: String) {
     BadgedBox(
         badge = {
-            Badge(modifier = Modifier.testTag("nav_messages_unread")) {
+            Badge(modifier = Modifier.testTag(tag)) {
                 Text(if (count > 99) "99+" else count.toString())
             }
         },
@@ -442,6 +529,9 @@ private fun NavDestination?.section(): AppSection? {
         hierarchy.any { it.hasRoute<MessagesDestination>() } -> AppSection.MESSAGES
         hierarchy.any { it.hasRoute<AttendanceDestination>() } -> AppSection.ATTENDANCE
         hierarchy.any { it.hasRoute<AttendanceRecordsDestination>() } -> AppSection.ATTENDANCE_RECORDS
+        hierarchy.any { it.hasRoute<HrDocumentsDestination>() } -> AppSection.HR_DOCUMENTS
+        hierarchy.any { it.hasRoute<MyDocumentsDestination>() } -> AppSection.MY_DOCUMENTS
+        hierarchy.any { it.hasRoute<VehicleDocumentsDestination>() } -> AppSection.VEHICLE_DOCUMENTS
         hierarchy.any { it.hasRoute<ProfileDestination>() } -> AppSection.PROFILE
         else -> null
     }
@@ -453,4 +543,18 @@ private fun NavHostController.navigateToTopLevel(section: AppSection) {
         launchSingleTop = true
         restoreState = true
     }
+}
+
+/**
+ * One line that shrinks instead of being cut off when a long word (Russian, Polish) meets large system
+ * text: "Документы" must never read "Документ".
+ */
+@Composable
+private fun NavLabel(text: String) {
+    val size = LocalTextStyle.current.fontSize
+    Text(
+        text = text,
+        maxLines = 1,
+        autoSize = TextAutoSize.StepBased(minFontSize = 10.sp, maxFontSize = size, stepSize = 0.5.sp),
+    )
 }

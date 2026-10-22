@@ -25,19 +25,32 @@ import com.dynamictransport.dynamicone.domain.usecase.SubmitTripActionUseCase
 import com.dynamictransport.dynamicone.feature.common.SingleFlight
 import com.dynamictransport.dynamicone.feature.common.messageRes
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.launch
+import java.time.Clock
+import java.time.Duration
 import java.time.Instant
+import java.util.Locale
 import javax.inject.Inject
 
 data class HomeUiState(
     val loading: Boolean = true,
     val isDemoMode: Boolean = false,
     val driverName: String? = null,
+    /** The driver's current fleet vehicle from `me`, not the vehicle of a trip. */
+    val assignedVehicle: AssignedVehicleState = AssignedVehicleState.Loading,
     val isOnline: Boolean = true,
     val shift: Shift = Shift.NotStarted,
     val lastSyncAt: Instant? = null,
@@ -59,7 +72,7 @@ data class HomeUiState(
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    authRepository: AuthRepository,
+    private val authRepository: AuthRepository,
     private val shiftRepository: ShiftRepository,
     tripRepository: TripRepository,
     private val syncRepository: SyncRepository,

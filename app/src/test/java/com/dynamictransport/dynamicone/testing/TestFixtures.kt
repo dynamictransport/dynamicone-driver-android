@@ -15,6 +15,7 @@ import com.dynamictransport.dynamicone.domain.model.ShiftStatus
 import com.dynamictransport.dynamicone.domain.model.StopActivity
 import com.dynamictransport.dynamicone.domain.model.StopStatus
 import com.dynamictransport.dynamicone.domain.model.SyncState
+import com.dynamictransport.dynamicone.domain.model.TrailerOption
 import com.dynamictransport.dynamicone.domain.model.Trip
 import com.dynamictransport.dynamicone.domain.model.TripActionType
 import com.dynamictransport.dynamicone.domain.model.TripContainer
@@ -22,6 +23,7 @@ import com.dynamictransport.dynamicone.domain.model.TripExecution
 import com.dynamictransport.dynamicone.domain.model.TripLocation
 import com.dynamictransport.dynamicone.domain.model.TripState
 import com.dynamictransport.dynamicone.domain.model.TripStop
+import com.dynamictransport.dynamicone.domain.model.TripTrailerState
 import com.dynamictransport.dynamicone.domain.model.TripWorkflow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -114,7 +116,8 @@ fun testAction(
     label: String? = null,
     stopId: String? = null,
     containerId: String? = null,
-) = ExecutionAction(code, label, stopId, containerId)
+    blockedByTrailer: Boolean = false,
+) = ExecutionAction(code, label, stopId, containerId, blockedByTrailer = blockedByTrailer)
 
 fun testExecution(
     tripId: String = "trip-1",
@@ -122,7 +125,21 @@ fun testExecution(
     actions: List<ExecutionAction> = emptyList(),
     documents: List<DocumentSlot> = emptyList(),
     workflow: TripWorkflow = TripWorkflow.TRIP_ACTIONS,
-) = TripExecution(tripId, version, "InProgress", workflow, actions, documents)
+    trailerConfirmationRequired: Boolean = false,
+) = TripExecution(tripId, version, "InProgress", workflow, actions, documents, trailerConfirmationRequired)
+
+fun testTrailer(id: String, registrationNumber: String, companyCode: String? = null) =
+    TrailerOption(id, registrationNumber, companyCode)
+
+fun testTrailerState(
+    tripId: String = "trip-1",
+    version: String = "v1",
+    plannedTrailerId: String? = null,
+    confirmedTrailerId: String? = null,
+    confirmedAt: Instant? = null,
+    canConfirm: Boolean = true,
+    trailers: List<TrailerOption> = emptyList(),
+) = TripTrailerState(tripId, version, plannedTrailerId, confirmedTrailerId, confirmedAt, canConfirm, trailers)
 
 fun testSlot(
     key: String,

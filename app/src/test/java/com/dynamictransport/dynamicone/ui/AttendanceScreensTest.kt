@@ -5,6 +5,7 @@ import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -25,6 +26,7 @@ import com.dynamictransport.dynamicone.domain.model.LocalPunchState
 import com.dynamictransport.dynamicone.domain.model.PunchFailure
 import com.dynamictransport.dynamicone.domain.model.SyncState
 import com.dynamictransport.dynamicone.domain.rules.AttendanceSituation
+import com.dynamictransport.dynamicone.feature.attendance.ATTENDANCE_JOB_TITLE_TAG
 import com.dynamictransport.dynamicone.feature.attendance.AttendanceRecordsScreen
 import com.dynamictransport.dynamicone.feature.attendance.AttendanceRecordsUiState
 import com.dynamictransport.dynamicone.feature.attendance.AttendanceScreen
@@ -111,6 +113,32 @@ class AttendanceScreensTest {
             .performClick()
 
         assertEquals(1, primaryActions)
+    }
+
+    @Test
+    fun jobTitleIsShownUnderTheNameOnlyWhenKnown() {
+        setScreen(AttendanceUiState(loading = false, userName = "Ayşe Yılmaz", userTitle = "Operations Manager", situation = situation(checkedIn = true)))
+
+        composeRule.onNodeWithText("Ayşe Yılmaz").assertIsDisplayed()
+        composeRule.onNodeWithTag(ATTENDANCE_JOB_TITLE_TAG).assertIsDisplayed().assertTextEquals("Operations Manager")
+    }
+
+    @Test
+    @org.robolectric.annotation.GraphicsMode(org.robolectric.annotation.GraphicsMode.Mode.NATIVE)
+    fun aLongJobTitleStaysWithinTwoLines() {
+        val title = "Senior International Road Transport Operations and Customs Documentation Coordinator for Eastern Europe and Central Asia"
+        setScreen(AttendanceUiState(loading = false, userName = "Ayşe Yılmaz", userTitle = title, situation = situation(checkedIn = true)))
+
+        val layout = composeRule.onNodeWithTag(ATTENDANCE_JOB_TITLE_TAG).assertTextEquals(title).textLayout()
+        assertEquals(2, layout.lineCount)
+        org.junit.Assert.assertTrue(layout.hasVisualOverflow)
+    }
+
+    @Test
+    fun withoutJobTitleNoEmptyLineIsShown() {
+        setScreen(AttendanceUiState(loading = false, userName = "Ayşe Yılmaz", situation = situation(checkedIn = true)))
+
+        composeRule.onAllNodes(hasTestTag(ATTENDANCE_JOB_TITLE_TAG)).assertCountEquals(0)
     }
 
     @Test

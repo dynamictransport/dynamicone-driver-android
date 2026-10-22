@@ -3,12 +3,15 @@ package com.dynamictransport.dynamicone.core.security
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import com.dynamictransport.dynamicone.domain.model.AppModule
+import com.dynamictransport.dynamicone.domain.model.AssignedVehicle
+import com.dynamictransport.dynamicone.domain.model.AssignedVehicleState
 import com.dynamictransport.dynamicone.domain.model.UserProfile
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -272,7 +275,7 @@ class SessionPreferences @Inject constructor(
 
     suspend fun modules(): Set<AppModule> = AppModule.fromWire(dataStore.data.first()[MODULES])
 
-    /** Stores who is signed in, with the modules and name the app needs to open offline. */
+    /** Stores who is signed in, with the modules, name and assigned vehicle the app needs to open offline. */
     suspend fun setLoggedInUser(profile: UserProfile) {
         dataStore.edit {
             it[USER_ID] = profile.id
@@ -283,16 +286,13 @@ class SessionPreferences @Inject constructor(
                 it[LAST_DRIVER_ID] = profile.driverId
             }
             it[SESSION_EXPIRED] = false
+            it.writeProfile(profile)
         }
-        updateProfile(profile)
     }
 
-    /** A newer `me` of the same account: name and modules may have changed. */
+    /** A newer `me` of the same account: name, modules and the assigned vehicle may have changed. */
     suspend fun updateProfile(profile: UserProfile) {
-        dataStore.edit {
-            it[MODULES] = profile.modules.mapTo(LinkedHashSet()) { module -> module.wireName }
-            if (profile.displayName.isBlank()) it.remove(DISPLAY_NAME) else it[DISPLAY_NAME] = profile.displayName
-        }
+        dataStore.edit { it.writeProfile(profile) }
     }
 
     suspend fun clearLoggedInUser(expired: Boolean) {
@@ -301,12 +301,48 @@ class SessionPreferences @Inject constructor(
             it.remove(DRIVER_ID)
             it.remove(MODULES)
             it.remove(DISPLAY_NAME)
+            it.remove(JOB_TITLE)
+            it.removeAssignedVehicle()
             it[SESSION_EXPIRED] = expired
         }
     }
 
     /** Display name from `me`, kept so the app can greet the user offline. */
     suspend fun displayName(): String? = dataStore.data.first()[DISPLAY_NAME]
+
+    /** Job title from `me` (docs/22), kept with the name for offline starts. */
+    suspend fun jobTitle(): String? = dataStore.data.first()[JOB_TITLE]
+
+    /** `me.assignedVehicle` of the signed-in account; null until `me` has answered for it. */
+    val assignedVehicleChanges: Flow<AssignedVehicleState?> = dataStore.data.map { it.assignedVehicle() }.distinctUntilChanged()
+
+    suspend fun assignedVehicle(): AssignedVehicleState? = dataStore.data.first().assignedVehicle()
+
+    /** [profile] is an answer of `me`: a null vehicle means that none is assigned. */
+    private fun MutablePreferences.writeProfile(profile: UserProfile) {
+        this[MODULES] = profile.modules.mapTo(LinkedHashSet()) { module -> module.wireName }
+        if (profile.displayName.isBlank()) remove(DISPLAY_NAME) else this[DISPLAY_NAME] = profile.displayName
+        if (profile.jobTitle == null) remove(JOB_TITLE) else this[JOB_TITLE] = profile.jobTitle
+        removeAssignedVehicle()
+        val vehicle = profile.assignedVehicle
+        this[VEHICLE_ASSIGNED] = vehicle != null
+        vehicle?.vehicleId?.let { this[VEHICLE_ID] = it }
+        vehicle?.companyCode?.let { this[VEHICLE_COMPANY_CODE] = it }
+        vehicle?.registrationNumber?.let { this[VEHICLE_REGISTRATION] = it }
+    }
+
+    private fun MutablePreferences.removeAssignedVehicle() {
+        remove(VEHICLE_ASSIGNED)
+        remove(VEHICLE_ID)
+        remove(VEHICLE_COMPANY_CODE)
+        remove(VEHICLE_REGISTRATION)
+    }
+
+    private fun Preferences.assignedVehicle(): AssignedVehicleState? = when (this[VEHICLE_ASSIGNED]) {
+        null -> null
+        false -> AssignedVehicleState.NotAssigned
+        true -> AssignedVehicleState.Assigned(AssignedVehicle(this[VEHICLE_ID], this[VEHICLE_COMPANY_CODE], this[VEHICLE_REGISTRATION]))
+    }
 
     suspend fun lastUsername(): String? = dataStore.data.first()[LAST_USERNAME]
 
@@ -327,9 +363,14 @@ class SessionPreferences @Inject constructor(
         val DRIVER_ID = stringPreferencesKey("driver_id")
         val MODULES = stringSetPreferencesKey("modules")
         val DISPLAY_NAME = stringPreferencesKey("display_name")
+        val JOB_TITLE = stringPreferencesKey("job_title")
         val LAST_DRIVER_ID = stringPreferencesKey("last_driver_id")
         val LAST_USERNAME = stringPreferencesKey("last_username")
         val INSTALLATION_ID = stringPreferencesKey("installation_id")
         val SESSION_EXPIRED = booleanPreferencesKey("session_expired")
+        val VEHICLE_ASSIGNED = booleanPreferencesKey("assigned_vehicle")
+        val VEHICLE_ID = stringPreferencesKey("assigned_vehicle_id")
+        val VEHICLE_COMPANY_CODE = stringPreferencesKey("assigned_vehicle_company_code")
+        val VEHICLE_REGISTRATION = stringPreferencesKey("assigned_vehicle_registration")
     }
 }
