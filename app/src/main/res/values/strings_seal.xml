@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Export loading: seal number and seal photo per container (docs/27, backend TH-2026-0519). -->
+<resources>
+    <string name="exec_confirm_loading">LOADING COMPLETED</string>
+    <string name="exec_record_seal">SAVE THE SEAL NUMBER</string>
+    <string name="receipt_confirm_loading">Loading confirmed</string>
+    <string name="receipt_record_seal">Seal number recorded</string>
+    <string name="seal_loading_hint">Confirm when the loading is physically finished. The planner closes this stop.</string>
+    <string name="seal_loading_confirmed">Loading confirmed. Save the seal number and the seal photo of each container.</string>
+    <string name="seal_hint">Save the seal number and the seal photo of each container. The planner closes this stop.</string>
+    <string name="seal_waiting_planner">Seal details saved. Waiting for the planner\'s confirmation.</string>
+    <string name="seal_planner_closes">This stop is closed by the planner.</string>
+    <string name="seal_card_title">Seal · Container %1$s</string>
+    <string name="seal_number_label">Seal number</string>
+    <string name="seal_number_recorded">Saved: %1$s</string>
+    <string name="seal_number_missing">Seal number missing</string>
+    <string name="seal_save">SAVE THE SEAL NUMBER</string>
+    <string name="seal_saved">Seal number saved.</string>
+    <string name="seal_photo_label">Seal photo</string>
+    <string name="seal_photo_missing">Photo missing</string>
+    <string name="seal_photo_not_required">Photo not required</string>
+    <string name="seal_photo_pending">Uploaded, waiting for review</string>
+    <string name="seal_photo_approved">Approved</string>
+    <string name="seal_photo_rejected">Rejected — upload again</string>
+    <string name="seal_photo_unknown">Status unknown</string>
+    <string name="seal_photo_no_slot">No photo slot in this plan</string>
+    <string name="seal_photo_take">TAKE THE SEAL PHOTO</string>
+    <string name="seal_photo_retake">UPLOAD THE PHOTO AGAIN</string>
+    <string name="seal_photo_replace">Replace the photo</string>
+    <string name="seal_complete">Seal details complete</string>
+    <string name="error_seal_number_invalid">Enter a seal number of 1 to 100 characters without line breaks.</string>
+    <string name="error_seal_number_required">The seal number of this container is still missing on the server. The step was not recorded.</string>
+    <string name="error_loading_confirmation_required">Confirm the loading first. The step was not recorded.</string>
+</resources>

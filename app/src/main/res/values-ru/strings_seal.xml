@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="exec_confirm_loading">ПОГРУЗКА ЗАВЕРШЕНА</string>
+    <string name="exec_record_seal">СОХРАНИТЬ НОМЕР ПЛОМБЫ</string>
+    <string name="receipt_confirm_loading">Погрузка подтверждена</string>
+    <string name="receipt_record_seal">Номер пломбы сохранён</string>
+    <string name="seal_loading_hint">Подтвердите, когда погрузка физически завершена. Эту остановку закрывает планировщик.</string>
+    <string name="seal_loading_confirmed">Погрузка подтверждена. Сохраните номер пломбы и фото пломбы каждого контейнера.</string>
+    <string name="seal_hint">Сохраните номер пломбы и фото пломбы каждого контейнера. Эту остановку закрывает планировщик.</string>
+    <string name="seal_waiting_planner">Данные пломбы сохранены. Ожидается подтверждение планировщика.</string>
+    <string name="seal_planner_closes">Эту остановку закрывает планировщик.</string>
+    <string name="seal_card_title">Пломба · Контейнер %1$s</string>
+    <string name="seal_number_label">Номер пломбы</string>
+    <string name="seal_number_recorded">Сохранено: %1$s</string>
+    <string name="seal_number_missing">Номер пломбы отсутствует</string>
+    <string name="seal_save">СОХРАНИТЬ НОМЕР ПЛОМБЫ</string>
+    <string name="seal_saved">Номер пломбы сохранён.</string>
+    <string name="seal_photo_label">Фото пломбы</string>
+    <string name="seal_photo_missing">Фото отсутствует</string>
+    <string name="seal_photo_not_required">Фото не требуется</string>
+    <string name="seal_photo_pending">Загружено, ожидает проверки</string>
+    <string name="seal_photo_approved">Одобрено</string>
+    <string name="seal_photo_rejected">Отклонено — загрузите снова</string>
+    <string name="seal_photo_unknown">Статус неизвестен</string>
+    <string name="seal_photo_no_slot">В этом плане нет поля для фото</string>
+    <string name="seal_photo_take">СНЯТЬ ФОТО ПЛОМБЫ</string>
+    <string name="seal_photo_retake">ЗАГРУЗИТЬ ФОТО СНОВА</string>
+    <string name="seal_photo_replace">Заменить фото</string>
+    <string name="seal_complete">Данные пломбы заполнены</string>
+    <string name="error_seal_number_invalid">Введите номер пломбы от 1 до 100 символов без переносов строк.</string>
+    <string name="error_seal_number_required">На сервере всё ещё нет номера пломбы этого контейнера. Шаг не записан.</string>
+    <string name="error_loading_confirmation_required">Сначала подтвердите погрузку. Шаг не записан.</string>
+</resources>

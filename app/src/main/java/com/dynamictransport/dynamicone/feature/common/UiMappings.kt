@@ -129,6 +129,8 @@ fun ExecutionAction.knownLabelRes(): Int? = when (code) {
     ExecutionActionCode.REST -> R.string.exec_rest
     ExecutionActionCode.PROBLEM -> R.string.exec_problem
     ExecutionActionCode.COMPLETE_STOP -> label?.let { COMPLETE_STOP_LABELS[it] }
+    ExecutionActionCode.CONFIRM_LOADING -> R.string.exec_confirm_loading
+    ExecutionActionCode.RECORD_SEAL_NUMBER -> R.string.exec_record_seal
 }
 
 private val COMPLETE_STOP_LABELS = mapOf(
@@ -149,6 +151,8 @@ fun ExecutionActionCode.icon(): ImageVector = when (this) {
     ExecutionActionCode.COMPLETE_STOP -> Icons.Filled.TaskAlt
     ExecutionActionCode.REST -> Icons.Filled.FreeBreakfast
     ExecutionActionCode.PROBLEM -> Icons.Filled.ReportProblem
+    ExecutionActionCode.CONFIRM_LOADING -> Icons.Filled.Inventory
+    ExecutionActionCode.RECORD_SEAL_NUMBER -> Icons.Filled.Lock
 }
 
 @StringRes
@@ -157,7 +161,20 @@ fun ExecutionActionCode?.receiptLabelRes(): Int = when (this) {
     ExecutionActionCode.COMPLETE_STOP -> R.string.receipt_complete_stop
     ExecutionActionCode.REST -> R.string.receipt_rest
     ExecutionActionCode.PROBLEM -> R.string.receipt_problem
+    ExecutionActionCode.CONFIRM_LOADING -> R.string.receipt_confirm_loading
+    ExecutionActionCode.RECORD_SEAL_NUMBER -> R.string.receipt_record_seal
     null -> R.string.receipt_unknown
+}
+
+/** docs/27: the seal photo of a container, worded for the seal card; never "approved" for a pending upload. */
+fun DocumentSlotState?.toSealPhotoUi(): StatusUi = when (this) {
+    null -> StatusUi(R.string.seal_photo_no_slot, Icons.Filled.Info, StatusTone.Neutral)
+    DocumentSlotState.MISSING -> StatusUi(R.string.seal_photo_missing, Icons.Filled.AddAPhoto, StatusTone.Warning)
+    DocumentSlotState.NOT_REQUIRED -> StatusUi(R.string.seal_photo_not_required, Icons.Filled.RemoveCircleOutline, StatusTone.Neutral)
+    DocumentSlotState.PENDING_REVIEW -> StatusUi(R.string.seal_photo_pending, Icons.Filled.HourglassTop, StatusTone.Info)
+    DocumentSlotState.APPROVED -> StatusUi(R.string.seal_photo_approved, Icons.Filled.Verified, StatusTone.Positive)
+    DocumentSlotState.REJECTED -> StatusUi(R.string.seal_photo_rejected, Icons.Filled.Error, StatusTone.Danger)
+    DocumentSlotState.UNKNOWN -> StatusUi(R.string.seal_photo_unknown, Icons.Filled.Info, StatusTone.Neutral)
 }
 
 @StringRes
@@ -360,6 +377,9 @@ fun ActionRejection.messageRes(): Int = when (this) {
     ActionRejection.PENDING_ACTION -> R.string.error_pending_action
     ActionRejection.DOCUMENTS_REQUIRED -> R.string.error_documents_required
     ActionRejection.PHOTO_REQUIRED -> R.string.error_photo_required
+    ActionRejection.SEAL_NUMBER_INVALID -> R.string.error_seal_number_invalid
+    ActionRejection.SEAL_NUMBER_REQUIRED -> R.string.error_seal_number_required
+    ActionRejection.LOADING_CONFIRMATION_REQUIRED -> R.string.error_loading_confirmation_required
     ActionRejection.OFFLINE -> R.string.error_offline
     ActionRejection.SERVICE_UNAVAILABLE -> R.string.refresh_service_unavailable
     ActionRejection.RATE_LIMITED -> R.string.refresh_rate_limited

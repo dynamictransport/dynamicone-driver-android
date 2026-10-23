@@ -40,6 +40,10 @@ data class DriverAvailableActionDto(
     val blockingDocumentSlots: List<String>? = null,
     /** docs/20: a stated reason, e.g. `trailer_confirmation_required`; documents use the list above. */
     val blockingReason: String? = null,
+    /** docs/27 (TH-2026-0519), `RecordSealNumber`: the seal already recorded for this trip container. */
+    val sealNumber: String? = null,
+    val containerNumber: String? = null,
+    val stopName: String? = null,
 )
 
 @Serializable
@@ -100,6 +104,8 @@ data class DriverActionCommandDto(
     val latitude: Double?,
     val longitude: Double?,
     val accuracyMeters: Double?,
+    /** docs/27: only with `RecordSealNumber`; omitted otherwise so older commands keep their payload. */
+    val sealNumber: String? = null,
 )
 
 @Serializable
@@ -253,11 +259,19 @@ object DriverExecutionNames {
     const val ACTION_COMPLETE_STOP = "CompleteStop"
     const val ACTION_REST = "Rest"
     const val ACTION_PROBLEM = "Problem"
+
+    /** Export loading stop (docs/27, TH-2026-0519): stop-scoped loading confirmation and per-container seal entry. */
+    const val ACTION_CONFIRM_LOADING = "ConfirmLoading"
+    const val ACTION_RECORD_SEAL_NUMBER = "RecordSealNumber"
     const val COORDINATES_AVAILABLE = "Available"
     const val COORDINATES_MISSING = "Missing"
 
     /** `blockingReason` of Start while the trailer under the truck is not confirmed (docs/20). */
     const val BLOCKED_TRAILER_CONFIRMATION = "trailer_confirmation_required"
+
+    /** `blockingReason` of CompleteStop at an export loading stop (docs/27); also the 409 codes. */
+    const val BLOCKED_LOADING_CONFIRMATION = "loading_confirmation_required"
+    const val BLOCKED_SEAL_NUMBER = "seal_number_required"
 }
 
 object DriverSlotStateNames {

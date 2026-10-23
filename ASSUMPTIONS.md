@@ -311,3 +311,47 @@ Kullanıcı isteği: sefer detayındaki terminal duraklarında planlamacının k
 - **L11 — Uyarı kaynağı ve iptali:** Uyarılar bellekteki sefer okumasından kurulur ve Room `tar_warnings` (v8) ile yeniden başlatmayı atlatır. Taşınan pencere yeniden kurar; kaldırılan TAR, tamamlanan/atlanan durak, biten veya listeden düşen sefer iptal eder; boş liste ve durakları okunmamış sefer kararsızdır (dokunulmaz); çıkışta hepsi iptal. Geçmiş eşikler sonradan çalmaz.
 - **L12 — Çalma anındaki kontrol:** Alarm çalınca durak yeniden kontrol edilir (aynı kod ve bitiş, durak açık, pencere bitmemiş). Süreç yeniden başladıysa sefer sunucudan okunur; ulaşılamazsa kayıtlı veriyle çalar (en iyi çaba). Aynı alarm iki kez teslim edilirse bir kez çalar.
 - **L13 — Ekranda:** Ek bir ekran öğesi yoktur; bildirim uygulama açıkken de heads-up olarak görünür, kart zaten ≤30 dk'da sarıya döner.
+
+## Export yüklemesinde mühür numarası ve fotoğrafı (23.10.2026)
+
+Kullanıcı isteği (TH-2026-0519 aktarımı): Export yükleme durağında yükleme onayı, konteyner başına mühür numarası
+ve mühür fotoğrafı; durak kapatma geçiş döneminde planlamacıda. Backend PR #608 (merge 453bcb33) `main`'de; uygulama
+sözleşmesi `docs/27_EXPORT_LOADING_SEAL.md`. Harf etiketi **S**.
+
+- **S1 — Export durağı sunucudan tanınır:** Sefer türü uygulamada saklanmaz/tahmin edilmez. Planda `ConfirmLoading`
+  ya da `RecordSealNumber` sunulan durak, ya da `CompleteStop`'u `loading_confirmation_required` /
+  `seal_number_required` ile engellenen durak "Export yükleme durağı"dır (`TripExecution.exportLoadingStopId`).
+  Böyle bir durak yoksa hiçbir şey değişmez; diğer sefer türleri etkilenmez.
+- **S2 — CompleteStop asla gönderilmez:** Bu durağın `CompleteStop` seçeneği ekranda çizilmez; `submit()` de
+  `NOT_ALLOWED` ile reddeder (sunucu `canExecute=true` dönse bile). Daha önce saklanmış bir `CompleteStop` komutunun
+  aynen tekrar gönderilmesi (yanıt kaybı) etkilenmez; o zaten gönderilmiş bir isteğin tekrarıdır.
+- **S3 — Yükleme onayı basılı tutmalı:** `ConfirmLoading` geri alınamaz ve sunucuda hatırlatma mesajı doğurur;
+  diğer kalıcı adımlar gibi *basılı tut* ile onaylanır. `containerId` null olduğundan JSON'da alan yazılmaz
+  (`explicitNulls=false`); `Guid?` için eşdeğerdir. Ofis/eski akış zaten onayladıysa plan `ConfirmLoading` sunmaz,
+  uygulama onay üretmez.
+- **S4 — Mühür metni doğrulaması:** Kırpılmış 1–100 karakter, `Char.isISOControl()` (Unicode Cc = C# `char.IsControl`)
+  içermez; harf büyüklüğü değiştirilmez. Metin alanı 100 karakterde kesilir. Geçersiz değer istek atılmadan
+  reddedilir; sunucu `400 invalid_seal_number` dönerse komut silinir, düzeltme yeni UUID ile gider.
+- **S5 — Her konteyner ayrı komut, güncel sürümle:** Her kayıt yeni `commandId`; `expectedVersion` o anki plan
+  sürümü. Başarıda plan yeniden okunur, ikinci konteyner yeni sürümle gider. Tek bekleyen komut kuralı (docs/18)
+  geçerlidir: yanıtı belirsiz bir mühür komutu çözülmeden başka komut gönderilmez.
+- **S6 — Metin ve fotoğraf bağımsız:** `SealEntry.sealNumberRecorded` sunucunun `sealNumber` alanından,
+  `photoDone` `Seal` slotunun durumundan (`PendingReview`/`Approved`/`NotRequired`) okunur. Biri diğerini
+  tamamlanmış göstermez. Planda ilgili `Seal` slotu hiç yoksa fotoğraf "bu planda yok" sayılır ve sadece metin
+  tamamlamayı belirler (güvenli varsayım; sunucu slot verirse kural slot durumuna döner).
+- **S7 — Fotoğraf mevcut belge akışıyla:** Karttaki düğme belge ekranını ilgili slotla açar; kamera, galeri,
+  önizleme/yeniden çekme, JPEG'e dönüştürme, 10 MiB sınırı ve yanıt kaybında kör tekrar yüklememe
+  (`RealDocumentRepository`) olduğu gibi kullanılır. Yeni yükleme yolu yazılmadı.
+- **S8 — Planlamacı bekleme durumu:** Listelenen tüm konteynerler `complete` ise eylem çubuğunda *Mühür bilgileri
+  kaydedildi. Planlamacı onayı bekleniyor.* Durak yerelde tamamlanmış sayılmaz; mevcut 60 sn yenileme ve ön plana
+  dönüş okuması kapanışı sunucudan getirir. Konteynersiz Export durağı (sunucu `seal_number_required` ile bloklar,
+  eylem sunmaz) *Bu durağı planlamacı kapatır* ipucuyla gösterilir.
+- **S9 — Gerekli evrak kartı:** Export yükleme durağının `Seal` slotları *Sıradaki adım için gerekli* kartında
+  tekrar listelenmez (kartlarda gösterilir); CMR vb. diğer slotlar listelenmeye devam eder.
+- **S10 — Hata kodları:** `409 seal_number_required` / `loading_confirmation_required` komutu siler, planı yeniden
+  okur ve kendi mesajıyla açıklar; `required_documents_missing`/`conflict` mevcut davranış. Sunucu metni
+  kullanılmaz.
+- **S11 — Bildirim:** Yeni push türü yok; sunucunun ürettiği hatırlatma mevcut `driver.message` kanalı, messageId
+  tekilleştirmesi ve dokununca seferi yeniden okuma davranışıyla gelir. Uygulama hatırlatma üretmez.
+- **S12 — Doğrulama:** 21 yeni JVM testi (kural, mapping, MockWebServer repository, ViewModel, Robolectric Compose).
+  Fiziksel cihaz kabulü teslim raporunda ayrı listelenir; iki konteynerli gerçek Export seferi gerektirir.

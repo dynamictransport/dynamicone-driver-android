@@ -9,6 +9,31 @@ enum class ExecutionActionCode {
     COMPLETE_STOP,
     REST,
     PROBLEM,
+
+    /** Export loading stop (docs/27): physical loading is finished; the stop stays open. */
+    CONFIRM_LOADING,
+
+    /** Export loading stop (docs/27): the seal number of one container, sent with `sealNumber`. */
+    RECORD_SEAL_NUMBER,
+}
+
+/** The server's stated `blockingReason` of an action. Evidence slots are listed separately. */
+enum class ExecutionBlock {
+    /** docs/20: the trailer under the truck has to be confirmed first. */
+    TRAILER_CONFIRMATION_REQUIRED,
+
+    /** docs/27: the stop closes only after the loading confirmation. */
+    LOADING_CONFIRMATION_REQUIRED,
+
+    /** docs/27: the stop closes only after the seal number of the container. */
+    SEAL_NUMBER_REQUIRED,
+
+    /** A reason this app version does not know; the action is blocked all the same. */
+    UNKNOWN,
+    ;
+
+    /** The export loading stop is closed by the planner, never by the app (docs/27). */
+    val isExportSealGate: Boolean get() = this == LOADING_CONFIRMATION_REQUIRED || this == SEAL_NUMBER_REQUIRED
 }
 
 /**
@@ -26,9 +51,20 @@ data class ExecutionAction(
     val canExecute: Boolean = true,
     /** docs/20: refused until the driver confirms the trailer under the truck; not an evidence problem. */
     val blockedByTrailer: Boolean = false,
+    /** The server's stated reason while the action cannot be executed; null when none was given. */
+    val blockingReason: ExecutionBlock? = null,
+    /** docs/27, `RecordSealNumber`: the seal number already recorded for this container of this trip. */
+    val sealNumber: String? = null,
+    /** docs/27: display data of the step, as the server sent it. */
+    val containerNumber: String? = null,
+    val stopName: String? = null,
 ) {
     /** Start or a stop/container completion: moves the trip forward. */
     val isProgress: Boolean get() = code == ExecutionActionCode.START || code == ExecutionActionCode.COMPLETE_STOP
+
+    /** Loading confirmation or seal entry of an export loading stop: recorded, but never closes the stop (docs/27). */
+    val isExportLoadingStep: Boolean
+        get() = code == ExecutionActionCode.CONFIRM_LOADING || code == ExecutionActionCode.RECORD_SEAL_NUMBER
 
     /** Offered, but not possible before the listed evidence is uploaded. A contradictory answer counts as blocked. */
     val isBlocked: Boolean get() = !canExecute || blockingDocumentSlots.isNotEmpty()
@@ -36,6 +72,35 @@ data class ExecutionAction(
     /** The same step of the plan (code, stop and container); whether it is blocked may change meanwhile. */
     fun isSameStep(other: ExecutionAction): Boolean =
         code == other.code && stopId == other.stopId && containerId == other.containerId
+}
+
+/**
+ * The seal of one container at an export loading stop (docs/27): the seal number and the seal photo are
+ * two separate server records. One of them never stands in for the other.
+ */
+data class SealEntry(
+    /** The server's `RecordSealNumber` option of this container. */
+    val action: ExecutionAction,
+    /** The `Seal` slot of the same stop and container; null when the plan has no such slot. */
+    val photoSlot: DocumentSlot?,
+) {
+    val containerId: String? get() = action.containerId
+
+    /** The seal number recorded on the server for this trip and container. */
+    val recordedSealNumber: String? get() = action.sealNumber
+
+    val sealNumberRecorded: Boolean get() = !recordedSealNumber.isNullOrBlank()
+
+    /** Uploaded and waiting for review, approved, or not required: the photo asks nothing more of the driver. */
+    val photoDone: Boolean
+        get() = when (photoSlot?.state) {
+            null -> true
+            DocumentSlotState.PENDING_REVIEW, DocumentSlotState.APPROVED, DocumentSlotState.NOT_REQUIRED -> true
+            DocumentSlotState.MISSING, DocumentSlotState.REJECTED, DocumentSlotState.UNKNOWN -> false
+        }
+
+    /** Both records are on the server. Only then does the stop wait for the planner. */
+    val complete: Boolean get() = sealNumberRecorded && photoDone
 }
 
 /** Current execution plan of a trip (`GET trips/{tripId}/execution`). */
@@ -51,14 +116,38 @@ data class TripExecution(
     val trailerConfirmationRequired: Boolean = false,
 ) {
     /**
+     * The export loading stop of the plan, if the current stop is one (docs/27): the server offers the
+     * loading confirmation or seal entries for it, or blocks its completion for the seal gate. The app
+     * never sends `CompleteStop` for this stop; the planner closes it.
+     */
+    val exportLoadingStopId: String?
+        get() = availableActions.firstOrNull { it.isExportLoadingStep }?.stopId
+            ?: availableActions.firstOrNull { it.code == ExecutionActionCode.COMPLETE_STOP && it.blockingReason?.isExportSealGate == true }?.stopId
+
+    /** The server's loading confirmation option; null once loading is confirmed or outside export loading. */
+    val loadingConfirmation: ExecutionAction?
+        get() = availableActions.firstOrNull { it.code == ExecutionActionCode.CONFIRM_LOADING }
+
+    /** One entry per container the server still lists for seal entry, in server order, with its seal photo slot. */
+    val sealEntries: List<SealEntry>
+        get() = availableActions.filter { it.code == ExecutionActionCode.RECORD_SEAL_NUMBER }.map { action ->
+            SealEntry(action, documents.firstOrNull { it.isSealPhotoOf(action.stopId, action.containerId) })
+        }
+
+    /**
      * Slots that block a start or stop/container completion, in checklist order. The server decides which
      * evidence blocks which step; keys that are not in the checklist cannot be shown and are left out.
+     * Seal photos of the export loading stop belong to the seal entries and are not repeated here.
      */
     val blockingSlots: List<DocumentSlot>
         get() {
             val keys = availableActions.filter { it.isProgress && it.isBlocked }.flatMapTo(HashSet()) { it.blockingDocumentSlots }
-            return documents.filter { it.key in keys }
+            val exportStop = exportLoadingStopId
+            return documents.filter { it.key in keys && !(exportStop != null && it.type == DocumentType.SEAL_PHOTO && it.stopId == exportStop) }
         }
+
+    private fun DocumentSlot.isSealPhotoOf(stopId: String?, containerId: String?): Boolean =
+        type == DocumentType.SEAL_PHOTO && this.stopId == stopId && this.containerId == containerId
 }
 
 /** Optional device evidence of an action. The app sends none unless every contract rule holds. */
@@ -106,6 +195,8 @@ data class PendingTripAction(
     val location: LocationEvidence?,
     val createdAt: Instant,
     val state: PendingCommandState,
+    /** docs/27: the seal number of a `RecordSealNumber` command, part of the stored payload. */
+    val sealNumber: String? = null,
 )
 
 /** Recorded action (`GET trips/{tripId}/actions`). Server receive time and device observation time are different facts. */

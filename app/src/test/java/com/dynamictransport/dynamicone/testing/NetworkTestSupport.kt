@@ -222,10 +222,16 @@ object DriverApiJson {
         containerId: String? = null,
         blockingSlots: List<String>? = null,
         blockingReason: String? = null,
+        sealNumber: String? = null,
+        containerNumber: String? = null,
+        stopName: String? = null,
     ) = """{"code":"$code","label":"$label","stopId":${q(stopId)},"containerId":${q(containerId)}""" +
         (blockingSlots?.let { keys -> ""","blockingDocumentSlots":[${keys.joinToString(",") { q(it) }}]""" } ?: "") +
         (blockingReason?.let { ""","blockingReason":${q(it)}""" } ?: "") +
         (if (blockingSlots == null && blockingReason == null) "" else ""","canExecute":${blockingSlots.isNullOrEmpty() && blockingReason == null}""") +
+        (sealNumber?.let { ""","sealNumber":${q(it)}""" } ?: "") +
+        (containerNumber?.let { ""","containerNumber":${q(it)}""" } ?: "") +
+        (stopName?.let { ""","stopName":${q(it)}""" } ?: "") +
         "}"
 
     fun slot(

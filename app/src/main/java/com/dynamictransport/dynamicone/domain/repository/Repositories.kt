@@ -224,8 +224,18 @@ interface TripExecutionRepository {
 
     suspend fun refreshReceipts(tripId: String): RefreshResult
 
-    /** Stores the command with a new command id, then sends it. Only options of the current plan are accepted. */
+    /**
+     * Stores the command with a new command id, then sends it. Only options of the current plan are accepted.
+     * Never a `CompleteStop` of an export loading stop (the planner closes it) and never a seal entry (see
+     * [recordSealNumber]).
+     */
     suspend fun submit(tripId: String, action: ExecutionAction, note: String?): ActionResult
+
+    /**
+     * docs/27: records the seal number of one container with the server's `RecordSealNumber` option, as its
+     * own command. The seal photo is a separate upload; neither record stands in for the other.
+     */
+    suspend fun recordSealNumber(tripId: String, action: ExecutionAction, sealNumber: String): ActionResult
 
     /** Sends the stored command again with the same command id and payload. */
     suspend fun resendPending(tripId: String): ActionResult

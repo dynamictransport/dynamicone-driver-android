@@ -35,6 +35,7 @@ import com.dynamictransport.dynamicone.domain.model.DocumentType
 import com.dynamictransport.dynamicone.domain.model.DriverMessage
 import com.dynamictransport.dynamicone.domain.model.ExecutionAction
 import com.dynamictransport.dynamicone.domain.model.ExecutionActionCode
+import com.dynamictransport.dynamicone.domain.model.ExecutionBlock
 import com.dynamictransport.dynamicone.domain.model.FinalizedMonthlyPay
 import com.dynamictransport.dynamicone.domain.model.GeoPoint
 import com.dynamictransport.dynamicone.domain.model.MessageDirection
@@ -186,6 +187,7 @@ internal object DriverApiMapping {
      */
     fun action(dto: DriverAvailableActionDto): ExecutionAction? {
         val code = actionCode(dto.code) ?: return null
+        val reason = blockingReason(dto.blockingReason)
         return ExecutionAction(
             code = code,
             label = dto.label?.trim()?.takeIf { it.isNotEmpty() },
@@ -193,8 +195,22 @@ internal object DriverApiMapping {
             containerId = dto.containerId,
             blockingDocumentSlots = dto.blockingDocumentSlots.orEmpty().filter { it.isNotBlank() }.distinct(),
             canExecute = dto.canExecute ?: true,
-            blockedByTrailer = dto.blockingReason?.trim() == DriverExecutionNames.BLOCKED_TRAILER_CONFIRMATION,
+            blockedByTrailer = reason == ExecutionBlock.TRAILER_CONFIRMATION_REQUIRED,
+            blockingReason = reason,
+            // The seal is shown as recorded; the case is the server's.
+            sealNumber = dto.sealNumber?.trim()?.takeIf { it.isNotEmpty() },
+            containerNumber = dto.containerNumber?.trim()?.takeIf { it.isNotEmpty() },
+            stopName = dto.stopName?.trim()?.takeIf { it.isNotEmpty() },
         )
+    }
+
+    /** A stated reason that this app does not know still blocks; an empty one is no reason. */
+    fun blockingReason(wire: String?): ExecutionBlock? = when (wire?.trim()) {
+        null, "" -> null
+        DriverExecutionNames.BLOCKED_TRAILER_CONFIRMATION -> ExecutionBlock.TRAILER_CONFIRMATION_REQUIRED
+        DriverExecutionNames.BLOCKED_LOADING_CONFIRMATION -> ExecutionBlock.LOADING_CONFIRMATION_REQUIRED
+        DriverExecutionNames.BLOCKED_SEAL_NUMBER -> ExecutionBlock.SEAL_NUMBER_REQUIRED
+        else -> ExecutionBlock.UNKNOWN
     }
 
     /**
@@ -228,6 +244,8 @@ internal object DriverApiMapping {
         DriverExecutionNames.ACTION_COMPLETE_STOP -> ExecutionActionCode.COMPLETE_STOP
         DriverExecutionNames.ACTION_REST -> ExecutionActionCode.REST
         DriverExecutionNames.ACTION_PROBLEM -> ExecutionActionCode.PROBLEM
+        DriverExecutionNames.ACTION_CONFIRM_LOADING -> ExecutionActionCode.CONFIRM_LOADING
+        DriverExecutionNames.ACTION_RECORD_SEAL_NUMBER -> ExecutionActionCode.RECORD_SEAL_NUMBER
         else -> null
     }
 
@@ -236,6 +254,8 @@ internal object DriverApiMapping {
         ExecutionActionCode.COMPLETE_STOP -> DriverExecutionNames.ACTION_COMPLETE_STOP
         ExecutionActionCode.REST -> DriverExecutionNames.ACTION_REST
         ExecutionActionCode.PROBLEM -> DriverExecutionNames.ACTION_PROBLEM
+        ExecutionActionCode.CONFIRM_LOADING -> DriverExecutionNames.ACTION_CONFIRM_LOADING
+        ExecutionActionCode.RECORD_SEAL_NUMBER -> DriverExecutionNames.ACTION_RECORD_SEAL_NUMBER
     }
 
     fun receipt(dto: DriverActionReceiptDto) = ActionReceipt(

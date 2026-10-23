@@ -46,6 +46,15 @@ enum class ActionRejection {
     /** Container and seal evidence must be a JPEG or PNG photo. */
     PHOTO_REQUIRED,
 
+    /** docs/27: the seal number is empty, longer than 100 characters or contains control characters. */
+    SEAL_NUMBER_INVALID,
+
+    /** docs/27, 409: the server still waits for the seal number of the container; nothing was recorded. */
+    SEAL_NUMBER_REQUIRED,
+
+    /** docs/27, 409: the server still waits for the loading confirmation of the stop; nothing was recorded. */
+    LOADING_CONFIRMATION_REQUIRED,
+
     /** No connection or the outcome is unknown; nothing is resent automatically. */
     OFFLINE,
     SERVICE_UNAVAILABLE,

@@ -10,6 +10,7 @@ import com.dynamictransport.dynamicone.domain.model.ActionReceipt
 import com.dynamictransport.dynamicone.domain.model.ActionRejection
 import com.dynamictransport.dynamicone.domain.model.ActionResult
 import com.dynamictransport.dynamicone.domain.model.ExecutionAction
+import com.dynamictransport.dynamicone.domain.model.ExecutionActionCode
 import com.dynamictransport.dynamicone.domain.model.PendingCommandState
 import com.dynamictransport.dynamicone.domain.model.PendingTripAction
 import com.dynamictransport.dynamicone.domain.model.RefreshResult
@@ -114,8 +115,20 @@ class RealTripExecutionRepository @Inject constructor(
     }
 
     override suspend fun submit(tripId: String, action: ExecutionAction, note: String?): ActionResult {
+        // A seal entry carries its own payload and goes through recordSealNumber (docs/27).
+        if (action.code == ExecutionActionCode.RECORD_SEAL_NUMBER) return ActionResult.Rejected(ActionRejection.NOT_ALLOWED)
         DriverInputRules.validateActionNote(action.code, note)?.let { return ActionResult.Rejected(it) }
-        return sendMutex.withLock {
+        return enqueue(tripId, action, DriverInputRules.normalizeNote(note), sealNumber = null)
+    }
+
+    override suspend fun recordSealNumber(tripId: String, action: ExecutionAction, sealNumber: String): ActionResult {
+        if (action.code != ExecutionActionCode.RECORD_SEAL_NUMBER) return ActionResult.Rejected(ActionRejection.NOT_ALLOWED)
+        DriverInputRules.validateSealNumber(sealNumber)?.let { return ActionResult.Rejected(it) }
+        return enqueue(tripId, action, note = null, sealNumber = DriverInputRules.normalizeSealNumber(sealNumber))
+    }
+
+    private suspend fun enqueue(tripId: String, action: ExecutionAction, note: String?, sealNumber: String?): ActionResult =
+        sendMutex.withLock {
             if (store.tripAction(tripId) != null) return@withLock ActionResult.Rejected(ActionRejection.PENDING_ACTION)
             val execution = trips.currentExecution(tripId)?.takeIf { it.workflow == TripWorkflow.TRIP_ACTIONS }
                 ?: return@withLock ActionResult.Rejected(ActionRejection.PLAN_CHANGED)
@@ -124,21 +137,25 @@ class RealTripExecutionRepository @Inject constructor(
                 ?: return@withLock ActionResult.Rejected(ActionRejection.PLAN_CHANGED)
             // The trailer step comes first; it is not an evidence problem (docs/20).
             if (current.blockedByTrailer) return@withLock ActionResult.Rejected(ActionRejection.NOT_ALLOWED)
+            // An export loading stop is closed by the planner: the app never sends its completion (docs/27).
+            if (current.code == ExecutionActionCode.COMPLETE_STOP && current.stopId == execution.exportLoadingStopId) {
+                return@withLock ActionResult.Rejected(ActionRejection.NOT_ALLOWED)
+            }
             if (current.isBlocked) return@withLock ActionResult.Rejected(ActionRejection.DOCUMENTS_REQUIRED)
             val command = PendingTripAction(
                 commandId = ids.newId(),
                 tripId = tripId,
                 expectedVersion = execution.version,
                 action = current,
-                note = DriverInputRules.normalizeNote(note),
+                note = note,
                 location = null,
                 createdAt = clock.instant(),
                 state = PendingCommandState.SENDING,
+                sealNumber = sealNumber,
             )
             if (!store.save(command)) return@withLock ActionResult.Rejected(ActionRejection.NOT_LOGGED_IN)
             send(command)
         }
-    }
 
     override suspend fun resendPending(tripId: String): ActionResult = sendMutex.withLock {
         val command = store.tripAction(tripId) ?: return@withLock ActionResult.Rejected(ActionRejection.NOT_FOUND)
@@ -181,13 +198,24 @@ class RealTripExecutionRepository @Inject constructor(
             // Not recorded. The new plan carries the evidence checklist that shows what is missing.
             store.delete(command.commandId)
             trips.refreshTrip(command.tripId)
-            val documentsMissing = e.problem?.code == DriverErrorCodes.REQUIRED_DOCUMENTS_MISSING
-            ActionResult.Rejected(if (documentsMissing) ActionRejection.DOCUMENTS_REQUIRED else ActionRejection.PLAN_CHANGED)
+            ActionResult.Rejected(
+                when (e.problem?.code) {
+                    DriverErrorCodes.REQUIRED_DOCUMENTS_MISSING -> ActionRejection.DOCUMENTS_REQUIRED
+                    DriverErrorCodes.SEAL_NUMBER_REQUIRED -> ActionRejection.SEAL_NUMBER_REQUIRED
+                    DriverErrorCodes.LOADING_CONFIRMATION_REQUIRED -> ActionRejection.LOADING_CONFIRMATION_REQUIRED
+                    else -> ActionRejection.PLAN_CHANGED
+                },
+            )
         }
         e is RemoteException.NotFound && !e.isApiDisabled -> {
             store.delete(command.commandId)
             trips.refreshTrip(command.tripId)
             ActionResult.Rejected(ActionRejection.NOT_FOUND)
+        }
+        e is RemoteException.Validation && e.problem?.code == DriverErrorCodes.INVALID_SEAL_NUMBER -> {
+            // The driver corrects the value; the next attempt is a new command.
+            store.delete(command.commandId)
+            ActionResult.Rejected(ActionRejection.SEAL_NUMBER_INVALID)
         }
         e is RemoteException.Validation || e is RemoteException.Rejected || e is RemoteException.PayloadTooLarge -> {
             store.delete(command.commandId)
@@ -211,6 +239,7 @@ class RealTripExecutionRepository @Inject constructor(
         latitude = location?.latitude,
         longitude = location?.longitude,
         accuracyMeters = location?.accuracyMeters,
+        sealNumber = sealNumber,
     )
 
     private companion object {

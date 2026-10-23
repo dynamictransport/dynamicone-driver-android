@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="exec_confirm_loading">ZAŁADUNEK ZAKOŃCZONY</string>
+    <string name="exec_record_seal">ZAPISZ NUMER PLOMBY</string>
+    <string name="receipt_confirm_loading">Załadunek potwierdzony</string>
+    <string name="receipt_record_seal">Numer plomby zapisany</string>
+    <string name="seal_loading_hint">Potwierdź, gdy załadunek fizycznie się zakończy. Ten postój zamyka planista.</string>
+    <string name="seal_loading_confirmed">Załadunek potwierdzony. Zapisz numer plomby i zdjęcie plomby każdego kontenera.</string>
+    <string name="seal_hint">Zapisz numer plomby i zdjęcie plomby każdego kontenera. Ten postój zamyka planista.</string>
+    <string name="seal_waiting_planner">Dane plomby zapisane. Oczekiwanie na potwierdzenie planisty.</string>
+    <string name="seal_planner_closes">Ten postój zamyka planista.</string>
+    <string name="seal_card_title">Plomba · Kontener %1$s</string>
+    <string name="seal_number_label">Numer plomby</string>
+    <string name="seal_number_recorded">Zapisano: %1$s</string>
+    <string name="seal_number_missing">Brak numeru plomby</string>
+    <string name="seal_save">ZAPISZ NUMER PLOMBY</string>
+    <string name="seal_saved">Numer plomby zapisany.</string>
+    <string name="seal_photo_label">Zdjęcie plomby</string>
+    <string name="seal_photo_missing">Brak zdjęcia</string>
+    <string name="seal_photo_not_required">Zdjęcie niewymagane</string>
+    <string name="seal_photo_pending">Wysłano, czeka na sprawdzenie</string>
+    <string name="seal_photo_approved">Zatwierdzono</string>
+    <string name="seal_photo_rejected">Odrzucono — wyślij ponownie</string>
+    <string name="seal_photo_unknown">Status nieznany</string>
+    <string name="seal_photo_no_slot">W tym planie nie ma pola na zdjęcie</string>
+    <string name="seal_photo_take">ZRÓB ZDJĘCIE PLOMBY</string>
+    <string name="seal_photo_retake">WYŚLIJ ZDJĘCIE PONOWNIE</string>
+    <string name="seal_photo_replace">Zmień zdjęcie</string>
+    <string name="seal_complete">Dane plomby kompletne</string>
+    <string name="error_seal_number_invalid">Wpisz numer plomby o długości od 1 do 100 znaków, bez znaków nowej linii.</string>
+    <string name="error_seal_number_required">Na serwerze nadal brakuje numeru plomby tego kontenera. Krok nie został zapisany.</string>
+    <string name="error_loading_confirmation_required">Najpierw potwierdź załadunek. Krok nie został zapisany.</string>
+</resources>

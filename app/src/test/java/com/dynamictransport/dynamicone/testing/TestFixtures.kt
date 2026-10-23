@@ -9,6 +9,7 @@ import com.dynamictransport.dynamicone.domain.model.DocumentSlotState
 import com.dynamictransport.dynamicone.domain.model.DocumentType
 import com.dynamictransport.dynamicone.domain.model.ExecutionAction
 import com.dynamictransport.dynamicone.domain.model.ExecutionActionCode
+import com.dynamictransport.dynamicone.domain.model.ExecutionBlock
 import com.dynamictransport.dynamicone.domain.model.GeoPoint
 import com.dynamictransport.dynamicone.domain.model.Shift
 import com.dynamictransport.dynamicone.domain.model.ShiftStatus
@@ -117,7 +118,20 @@ fun testAction(
     stopId: String? = null,
     containerId: String? = null,
     blockedByTrailer: Boolean = false,
-) = ExecutionAction(code, label, stopId, containerId, blockedByTrailer = blockedByTrailer)
+    sealNumber: String? = null,
+    containerNumber: String? = null,
+    stopName: String? = null,
+) = ExecutionAction(
+    code,
+    label,
+    stopId,
+    containerId,
+    blockedByTrailer = blockedByTrailer,
+    blockingReason = if (blockedByTrailer) ExecutionBlock.TRAILER_CONFIRMATION_REQUIRED else null,
+    sealNumber = sealNumber,
+    containerNumber = containerNumber,
+    stopName = stopName,
+)
 
 fun testExecution(
     tripId: String = "trip-1",

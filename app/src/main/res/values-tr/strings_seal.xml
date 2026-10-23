@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="exec_confirm_loading">YÜKLEME TAMAMLANDI</string>
+    <string name="exec_record_seal">MÜHÜR NUMARASINI KAYDET</string>
+    <string name="receipt_confirm_loading">Yükleme onaylandı</string>
+    <string name="receipt_record_seal">Mühür numarası kaydedildi</string>
+    <string name="seal_loading_hint">Yükleme fiziksel olarak bittiğinde onaylayın. Bu durağı planlamacı kapatır.</string>
+    <string name="seal_loading_confirmed">Yükleme onaylandı. Her konteynerin mühür numarasını ve mühür fotoğrafını kaydedin.</string>
+    <string name="seal_hint">Her konteynerin mühür numarasını ve mühür fotoğrafını kaydedin. Bu durağı planlamacı kapatır.</string>
+    <string name="seal_waiting_planner">Mühür bilgileri kaydedildi. Planlamacı onayı bekleniyor.</string>
+    <string name="seal_planner_closes">Bu durağı planlamacı kapatır.</string>
+    <string name="seal_card_title">Mühür · Konteyner %1$s</string>
+    <string name="seal_number_label">Mühür numarası</string>
+    <string name="seal_number_recorded">Kaydedildi: %1$s</string>
+    <string name="seal_number_missing">Mühür numarası eksik</string>
+    <string name="seal_save">MÜHÜR NUMARASINI KAYDET</string>
+    <string name="seal_saved">Mühür numarası kaydedildi.</string>
+    <string name="seal_photo_label">Mühür fotoğrafı</string>
+    <string name="seal_photo_missing">Fotoğraf eksik</string>
+    <string name="seal_photo_not_required">Fotoğraf gerekli değil</string>
+    <string name="seal_photo_pending">Yüklendi, inceleme bekliyor</string>
+    <string name="seal_photo_approved">Onaylandı</string>
+    <string name="seal_photo_rejected">Reddedildi — yeniden yükleyin</string>
+    <string name="seal_photo_unknown">Durum bilinmiyor</string>
+    <string name="seal_photo_no_slot">Bu planda fotoğraf alanı yok</string>
+    <string name="seal_photo_take">MÜHÜR FOTOĞRAFINI ÇEK</string>
+    <string name="seal_photo_retake">FOTOĞRAFI YENİDEN YÜKLE</string>
+    <string name="seal_photo_replace">Fotoğrafı değiştir</string>
+    <string name="seal_complete">Mühür bilgileri tamamlandı</string>
+    <string name="error_seal_number_invalid">1–100 karakterlik, satır sonu içermeyen bir mühür numarası girin.</string>
+    <string name="error_seal_number_required">Bu konteynerin mühür numarası sunucuda hâlâ eksik. Adım kaydedilmedi.</string>
+    <string name="error_loading_confirmation_required">Önce yüklemeyi onaylayın. Adım kaydedilmedi.</string>
+</resources>

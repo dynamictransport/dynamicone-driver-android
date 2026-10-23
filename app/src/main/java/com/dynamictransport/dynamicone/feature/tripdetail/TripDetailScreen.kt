@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.FreeBreakfast
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.LocalShipping
@@ -183,6 +184,8 @@ fun TripDetailRoute(
         },
         onReportIncident = { state.trip?.let { onReportIncident(it.id) } },
         onConfirmTrailer = { state.trip?.let { onConfirmTrailer(it.id) } },
+        onConfirmLoading = viewModel::onConfirmLoading,
+        onRecordSealNumber = viewModel::onRecordSealNumber,
         onMessageShown = viewModel::onMessageShown,
         onRetry = viewModel::onRetry,
     )
@@ -207,6 +210,9 @@ fun TripDetailScreen(
     onCopyCoordinates: (GeoPoint, String?) -> Unit = { _, _ -> },
     onConfirmTrailer: () -> Unit = {},
     onCopyTar: (String) -> Unit = {},
+    /** docs/27: loading confirmation and seal entry of an export loading stop. */
+    onConfirmLoading: (ExecutionAction) -> Unit = {},
+    onRecordSealNumber: (ExecutionAction, String) -> Unit = { _, _ -> },
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     MessageEffect(state.message, snackbarHostState, onMessageShown)
@@ -215,7 +221,9 @@ fun TripDetailScreen(
     val actions: (@Composable ColumnScope.() -> Unit)? = if (trip != null && !trip.state.isTerminal) {
         {
             if (state.usesServerActions && !state.shiftStartRequired) {
-                ExecutionActions(state, trip, onExecutionAction, onResendPending, onDiscardPending, onRetry, onOpenDocuments, onConfirmTrailer)
+                ExecutionActions(
+                    state, trip, onExecutionAction, onResendPending, onDiscardPending, onRetry, onOpenDocuments, onConfirmTrailer, onConfirmLoading,
+                )
             } else {
                 if (state.shiftStartRequired) CenteredHint(stringResource(R.string.trip_shift_start_first), Modifier.testTag("trip_shift_start_first"))
                 TripActions(state, onPrimaryAction, onSecondaryAction)
@@ -249,6 +257,7 @@ fun TripDetailScreen(
             when {
                 trip != null -> TripDetailContent(
                     trip, state, onOpenDocuments, onOpenMessages, onOpenNavigation, onCopyCoordinates, onReportIncident, onCopyTar, onRetry,
+                    onRecordSealNumber,
                 )
 
                 state.loading -> LinearProgressIndicator(
@@ -325,6 +334,7 @@ private fun ExecutionActions(
     onRetry: () -> Unit,
     onOpenDocuments: (String?) -> Unit,
     onConfirmTrailer: () -> Unit,
+    onConfirmLoading: (ExecutionAction) -> Unit,
 ) {
     val pending = state.pendingAction
     val execution = state.execution
@@ -359,7 +369,33 @@ private fun ExecutionActions(
 
         else -> {
             val progress = state.progressActions
-            if (progress.isEmpty()) CenteredHint(stringResource(R.string.exec_no_action), Modifier.testTag("execution_no_action"))
+            val loadingConfirmation = state.loadingConfirmation
+            // Export loading stop (docs/27): confirm the loading, then the seal cards; the planner closes the stop.
+            when {
+                loadingConfirmation != null -> {
+                    CenteredHint(stringResource(R.string.seal_loading_hint), Modifier.testTag("seal_loading_hint"))
+                    DriverActionButton(
+                        text = executionActionLabel(loadingConfirmation),
+                        icon = loadingConfirmation.code.icon(),
+                        tone = ActionTone.Positive,
+                        requiresHold = true,
+                        onClick = { onConfirmLoading(loadingConfirmation) },
+                        loading = state.submitting,
+                        modifier = Modifier.testTag(PRIMARY_ACTION_TAG),
+                    )
+                }
+                state.sealHandoverComplete -> StatusBanner(
+                    message = stringResource(R.string.seal_waiting_planner),
+                    icon = Icons.Filled.HourglassTop,
+                    tone = StatusTone.Positive,
+                    modifier = Modifier.testTag("seal_waiting_planner"),
+                )
+                state.sealEntries.isNotEmpty() -> CenteredHint(stringResource(R.string.seal_hint), Modifier.testTag("seal_hint"))
+                state.exportLoadingActive -> CenteredHint(stringResource(R.string.seal_planner_closes), Modifier.testTag("seal_planner_closes"))
+            }
+            if (progress.isEmpty() && !state.exportLoadingActive) {
+                CenteredHint(stringResource(R.string.exec_no_action), Modifier.testTag("execution_no_action"))
+            }
             progress.forEachIndexed { index, action ->
                 tripContextLabel(trip, action.stopId, action.containerId)?.let { context ->
                     Text(
@@ -377,7 +413,7 @@ private fun ExecutionActions(
                     onClick = { onExecutionAction(action) },
                     loading = state.submitting,
                     enabled = !action.isBlocked,
-                    modifier = Modifier.testTag(if (index == 0) PRIMARY_ACTION_TAG else "execution_action_$index"),
+                    modifier = Modifier.testTag(if (index == 0 && loadingConfirmation == null) PRIMARY_ACTION_TAG else "execution_action_$index"),
                 )
                 if (action.isBlocked) BlockedByDocuments(action, execution, Modifier.testTag("execution_blocked_$index"))
             }
@@ -392,7 +428,7 @@ private fun ExecutionActions(
                     SecondaryActionButton(text = upload, onClick = openFirst, icon = Icons.Filled.UploadFile, enabled = !state.submitting, modifier = uploadModifier)
                 }
             }
-            execution.availableActions.filter { !it.isProgress }.forEach { action ->
+            execution.availableActions.filter { !it.isProgress && !it.isExportLoadingStep }.forEach { action ->
                 SecondaryActionButton(
                     text = executionActionLabel(action),
                     onClick = { onExecutionAction(action) },
@@ -485,6 +521,7 @@ private fun TripDetailContent(
     onReportIncident: () -> Unit,
     onCopyTar: (String) -> Unit,
     onRetry: () -> Unit,
+    onRecordSealNumber: (ExecutionAction, String) -> Unit = { _, _ -> },
 ) {
     val locale = currentLocale()
 
@@ -521,6 +558,11 @@ private fun TripDetailContent(
             tone = StatusTone.Warning,
             modifier = Modifier.testTag("break_banner"),
         )
+    }
+
+    // Export loading stop (docs/27): seal number and seal photo per container, each with its own server state.
+    if (state.sealEntries.isNotEmpty()) {
+        SealCards(state.sealEntries, trip, state.pendingAction, state.submitting, onRecordSealNumber, onOpenDocuments)
     }
 
     if (state.blockingDocuments.isNotEmpty()) RequiredDocumentsCard(state.blockingDocuments, trip, onOpenDocuments)

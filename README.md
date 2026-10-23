@@ -192,6 +192,7 @@ Uygulamada SQL bağlantısı, storage anahtarı, JWT imza anahtarı veya başka 
 - FCM kaydı yalnızca gerçek backend'e giriş yapıldıktan sonra başlar; demo modunda push yoktur. Android 13+ cihazlarda girişten sonra bildirim izni istenir.
 - Cihaz kaydı (`POST`/`DELETE me/devices`) ve FCM mesaj push'u backend'de yayında (TH-2026-0444). Uygulama girişten sonra cihazı kaydeder, çıkıştan önce kaydı siler. Üretimde gönderimin etkinleştirilmesi backend'de ayrı adımdır. Ayrıntı: [docs/13_PUSH_NOTIFICATIONS.md](docs/13_PUSH_NOTIFICATIONS.md). Firebase service account anahtarı yalnızca backend'in gizli ayarlarına konur, bu repoya girmez.
 - Planlamacının şoförü tablet ve telefondan sesli uyandırması (docs/25): `driver.wakeup` push'u alarm sesiyle tam ekran çalar, *UYANDIM* cevabı `wake-up-call-sync` kuyruğuyla gider. Sözleşme önerisi ve Codex görevi [docs/25_DRIVER_WAKE_UP_CALL.md](docs/25_DRIVER_WAKE_UP_CALL.md); backend'de henüz yok, uygulama tarafı JVM testleriyle doğrulandı (ASSUMPTIONS U1–U9).
+- Export yüklemesinde mühür numarası ve mühür fotoğrafı (docs/27): sunucu `ConfirmLoading`/`RecordSealNumber` sununca sefer detayı yükleme onayı ve konteyner başına mühür kartı gösterir; bu durakta *Durağı tamamla* yoktur, kapatma planlamacıdadır (ASSUMPTIONS S1–S12). Sözleşme: [docs/27_EXPORT_LOADING_SEAL.md](docs/27_EXPORT_LOADING_SEAL.md).
 
 ### Demo modu (backend olmadan)
 

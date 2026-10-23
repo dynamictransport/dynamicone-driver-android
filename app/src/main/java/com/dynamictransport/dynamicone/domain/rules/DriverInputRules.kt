@@ -44,6 +44,19 @@ object DriverInputRules {
         return null
     }
 
+    /** Export seal numbers (docs/27): 1–100 characters after trimming, no control characters; the case is kept. */
+    const val SEAL_NUMBER_MAX_LENGTH = 100
+
+    /** The value that is sent: trimmed, otherwise exactly what the driver typed. */
+    fun normalizeSealNumber(value: String?): String = value.orEmpty().trim()
+
+    fun validateSealNumber(value: String?): ActionRejection? {
+        val normalized = normalizeSealNumber(value)
+        if (normalized.isEmpty() || normalized.length > SEAL_NUMBER_MAX_LENGTH) return ActionRejection.SEAL_NUMBER_INVALID
+        if (normalized.any { it.isISOControl() }) return ActionRejection.SEAL_NUMBER_INVALID
+        return null
+    }
+
     fun validateMessage(body: String?): ActionRejection? {
         val normalized = normalizeNote(body) ?: return ActionRejection.NOTE_REQUIRED
         return if (normalized.length > MESSAGE_MAX_LENGTH) ActionRejection.NOTE_TOO_LONG else null

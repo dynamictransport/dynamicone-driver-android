@@ -51,6 +51,8 @@ class PendingCommandStore @Inject constructor(
         val latitude: Double? = null,
         val longitude: Double? = null,
         val accuracyMeters: Double? = null,
+        /** docs/27: part of the payload of a `RecordSealNumber` command; absent for every other action. */
+        val sealNumber: String? = null,
     )
 
     @Serializable
@@ -79,6 +81,7 @@ class PendingCommandStore @Inject constructor(
             latitude = action.location?.latitude,
             longitude = action.location?.longitude,
             accuracyMeters = action.location?.accuracyMeters,
+            sealNumber = action.sealNumber,
         )
         dao.insert(
             PendingCommandEntity(
@@ -161,6 +164,7 @@ class PendingCommandStore @Inject constructor(
             location = location,
             createdAt = entity.createdAt,
             state = effectiveState(entity),
+            sealNumber = stored.sealNumber,
         )
     }
 

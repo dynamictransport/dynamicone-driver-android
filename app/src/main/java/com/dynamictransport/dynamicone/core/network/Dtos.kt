@@ -233,6 +233,11 @@ object DriverErrorCodes {
     const val INVALID_DOCUMENT = "invalid_document"
     const val INVALID_DOCUMENT_SIZE = "invalid_document_size"
     const val DOCUMENT_REJECTED = "document_rejected"
+
+    /** docs/27: 400 for a bad seal number, 409 while the export loading stop's seal gate is open. */
+    const val INVALID_SEAL_NUMBER = "invalid_seal_number"
+    const val SEAL_NUMBER_REQUIRED = "seal_number_required"
+    const val LOADING_CONFIRMATION_REQUIRED = "loading_confirmation_required"
     const val INVALID_MESSAGE = "invalid_message"
     const val RATE_LIMIT_EXCEEDED = "rate_limit_exceeded"
 }

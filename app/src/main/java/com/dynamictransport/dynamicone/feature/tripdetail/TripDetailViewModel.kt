@@ -15,6 +15,7 @@ import com.dynamictransport.dynamicone.domain.model.PendingCommandState
 import com.dynamictransport.dynamicone.domain.model.PendingTripAction
 import com.dynamictransport.dynamicone.domain.model.RefreshResult
 import com.dynamictransport.dynamicone.domain.model.RejectReason
+import com.dynamictransport.dynamicone.domain.model.SealEntry
 import com.dynamictransport.dynamicone.domain.model.TrailerOption
 import com.dynamictransport.dynamicone.domain.model.Trip
 import com.dynamictransport.dynamicone.domain.model.TripActionType
@@ -115,10 +116,26 @@ data class TripDetailUiState(
 
     /**
      * Start or stop/container completions, exactly as offered by the server. A step that waits for the
-     * trailer confirmation is left out: the trailer is its own step (docs/20).
+     * trailer confirmation is left out: the trailer is its own step (docs/20). The completion of an export
+     * loading stop is left out too: the planner closes that stop, the app never sends it (docs/27).
      */
     val progressActions: List<ExecutionAction>
-        get() = execution?.availableActions.orEmpty().filter { it.isProgress && !it.blockedByTrailer }
+        get() = execution?.availableActions.orEmpty().filter {
+            it.isProgress && !it.blockedByTrailer &&
+                !(it.code == ExecutionActionCode.COMPLETE_STOP && it.stopId != null && it.stopId == execution?.exportLoadingStopId)
+        }
+
+    /** docs/27: the server offers the loading confirmation of the current export loading stop. */
+    val loadingConfirmation: ExecutionAction? get() = execution?.loadingConfirmation?.takeIf { usesServerActions }
+
+    /** docs/27: one card per container the server still lists for seal entry, with the stored command of that container. */
+    val sealEntries: List<SealEntry> get() = if (usesServerActions) execution?.sealEntries.orEmpty() else emptyList()
+
+    /** The current stop is an export loading stop: the planner closes it after the seal records (docs/27). */
+    val exportLoadingActive: Boolean get() = usesServerActions && execution?.exportLoadingStopId != null
+
+    /** Every listed container has its seal number and photo on the server: the stop waits for the planner. */
+    val sealHandoverComplete: Boolean get() = sealEntries.isNotEmpty() && sealEntries.all { it.complete }
 
     /**
      * The trip cannot start before the driver confirms the trailer under the truck (docs/20). Reported by
@@ -284,6 +301,26 @@ class TripDetailViewModel @Inject constructor(
         singleFlight.launch(viewModelScope) {
             message.value = when (val result = executionRepository.submit(tripId, action, note = null)) {
                 ActionResult.Queued -> if (action.code == ExecutionActionCode.REST) R.string.trip_break_reported else R.string.exec_recorded
+                is ActionResult.Rejected -> result.reason.messageRes()
+            }
+        }
+    }
+
+    /** docs/27: loading is physically finished. The stop stays open; the server reminds about missing seals. */
+    fun onConfirmLoading(action: ExecutionAction) {
+        singleFlight.launch(viewModelScope) {
+            message.value = when (val result = executionRepository.submit(tripId, action, note = null)) {
+                ActionResult.Queued -> R.string.seal_loading_confirmed
+                is ActionResult.Rejected -> result.reason.messageRes()
+            }
+        }
+    }
+
+    /** docs/27: the seal number of one container, its own command; the photo is uploaded separately. */
+    fun onRecordSealNumber(action: ExecutionAction, sealNumber: String) {
+        singleFlight.launch(viewModelScope) {
+            message.value = when (val result = executionRepository.recordSealNumber(tripId, action, sealNumber)) {
+                ActionResult.Queued -> R.string.seal_saved
                 is ActionResult.Rejected -> result.reason.messageRes()
             }
         }

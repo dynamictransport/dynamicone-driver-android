@@ -73,6 +73,8 @@ object UnavailableTripExecutionRepository : TripExecutionRepository {
     override suspend fun refreshReceipts(tripId: String): RefreshResult = RefreshResult.NOT_SUPPORTED
     override suspend fun submit(tripId: String, action: ExecutionAction, note: String?): ActionResult =
         ActionResult.Rejected(ActionRejection.NOT_SUPPORTED)
+    override suspend fun recordSealNumber(tripId: String, action: ExecutionAction, sealNumber: String): ActionResult =
+        ActionResult.Rejected(ActionRejection.NOT_SUPPORTED)
     override suspend fun resendPending(tripId: String): ActionResult = ActionResult.Rejected(ActionRejection.NOT_SUPPORTED)
     override suspend fun discardPending(tripId: String): RefreshResult = RefreshResult.NOT_SUPPORTED
     override fun observeTrailers(tripId: String): Flow<TripTrailerState?> = flowOf(null)

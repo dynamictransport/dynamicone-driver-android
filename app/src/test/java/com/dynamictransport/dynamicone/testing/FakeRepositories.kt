@@ -179,6 +179,9 @@ class FakeTripExecutionRepository : TripExecutionRepository {
     val receipts = MutableStateFlow<List<ActionReceipt>>(emptyList())
     val trailers = MutableStateFlow<TripTrailerState?>(null)
     val submitted = mutableListOf<Submitted>()
+
+    /** Seal entries (docs/27): `note` carries the seal number. */
+    val sealNumbers = mutableListOf<Submitted>()
     val confirmedTrailers = mutableListOf<Pair<String, String>>()
     var submitResult: ActionResult = ActionResult.Queued
     var resendResult: ActionResult = ActionResult.Queued
@@ -202,6 +205,12 @@ class FakeTripExecutionRepository : TripExecutionRepository {
 
     override suspend fun submit(tripId: String, action: ExecutionAction, note: String?): ActionResult {
         submitted += Submitted(tripId, action, note)
+        gate?.await()
+        return submitResult
+    }
+
+    override suspend fun recordSealNumber(tripId: String, action: ExecutionAction, sealNumber: String): ActionResult {
+        sealNumbers += Submitted(tripId, action, sealNumber)
         gate?.await()
         return submitResult
     }
