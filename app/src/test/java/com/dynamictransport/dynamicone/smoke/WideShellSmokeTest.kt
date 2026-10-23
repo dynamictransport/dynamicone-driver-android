@@ -12,8 +12,9 @@ import com.dynamictransport.dynamicone.app.DynamicOneApplication
 import com.dynamictransport.dynamicone.app.MainActivity
 import com.dynamictransport.dynamicone.app.navigation.NAV_BAR_TAG
 import com.dynamictransport.dynamicone.app.navigation.NAV_RAIL_TAG
-import com.dynamictransport.dynamicone.feature.common.ACTION_PANE_TAG
+import com.dynamictransport.dynamicone.feature.common.ACTION_BAR_TAG
 import com.dynamictransport.dynamicone.feature.common.PRIMARY_ACTION_TAG
+import com.dynamictransport.dynamicone.feature.home.HOME_DASHBOARD_TAG
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -22,7 +23,7 @@ import org.robolectric.annotation.Config
 
 /**
  * The signed-in shell on a tablet mounted in landscape (1024 x 640 dp): navigation is a rail on the left instead
- * of a bar at the bottom, and the first screen keeps its dominant action in the pane on the right.
+ * of a bar at the bottom, and the first screen is a two-column dashboard with its dominant action at the bottom.
  */
 @RunWith(AndroidJUnit4::class)
 @Config(application = DynamicOneApplication::class, qualifiers = "en-w1024dp-h640dp-land")
@@ -46,7 +47,8 @@ class WideShellSmokeTest {
 
         composeRule.onNodeWithTag(NAV_RAIL_TAG).assertExists()
         composeRule.onNodeWithTag(NAV_BAR_TAG).assertDoesNotExist()
-        composeRule.onNodeWithTag(ACTION_PANE_TAG).assertExists()
+        composeRule.onNodeWithTag(ACTION_BAR_TAG).assertExists()
+        composeRule.onNodeWithTag(HOME_DASHBOARD_TAG).assertExists()
 
         composeRule.onNodeWithTag("nav_TRIPS").performClick()
         waitFor(hasText("Trips"))

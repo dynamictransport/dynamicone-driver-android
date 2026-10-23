@@ -12,6 +12,7 @@ import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.unit.dp
@@ -21,6 +22,7 @@ import com.dynamictransport.dynamicone.core.design.layout.readableWidth
 import com.dynamictransport.dynamicone.core.design.theme.Dimens
 import com.dynamictransport.dynamicone.core.design.theme.DynamicOneTheme
 import com.dynamictransport.dynamicone.domain.model.Shift
+import com.dynamictransport.dynamicone.domain.model.Trip
 import com.dynamictransport.dynamicone.domain.model.TripActionType
 import com.dynamictransport.dynamicone.domain.model.TripState
 import com.dynamictransport.dynamicone.domain.statemachine.NextActionResolver
@@ -28,8 +30,8 @@ import com.dynamictransport.dynamicone.domain.statemachine.PrimaryAction
 import com.dynamictransport.dynamicone.feature.auth.LoginScreen
 import com.dynamictransport.dynamicone.feature.auth.LoginUiState
 import com.dynamictransport.dynamicone.feature.common.ACTION_BAR_TAG
-import com.dynamictransport.dynamicone.feature.common.ACTION_PANE_TAG
 import com.dynamictransport.dynamicone.feature.common.PRIMARY_ACTION_TAG
+import com.dynamictransport.dynamicone.feature.home.HOME_DASHBOARD_TAG
 import com.dynamictransport.dynamicone.feature.home.HomeScreen
 import com.dynamictransport.dynamicone.feature.home.HomeUiState
 import com.dynamictransport.dynamicone.feature.tripdetail.TripDetailScreen
@@ -45,8 +47,9 @@ import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 
 /**
- * A tablet mounted in landscape in the truck (1024 x 640 dp): the dominant action moves into a pane on the right,
- * content keeps a readable width, and the login form sits beside the brand. Phones keep their layout.
+ * A tablet mounted in landscape in the truck (1024 x 640 dp): the dominant action stays at the bottom, centred,
+ * the home screen becomes a two-column dashboard, content keeps a readable width, and the login form sits beside
+ * the brand. Phones keep their layout.
  */
 @RunWith(AndroidJUnit4::class)
 class WideScreenLayoutTest {
@@ -94,24 +97,26 @@ class WideScreenLayoutTest {
 
     @Test
     @Config(qualifiers = "w1024dp-h640dp-land")
-    fun tripActionsSitInAPaneBesideTheTripOnAWideScreen() {
+    fun tripActionsStayAtTheBottomAndCentredOnAWideScreen() {
         setTripDetail(TripState.ASSIGNED)
 
-        composeRule.onNodeWithTag(ACTION_PANE_TAG).assertIsDisplayed()
-        composeRule.onNodeWithTag(ACTION_BAR_TAG).assertDoesNotExist()
+        composeRule.onNodeWithTag(ACTION_BAR_TAG).assertIsDisplayed()
         composeRule.onNodeWithTag(PRIMARY_ACTION_TAG).assertIsDisplayed().assertTextContains("ACCEPT TRIP")
-        composeRule.onNode(hasTestTag(PRIMARY_ACTION_TAG) and hasAnyAncestor(hasTestTag(ACTION_PANE_TAG))).assertExists()
-        val pane = composeRule.onNodeWithTag(ACTION_PANE_TAG).getUnclippedBoundsInRoot()
-        assertTrue("pane is ${pane.width} wide", pane.width == Dimens.ActionPaneWidth)
-        assertTrue("pane ends at ${pane.right}", pane.right == 1024.dp)
+        composeRule.onNode(hasTestTag(PRIMARY_ACTION_TAG) and hasAnyAncestor(hasTestTag(ACTION_BAR_TAG))).assertExists()
+        val bar = composeRule.onNodeWithTag(ACTION_BAR_TAG).getUnclippedBoundsInRoot()
+        assertTrue("bar spans ${bar.left}..${bar.right}", bar.left == 0.dp && bar.right == 1024.dp)
+        assertTrue("bar ends at ${bar.bottom}", bar.bottom == 640.dp)
+        val button = composeRule.onNodeWithTag(PRIMARY_ACTION_TAG).getUnclippedBoundsInRoot()
+        assertTrue("button is ${button.width} wide", button.width <= Dimens.ActionMaxWidth)
+        val centre = (button.left + button.right) / 2
+        assertTrue("button centre at $centre", kotlin.math.abs((centre - 512.dp).value) < 1f)
     }
 
     @Test
     @Config(qualifiers = "w1024dp-h640dp-land")
-    fun aFinishedTripHasNoActionPane() {
+    fun aFinishedTripHasNoActionBar() {
         setTripDetail(TripState.FINISHED)
 
-        composeRule.onNodeWithTag(ACTION_PANE_TAG).assertDoesNotExist()
         composeRule.onNodeWithTag(ACTION_BAR_TAG).assertDoesNotExist()
     }
 
@@ -121,13 +126,38 @@ class WideScreenLayoutTest {
         setTripDetail(TripState.ASSIGNED)
 
         composeRule.onNodeWithTag(ACTION_BAR_TAG).assertIsDisplayed()
-        composeRule.onNodeWithTag(ACTION_PANE_TAG).assertDoesNotExist()
         composeRule.onNodeWithTag(PRIMARY_ACTION_TAG).assertIsDisplayed().assertTextContains("ACCEPT TRIP")
     }
 
     @Test
     @Config(qualifiers = "w1024dp-h640dp-land")
-    fun homeActionSitsInAPaneOnAWideScreen() {
+    fun homeIsATwoColumnDashboardWithTheActionAtTheBottomOnAWideScreen() {
+        val trip = setHome()
+
+        composeRule.onNodeWithTag(ACTION_BAR_TAG).assertIsDisplayed()
+        composeRule.onNodeWithTag(PRIMARY_ACTION_TAG).assertIsDisplayed().assertTextContains("ARRIVED AT PICKUP")
+        composeRule.onNodeWithTag(HOME_DASHBOARD_TAG).assertIsDisplayed()
+        composeRule.onNodeWithTag("trip_card_${trip.id}").assertIsDisplayed()
+        // The driver on the left, the trip on the right, side by side.
+        val greeting = composeRule.onNode(hasText("Hello, Mehmet")).getUnclippedBoundsInRoot()
+        val card = composeRule.onNodeWithTag("trip_card_${trip.id}").getUnclippedBoundsInRoot()
+        assertTrue("greeting at ${greeting.left}, card at ${card.left}", greeting.left < 512.dp && card.left >= 512.dp)
+        assertTrue("greeting top ${greeting.top}, card top ${card.top}", card.top < greeting.bottom)
+    }
+
+    @Test
+    @Config(qualifiers = "w411dp-h891dp")
+    fun homeStaysOneColumnOnAPhone() {
+        val trip = setHome()
+
+        composeRule.onNodeWithTag(HOME_DASHBOARD_TAG).assertDoesNotExist()
+        composeRule.onNodeWithTag(ACTION_BAR_TAG).assertIsDisplayed()
+        val greeting = composeRule.onNode(hasText("Hello, Mehmet")).getUnclippedBoundsInRoot()
+        val card = composeRule.onNodeWithTag("trip_card_${trip.id}").getUnclippedBoundsInRoot()
+        assertTrue("greeting bottom ${greeting.bottom}, card top ${card.top}", card.top >= greeting.bottom)
+    }
+
+    private fun setHome(): Trip {
         val trip = testTrip(state = TripState.STARTED)
         composeRule.setContent {
             DynamicOneTheme(darkTheme = false) {
@@ -153,11 +183,7 @@ class WideScreenLayoutTest {
                 )
             }
         }
-
-        composeRule.onNodeWithTag(ACTION_PANE_TAG).assertIsDisplayed()
-        composeRule.onNodeWithTag(ACTION_BAR_TAG).assertDoesNotExist()
-        composeRule.onNodeWithTag(PRIMARY_ACTION_TAG).assertIsDisplayed().assertTextContains("ARRIVED AT PICKUP")
-        composeRule.onNodeWithTag("trip_card_${trip.id}").assertIsDisplayed()
+        return trip
     }
 
     @Test

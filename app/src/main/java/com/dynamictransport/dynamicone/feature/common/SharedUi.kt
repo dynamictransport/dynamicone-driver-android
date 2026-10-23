@@ -15,9 +15,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.consumeWindowInsets
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBars
@@ -27,9 +24,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.CloudUpload
@@ -78,7 +73,6 @@ import com.dynamictransport.dynamicone.core.design.component.PrimaryActionButton
 import com.dynamictransport.dynamicone.core.design.component.StatusBadge
 import com.dynamictransport.dynamicone.core.design.component.StatusBanner
 import com.dynamictransport.dynamicone.core.design.component.StatusTone
-import com.dynamictransport.dynamicone.core.design.layout.isWideScreen
 import com.dynamictransport.dynamicone.core.design.layout.readableWidth
 import com.dynamictransport.dynamicone.core.design.theme.Dimens
 import com.dynamictransport.dynamicone.core.design.theme.DriverTheme
@@ -146,11 +140,11 @@ fun DriverActionButton(
 }
 
 const val ACTION_BAR_TAG = "action_bar"
-const val ACTION_PANE_TAG = "action_pane"
 
 /**
  * Pinned bottom area holding the screen's dominant action, always within thumb reach. On a wide screen the buttons
- * keep a readable width in the middle instead of stretching across the whole tablet.
+ * keep a readable width in the middle instead of stretching across the whole tablet, and the content above keeps
+ * the full width (a pane beside the content left one button in an empty column and squeezed the rest).
  */
 @Composable
 fun ActionBar(
@@ -176,39 +170,9 @@ fun ActionBar(
 }
 
 /**
- * The dominant action on a wide screen: a pane on the right of the content, so the short landscape height of a
- * tablet in the truck stays for the trip itself. The actions sit at mid height, where the hand reaches a mounted
- * tablet, and scroll when there are more than fit.
- */
-@Composable
-fun ActionPane(
-    modifier: Modifier = Modifier,
-    content: @Composable ColumnScope.() -> Unit,
-) {
-    Surface(
-        color = MaterialTheme.colorScheme.surfaceContainerLowest,
-        shadowElevation = 8.dp,
-        modifier = modifier
-            .fillMaxHeight()
-            .width(Dimens.ActionPaneWidth)
-            .testTag(ACTION_PANE_TAG),
-    ) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
-            modifier = Modifier
-                .fillMaxHeight()
-                .verticalScroll(rememberScrollState())
-                .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime).only(WindowInsetsSides.Bottom))
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            content = content,
-        )
-    }
-}
-
-/**
- * Screen with one dominant action area. Phones pin it under the content ([ActionBar]); wide screens put it in an
- * [ActionPane] on the right. [actions] null means the screen has no action area (for example a finished trip).
- * [content] receives the padding to apply, as with [Scaffold].
+ * Screen with one dominant action area pinned under the content ([ActionBar]) on phones and tablets alike: the
+ * same place on every device, and the content keeps the whole width above it. [actions] null means the screen has
+ * no action area (for example a finished trip). [content] receives the padding to apply, as with [Scaffold].
  */
 @Composable
 fun ActionScaffold(
@@ -217,32 +181,12 @@ fun ActionScaffold(
     snackbarHost: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit,
 ) {
-    if (isWideScreen()) {
-        Scaffold(topBar = topBar, snackbarHost = snackbarHost) { padding ->
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .consumeWindowInsets(padding),
-            ) {
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight(),
-                ) {
-                    content(PaddingValues())
-                }
-                if (actions != null) ActionPane(content = actions)
-            }
-        }
-    } else {
-        Scaffold(
-            topBar = topBar,
-            bottomBar = { if (actions != null) ActionBar(content = actions) },
-            snackbarHost = snackbarHost,
-            content = content,
-        )
-    }
+    Scaffold(
+        topBar = topBar,
+        bottomBar = { if (actions != null) ActionBar(content = actions) },
+        snackbarHost = snackbarHost,
+        content = content,
+    )
 }
 
 /**

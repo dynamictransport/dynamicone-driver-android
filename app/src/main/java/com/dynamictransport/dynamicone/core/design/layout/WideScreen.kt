@@ -42,11 +42,13 @@ fun Activity.applyScreenOrientationPolicy() {
 
 /**
  * Keeps a block readable on wide screens: it takes the available width up to [max] and sits centred in the rest.
- * On a phone, where less than [max] is available, it simply fills the width.
+ * On a phone, where less than [max] is available, it simply fills the width. The block itself ignores a minimum
+ * width the parent passes down (a `Surface` or `fillMaxWidth` above it): this layout node takes the whole width
+ * for the parent, the block inside stays at [max].
  */
 fun Modifier.readableWidth(max: Dp = Dimens.ContentMaxWidth): Modifier = layout { measurable, constraints ->
     val maxPx = max.roundToPx()
-    val width = if (constraints.hasBoundedWidth) minOf(constraints.maxWidth, maxOf(maxPx, constraints.minWidth)) else maxPx
+    val width = if (constraints.hasBoundedWidth) minOf(constraints.maxWidth, maxPx) else maxPx
     val placeable = measurable.measure(constraints.copy(minWidth = width, maxWidth = width))
     val totalWidth = if (constraints.hasBoundedWidth) constraints.maxWidth else placeable.width
     layout(totalWidth, placeable.height) {

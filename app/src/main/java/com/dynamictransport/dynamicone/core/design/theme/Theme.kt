@@ -183,8 +183,11 @@ object Dimens {
     /** Wide screens (tablet in the truck): content stays readable, the action area stays within one glance. */
     val ContentMaxWidth = 720.dp
     val ActionMaxWidth = 560.dp
-    val ActionPaneWidth = 360.dp
     val LoginFormWidth = 480.dp
+
+    /** From this much content width the home screen lays its blocks out in two columns (a tablet in landscape). */
+    val TwoColumnMinWidth = 840.dp
+    val DashboardMaxWidth = 1200.dp
 }
 
 val LocalDriverColors = staticCompositionLocalOf { LightDriverColors }

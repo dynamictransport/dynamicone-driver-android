@@ -2,7 +2,9 @@ package com.dynamictransport.dynamicone.feature.home
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -175,15 +177,8 @@ fun HomeScreen(
         actions = if (state.loading) null else ({ HomePrimaryAction(state, onPrimaryAction) }),
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
-        Column(
-            verticalArrangement = Arrangement.spacedBy(Dimens.CardGap),
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .readableWidth()
-                .padding(horizontal = Dimens.ScreenPadding, vertical = 12.dp),
-        ) {
+        // Who and what is true now: the driver, the vehicle and the day.
+        val driverBlock: @Composable ColumnScope.() -> Unit = {
             DriverHeader(
                 state = state,
                 now = now,
@@ -202,6 +197,9 @@ fun HomeScreen(
                     onOpenAlarmSettings = onOpenRestAlarmSettings,
                 )
             }
+        }
+        // What needs attention, the trip of the moment and the shortcuts.
+        val attentionBlock: @Composable ColumnScope.() -> Unit = {
             SyncBanners(
                 isOnline = state.isOnline,
                 pendingCount = state.pendingCount,
@@ -252,10 +250,52 @@ fun HomeScreen(
                 onOpenEarnings = onOpenEarnings,
                 onReportIncident = { onReportIncident(focusTrip?.id) },
             )
-            Spacer(Modifier.height(4.dp))
+        }
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
+        ) {
+            // A tablet in landscape: the two blocks side by side, so the day fits in one glance above the action.
+            val twoColumns = maxWidth >= Dimens.TwoColumnMinWidth
+            Column(
+                verticalArrangement = Arrangement.spacedBy(Dimens.CardGap),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .readableWidth(if (twoColumns) Dimens.DashboardMaxWidth else Dimens.ContentMaxWidth)
+                    .padding(horizontal = Dimens.ScreenPadding, vertical = 12.dp),
+            ) {
+                if (twoColumns) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.ScreenPadding),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag(HOME_DASHBOARD_TAG),
+                    ) {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(Dimens.CardGap),
+                            modifier = Modifier.weight(1f),
+                            content = driverBlock,
+                        )
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(Dimens.CardGap),
+                            modifier = Modifier.weight(1f),
+                            content = attentionBlock,
+                        )
+                    }
+                } else {
+                    driverBlock()
+                    attentionBlock()
+                }
+                Spacer(Modifier.height(4.dp))
+            }
         }
     }
 }
+
+/** The two-column home of a wide screen; absent on a phone. */
+const val HOME_DASHBOARD_TAG = "home_dashboard"
 
 @Composable
 private fun HomePrimaryAction(state: HomeUiState, onPrimaryAction: (PrimaryAction) -> Unit) {
