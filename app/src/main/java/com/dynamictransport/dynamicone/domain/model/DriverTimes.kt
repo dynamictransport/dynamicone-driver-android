@@ -82,8 +82,17 @@ data class DriverTimes(
     /** Older than the planning threshold: shown as the last known values. */
     fun isStale(now: Instant): Boolean = referenceTime == null || Duration.between(referenceTime, now) > STALE_AFTER
 
+    /**
+     * Older than a day: the server returns the newest stored snapshot however old it is (backend docs/82), so
+     * clock times derived from it (next break, shift end) would point into the past and are not shown.
+     */
+    fun isOutdated(now: Instant): Boolean = referenceTime == null || Duration.between(referenceTime, now) > OUTDATED_AFTER
+
     companion object {
         /** Same threshold as the backend's Planning Intelligence (docs/06 Webfleet). */
         val STALE_AFTER: Duration = Duration.ofMinutes(15)
+
+        /** Clock times from a snapshot older than this are hidden (user decision, 26.10.2026). */
+        val OUTDATED_AFTER: Duration = Duration.ofHours(24)
     }
 }

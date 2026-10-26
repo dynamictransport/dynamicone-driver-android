@@ -55,6 +55,8 @@
     <string name="driver_day_break_due">Następna przerwa najpóźniej o %1$s</string>
     <string name="driver_day_break_due_with">Następna przerwa najpóźniej o %1$s (%2$s)</string>
     <string name="driver_day_shift_latest_end">Zmiana musi się skończyć najpóźniej o %1$s</string>
+    <string name="driver_day_outdated">Dane tachografu są nieaktualne: ostatnie znane %1$s</string>
+    <string name="driver_day_outdated_unknown">Dane tachografu są nieaktualne</string>
     <string name="driver_day_infringement">Tachograf wykazuje naruszenie.</string>
     <string name="driver_day_as_of">Dane tachografu %1$s · orientacyjnie</string>
     <string name="driver_day_as_of_stale">Ostatnie znane dane tachografu: %1$s · orientacyjnie</string>

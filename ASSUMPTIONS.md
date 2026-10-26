@@ -356,3 +356,19 @@ sözleşmesi `docs/27_EXPORT_LOADING_SEAL.md`. Harf etiketi **S**.
   tekilleştirmesi ve dokununca seferi yeniden okuma davranışıyla gelir. Uygulama hatırlatma üretmez.
 - **S12 — Doğrulama:** 21 yeni JVM testi (kural, mapping, MockWebServer repository, ViewModel, Robolectric Compose).
   Fiziksel cihaz kabulü teslim raporunda ayrı listelenir; iki konteynerli gerçek Export seferi gerektirir.
+
+## Eski takograf verisinde saatlerin gizlenmesi (26.10.2026)
+
+Tabletteki takograf kartı "Sonraki mola en geç 21 Ağu 18:02" gösterdi: sunucu en yeni kayıtlı Webfleet snapshot'ını
+yaşına bakmadan döndürür (backend docs/82) ve `nextBreakDueUtc = reference_time + next_break` geçmişe düşer.
+Kullanıcı kararı: veri 24 saatten eskiyse mola ve vardiya bitiş saatleri gizlenir, yalnızca uyarı gösterilir.
+
+- **T1 — Eşik:** `DriverTimes.OUTDATED_AFTER` = 24 saat, `referenceTime` üzerinden; referans bilinmiyorsa da eski
+  sayılır. 15 dakikalık "son bilinen" eşiği (`STALE_AFTER`) değişmedi.
+- **T2 — Gizlenenler:** Yalnızca saat içeren satırlar (`nextBreakDueAt`, `latestShiftEnd`). *Kalan sürüş* süresi,
+  ihlal işareti ve dinlenme kartı istek dışı olduğu için gösterilmeye devam eder; kalan sürüş de eski veride
+  anlamsız olabilir, ayrı karar gerektirir.
+- **T3 — Uyarı:** Çalışma kartında uyarı tonunda, ikonlu satır: *Takograf verisi güncel değil: son bilinen 21 Ağu
+  13:30*. Alt bilgi satırı tarihi tekrar etmez, yalnızca "gösterge amaçlı" notunu yazar.
+- **T4 — Veri kaynağı:** Sunucu tarafı değişmedi; şoförün Webfleet eşlemesi ve snapshot tablosundaki son kaydın
+  kontrolü backend işidir.

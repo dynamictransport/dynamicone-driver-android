@@ -55,6 +55,8 @@
     <string name="driver_day_break_due">Next break by %1$s</string>
     <string name="driver_day_break_due_with">Next break by %1$s (%2$s)</string>
     <string name="driver_day_shift_latest_end">Shift must end by %1$s</string>
+    <string name="driver_day_outdated">Tachograph data is out of date: last known %1$s</string>
+    <string name="driver_day_outdated_unknown">Tachograph data is out of date</string>
     <string name="driver_day_infringement">The tachograph shows an infringement.</string>
     <string name="driver_day_as_of">Tachograph data %1$s · indicative</string>
     <string name="driver_day_as_of_stale">Last known tachograph data: %1$s · indicative</string>

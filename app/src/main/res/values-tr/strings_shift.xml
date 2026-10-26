@@ -55,6 +55,8 @@
     <string name="driver_day_break_due">Sonraki mola en geç %1$s</string>
     <string name="driver_day_break_due_with">Sonraki mola en geç %1$s (%2$s)</string>
     <string name="driver_day_shift_latest_end">Vardiya en geç %1$s bitmeli</string>
+    <string name="driver_day_outdated">Takograf verisi güncel değil: son bilinen %1$s</string>
+    <string name="driver_day_outdated_unknown">Takograf verisi güncel değil</string>
     <string name="driver_day_infringement">Takografta ihlal görünüyor.</string>
     <string name="driver_day_as_of">Takograf verisi %1$s · gösterge amaçlı</string>
     <string name="driver_day_as_of_stale">Son bilinen takograf verisi: %1$s · gösterge amaçlı</string>

@@ -69,7 +69,7 @@ bağlantısı; docs/06 Webfleet ve docs/58). Yeni sağlayıcı isteği **yapılm
 | Alan | Kural |
 | --- | --- |
 | `status` | `Available` · `NotLinked` (şoför bir Webfleet sürücüsüne bağlı değil) · `NoData` (bağlı ama kayıt yok ya da hesabın Remaining Driving Times lisansı yok). `Available` değilse diğer alanlar `null`/yok. |
-| `referenceTimeUtc` | Webfleet `reference_time`: değerlerin geçerli olduğu an. Uygulama 15 dakikadan eskiyse "son bilinen" yazar (Planning Intelligence ile aynı eşik). |
+| `referenceTimeUtc` | Webfleet `reference_time`: değerlerin geçerli olduğu an. Uygulama 15 dakikadan eskiyse "son bilinen" yazar (Planning Intelligence ile aynı eşik); 24 saatten eskiyse `nextBreakDueUtc` ve `latestEndCurrentShiftUtc` saatlerini gizler, yalnızca "takograf verisi güncel değil" uyarısını gösterir (kullanıcı kararı, 26.10.2026). |
 | `receivedAtUtc` | Snapshot'ın DynamicONE'a geldiği an. |
 | `currentActivity` | `Driving` · `OtherWork` · `Standby` · `Break` · `Unknown` (backend `DriverActivity`). |
 | `dailyRest.state` | `Resting`: son vardiya bitti, şoför günlük dinlenmede ve **yeni vardiya henüz başlamadı** (`endsAtUtc` geçmişte olabilir: asgari dinlenme tamamlandı, şoför henüz başlamadı). `Working`: vardiya sürüyor (sürüş, diğer iş, kısa mola, hazır bulunma). `Unknown`: karar verilemiyor. Hangi Webfleet alanlarından türetileceği backend kararıdır (ör. `current_workstate`, `current_shift_start`, `earliest_start_next_shift`); 5 dakikalık senkron gecikmesi kabul edilir. |

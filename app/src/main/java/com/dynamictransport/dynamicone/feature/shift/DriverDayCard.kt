@@ -193,20 +193,36 @@ private fun WorkingContent(times: DriverTimes, now: Instant) {
             tag = "driver_day_driving_left",
         )
     }
-    times.nextBreakDueAt?.let { due ->
-        val minimum = times.nextBreakMinimum
+    if (times.isOutdated(now)) {
+        // Break and shift-end times from an old snapshot would be dates in the past: only the warning is shown.
         InfoLine(
-            icon = Icons.Filled.Coffee,
-            text = if (minimum != null) {
-                stringResource(R.string.driver_day_break_due_with, dayTime(due, now), formatDuration(minimum))
-            } else {
-                stringResource(R.string.driver_day_break_due, dayTime(due, now))
-            },
-            tone = if (due.isBefore(now)) StatusTone.Warning else StatusTone.Neutral,
+            icon = Icons.Filled.Warning,
+            text = times.referenceTime?.let { stringResource(R.string.driver_day_outdated, dayTime(it, now)) }
+                ?: stringResource(R.string.driver_day_outdated_unknown),
+            tone = StatusTone.Warning,
+            tag = "driver_day_outdated",
         )
-    }
-    times.latestShiftEnd?.let { end ->
-        InfoLine(icon = Icons.Filled.Bedtime, text = stringResource(R.string.driver_day_shift_latest_end, dayTime(end, now)))
+    } else {
+        times.nextBreakDueAt?.let { due ->
+            val minimum = times.nextBreakMinimum
+            InfoLine(
+                icon = Icons.Filled.Coffee,
+                text = if (minimum != null) {
+                    stringResource(R.string.driver_day_break_due_with, dayTime(due, now), formatDuration(minimum))
+                } else {
+                    stringResource(R.string.driver_day_break_due, dayTime(due, now))
+                },
+                tone = if (due.isBefore(now)) StatusTone.Warning else StatusTone.Neutral,
+                tag = "driver_day_break_due",
+            )
+        }
+        times.latestShiftEnd?.let { end ->
+            InfoLine(
+                icon = Icons.Filled.Bedtime,
+                text = stringResource(R.string.driver_day_shift_latest_end, dayTime(end, now)),
+                tag = "driver_day_shift_end",
+            )
+        }
     }
     if (times.hasInfringement) {
         InfoLine(icon = Icons.Filled.Warning, text = stringResource(R.string.driver_day_infringement), tone = StatusTone.Warning)
@@ -222,7 +238,7 @@ private fun Footer(times: DriverTimes, now: Instant) {
         Spacer(Modifier.width(6.dp))
         Text(
             text = when {
-                reference == null -> stringResource(R.string.driver_day_indicative)
+                reference == null || times.isOutdated(now) -> stringResource(R.string.driver_day_indicative)
                 times.isStale(now) -> stringResource(R.string.driver_day_as_of_stale, dayTime(reference, now))
                 else -> stringResource(R.string.driver_day_as_of, DriverFormats.time(reference))
             },

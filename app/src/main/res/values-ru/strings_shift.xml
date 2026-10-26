@@ -55,6 +55,8 @@
     <string name="driver_day_break_due">Следующий перерыв до %1$s</string>
     <string name="driver_day_break_due_with">Следующий перерыв до %1$s (%2$s)</string>
     <string name="driver_day_shift_latest_end">Смена должна закончиться до %1$s</string>
+    <string name="driver_day_outdated">Данные тахографа устарели: последние известные %1$s</string>
+    <string name="driver_day_outdated_unknown">Данные тахографа устарели</string>
     <string name="driver_day_infringement">Тахограф показывает нарушение.</string>
     <string name="driver_day_as_of">Данные тахографа %1$s · ориентировочно</string>
     <string name="driver_day_as_of_stale">Последние известные данные тахографа: %1$s · ориентировочно</string>

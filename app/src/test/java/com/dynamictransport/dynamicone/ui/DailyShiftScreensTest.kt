@@ -301,6 +301,30 @@ class DailyShiftScreensTest {
     }
 
     @Test
+    fun workingCardHidesClockTimesFromASnapshotOlderThanADay() {
+        // The server returns the newest stored snapshot however old it is; 25 h old break/shift times would be past dates.
+        val reference = TEST_NOW.minus(Duration.ofHours(25))
+        val times = workingTimes(reference = reference).copy(latestShiftEnd = reference.plus(Duration.ofHours(6)))
+        setCard(DriverDayState(times = times, alarm = null), shift = ACTIVE_SHIFT.copy(requiresVehicleCheck = true))
+
+        assertTagHasText("driver_day_driving_left", "Driving left today: 2 h 5 min")
+        assertTagHasText("driver_day_outdated", "Tachograph data is out of date: last known")
+        composeRule.onNodeWithTag("driver_day_break_due").assertDoesNotExist()
+        composeRule.onNodeWithTag("driver_day_shift_end").assertDoesNotExist()
+        composeRule.onNodeWithText("Indicative values; the tachograph is authoritative.").assertIsDisplayed()
+    }
+
+    @Test
+    fun workingCardKeepsClockTimesFromASnapshotYoungerThanADay() {
+        val reference = TEST_NOW.minus(Duration.ofHours(23))
+        setCard(DriverDayState(times = workingTimes(reference = reference), alarm = null), shift = ACTIVE_SHIFT.copy(requiresVehicleCheck = true))
+
+        composeRule.onNodeWithTag("driver_day_break_due").assertIsDisplayed()
+        composeRule.onNodeWithTag("driver_day_outdated").assertDoesNotExist()
+        composeRule.onNodeWithText("Last known tachograph data: ", substring = true).assertIsDisplayed()
+    }
+
+    @Test
     fun wakeUpAlarmOffersStartingTheShift() {
         composeRule.setContent {
             DynamicOneTheme(darkTheme = false) {
