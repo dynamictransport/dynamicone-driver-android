@@ -404,8 +404,9 @@ private fun HeaderCard(payment: CashPayment, local: LocalCashSignature?) {
             modifier = Modifier.testTag("cash_detail_amount"),
         )
         // The planned date is on the status line below; the amount stands alone.
+        // approvedByName is the form's own text (the server may already include a label): shown as it came.
         val approval = listOfNotNull(
-            payment.approvedByName?.let { stringResource(R.string.cash_approved_by, it) },
+            payment.approvedByName,
             payment.approvedAt?.let { stringResource(R.string.cash_approved_at, cashDateTime(it, locale)) },
         )
         if (approval.isNotEmpty()) {

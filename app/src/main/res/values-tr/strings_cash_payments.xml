@@ -21,7 +21,6 @@
     <string name="cash_kind_overtime">Mesai</string>
     <string name="cash_planned_for">Planlanan tarih: %1$s</string>
     <string name="cash_received_at">Teslim edildi: %1$s</string>
-    <string name="cash_approved_by">Onaylayan: %1$s</string>
     <string name="cash_approved_at">Onay: %1$s</string>
     <string name="cash_cancelled">Finans bu ödemeyi iptal etti. Teslim edilecek bir şey yok.</string>
     <string name="cash_state_waiting">Telefonda imzalandı. Sunucunun teslimi onaylaması bekleniyor.</string>

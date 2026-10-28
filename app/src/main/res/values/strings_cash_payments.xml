@@ -21,7 +21,6 @@
     <string name="cash_kind_overtime">Overtime</string>
     <string name="cash_planned_for">Planned for %1$s</string>
     <string name="cash_received_at">Handed over: %1$s</string>
-    <string name="cash_approved_by">Approved by %1$s</string>
     <string name="cash_approved_at">Approved: %1$s</string>
     <string name="cash_cancelled">Finance cancelled this payment. There is nothing to hand over.</string>
     <string name="cash_state_waiting">Signed on the phone. Waiting for the server to confirm the hand-over.</string>

@@ -21,7 +21,6 @@
     <string name="cash_kind_overtime">Сверхурочные</string>
     <string name="cash_planned_for">Плановая дата: %1$s</string>
     <string name="cash_received_at">Выдано: %1$s</string>
-    <string name="cash_approved_by">Утвердил(а): %1$s</string>
     <string name="cash_approved_at">Утверждено: %1$s</string>
     <string name="cash_cancelled">Финансовый отдел отменил эту выплату. Выдавать нечего.</string>
     <string name="cash_state_waiting">Подписано на телефоне. Ожидается подтверждение выдачи сервером.</string>

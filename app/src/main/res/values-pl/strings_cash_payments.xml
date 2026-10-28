@@ -21,7 +21,6 @@
     <string name="cash_kind_overtime">Nadgodziny</string>
     <string name="cash_planned_for">Planowana data: %1$s</string>
     <string name="cash_received_at">Wydano: %1$s</string>
-    <string name="cash_approved_by">Zatwierdził(a): %1$s</string>
     <string name="cash_approved_at">Zatwierdzono: %1$s</string>
     <string name="cash_cancelled">Dział finansów anulował tę wypłatę. Nie ma nic do wydania.</string>
     <string name="cash_state_waiting">Podpisano w telefonie. Oczekiwanie na potwierdzenie wydania przez serwer.</string>
