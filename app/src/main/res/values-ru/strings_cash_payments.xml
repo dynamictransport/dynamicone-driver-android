@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Выдача наличных персоналу под подпись пальцем (docs/28_EMPLOYEE_CASH_PAYMENTS.md) -->
-    <string name="nav_cash_disbursements">Выдача наличных</string>
-    <string name="nav_my_cash_payments">Мои наличные</string>
+    <string name="nav_cash_disbursements">Выдача</string>
+    <string name="nav_my_cash_payments">Наличные</string>
     <string name="cash_disbursements_title">Наличные, выданные персоналу</string>
     <string name="my_cash_payments_title">Мои наличные выплаты</string>
     <string name="cash_detail_title">Наличная выплата</string>

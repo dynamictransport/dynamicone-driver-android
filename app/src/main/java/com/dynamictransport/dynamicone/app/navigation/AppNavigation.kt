@@ -50,6 +50,8 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -699,7 +701,8 @@ private fun NavHostController.navigateToTopLevel(section: AppSection) {
 
 /**
  * One line that shrinks instead of being cut off when a long word (Russian, Polish) meets large system
- * text: "Документы" must never read "Документ".
+ * text: "Документы" must never read "Документ". A label that does not fit even at the smallest size is
+ * ellipsised in the middle of its slot instead of being cut off at the end, which reads as a shifted word.
  */
 @Composable
 private fun NavLabel(text: String) {
@@ -707,6 +710,9 @@ private fun NavLabel(text: String) {
     Text(
         text = text,
         maxLines = 1,
+        softWrap = false,
+        overflow = TextOverflow.Ellipsis,
+        textAlign = TextAlign.Center,
         autoSize = TextAutoSize.StepBased(minFontSize = 10.sp, maxFontSize = size, stepSize = 0.5.sp),
     )
 }

@@ -2,7 +2,7 @@
 <resources>
     <!-- Wypłaty gotówkowe dla personelu z podpisem palcem (docs/28_EMPLOYEE_CASH_PAYMENTS.md) -->
     <string name="nav_cash_disbursements">Wypłaty</string>
-    <string name="nav_my_cash_payments">Moja gotówka</string>
+    <string name="nav_my_cash_payments">Gotówka</string>
     <string name="cash_disbursements_title">Wypłaty gotówkowe dla personelu</string>
     <string name="my_cash_payments_title">Moje wypłaty gotówkowe</string>
     <string name="cash_detail_title">Wypłata gotówkowa</string>

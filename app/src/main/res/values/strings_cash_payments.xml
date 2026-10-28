@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Cash paid to personnel against the recipient's finger signature (docs/28_EMPLOYEE_CASH_PAYMENTS.md) -->
-    <string name="nav_cash_disbursements">Cash payouts</string>
+    <string name="nav_cash_disbursements">Payouts</string>
     <string name="nav_my_cash_payments">My cash</string>
     <string name="cash_disbursements_title">Cash paid to personnel</string>
     <string name="my_cash_payments_title">My cash payments</string>

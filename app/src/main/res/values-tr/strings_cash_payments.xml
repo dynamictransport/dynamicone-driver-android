@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Personele nakit ödeme ve parmakla imza (docs/28_EMPLOYEE_CASH_PAYMENTS.md) -->
-    <string name="nav_cash_disbursements">Nakit ödemeler</string>
+    <string name="nav_cash_disbursements">Nakit</string>
     <string name="nav_my_cash_payments">Nakitlerim</string>
     <string name="cash_disbursements_title">Personele yapılan nakit ödemeler</string>
     <string name="my_cash_payments_title">Nakit ödemelerim</string>
