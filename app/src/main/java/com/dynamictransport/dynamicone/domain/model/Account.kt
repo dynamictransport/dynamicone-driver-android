@@ -12,6 +12,12 @@ enum class AppModule(val wireName: String) {
 
     /** Personnel documents to sign (docs/17_HR_DOCUMENT_SIGNING.md). */
     HR_DOCUMENTS("hrDocuments"),
+
+    /** Hands cash approved by finance over to personnel and records their signature (docs/28). */
+    CASH_DISBURSEMENTS("cashDisbursements"),
+
+    /** The account's own cash approvals and signed receipts (docs/28). */
+    CASH_PAYMENTS("cashPayments"),
     ;
 
     companion object {

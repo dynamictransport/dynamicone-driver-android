@@ -6,6 +6,13 @@ import com.dynamictransport.dynamicone.domain.model.AssignedVehicleState
 import com.dynamictransport.dynamicone.domain.model.AttendanceDirection
 import com.dynamictransport.dynamicone.domain.model.AttendanceMonth
 import com.dynamictransport.dynamicone.domain.model.AttendanceStatus
+import com.dynamictransport.dynamicone.domain.model.CashPayment
+import com.dynamictransport.dynamicone.domain.model.CashPaymentList
+import com.dynamictransport.dynamicone.domain.model.CashPaymentLookup
+import com.dynamictransport.dynamicone.domain.model.CashPaymentScope
+import com.dynamictransport.dynamicone.domain.model.CashPaymentState
+import com.dynamictransport.dynamicone.domain.model.CashSignResult
+import com.dynamictransport.dynamicone.domain.model.LocalCashSignature
 import com.dynamictransport.dynamicone.domain.model.CheckTemplate
 import com.dynamictransport.dynamicone.domain.model.Conversation
 import com.dynamictransport.dynamicone.domain.model.ConversationList
@@ -424,6 +431,41 @@ interface VehicleDocumentRepository {
     suspend fun refresh(): RefreshResult
 
     suspend fun open(documentId: String, contentTypeHint: String?): DocumentContentResult
+}
+
+/**
+ * Cash approved by finance and handed over against the recipient's finger signature (docs/28_EMPLOYEE_CASH_PAYMENTS.md).
+ * Lists and details live in memory only; a signature is stored on the phone with its command id until the server
+ * confirmed it. The app never creates a payment, changes an amount or computes a balance.
+ */
+interface CashPaymentRepository {
+    /** The list of one scope and state; null until read from the server. */
+    fun observeList(scope: CashPaymentScope, state: CashPaymentState): Flow<CashPaymentList?>
+
+    fun observePayment(scope: CashPaymentScope, paymentId: String): Flow<CashPaymentLookup>
+
+    /** Signatures of one scope waiting on the phone or rejected, for the list's status lines. */
+    fun observeLocalSignatures(scope: CashPaymentScope): Flow<List<LocalCashSignature>>
+
+    /** Reads the first page again. */
+    suspend fun refresh(scope: CashPaymentScope, state: CashPaymentState): RefreshResult
+
+    suspend fun loadMore(scope: CashPaymentScope, state: CashPaymentState): RefreshResult
+
+    /** Reads one payment from the server; a hand-over may only be signed after this succeeded on the open screen. */
+    suspend fun refreshPayment(scope: CashPaymentScope, paymentId: String): RefreshResult
+
+    /**
+     * Stores the recipient's signature on the phone with a new command id, then sends it. A signature already waiting
+     * for the same payment is sent again unchanged ([signature] is ignored then): a second tap never pays twice.
+     */
+    suspend fun sign(scope: CashPaymentScope, paymentId: String, formHash: String, signature: DrawnSignature): CashSignResult
+
+    /** Sends every waiting signature with its own command id. False: some must be tried again later. */
+    suspend fun sendPending(): Boolean
+
+    /** The signed receipt PDF, downloaded with the bearer token for the in-app viewer. */
+    suspend fun openReceipt(scope: CashPaymentScope, paymentId: String): DocumentContentResult
 }
 
 /** Removes a file downloaded for viewing once the viewer closes: nothing is kept for offline use. */

@@ -13,6 +13,7 @@ import com.dynamictransport.dynamicone.domain.model.RefreshResult
 import com.dynamictransport.dynamicone.domain.model.SessionState
 import com.dynamictransport.dynamicone.domain.model.VehicleDocumentsSnapshot
 import com.dynamictransport.dynamicone.testing.FakeAuthRepository
+import com.dynamictransport.dynamicone.testing.FakeCashPaymentRepository
 import com.dynamictransport.dynamicone.testing.FakeHrDocumentRepository
 import com.dynamictransport.dynamicone.testing.FakeImageDecoder
 import com.dynamictransport.dynamicone.testing.FakeMyDocumentRepository
@@ -44,6 +45,7 @@ class PersonnelFileViewModelsTest {
     private val vehicleDocuments = FakeVehicleDocumentRepository()
     private val signedDocuments = FakeSignedDocumentRepository()
     private val hrDocuments = FakeHrDocumentRepository()
+    private val cashPayments = FakeCashPaymentRepository()
     private val auth = FakeAuthRepository()
     private val pdfOpener = FakePdfOpener()
     private val imageDecoder = FakeImageDecoder()
@@ -171,6 +173,7 @@ class PersonnelFileViewModelsTest {
         vehicleDocuments,
         signedDocuments,
         hrDocuments,
+        cashPayments,
         pdfOpener,
         imageDecoder,
         cleaner,

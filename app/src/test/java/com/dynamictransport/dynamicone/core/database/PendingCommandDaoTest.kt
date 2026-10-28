@@ -117,12 +117,13 @@ class AppDatabaseMigrationTest {
                 it.moveToFirst()
                 assertEquals(0, it.getInt(0))
             }
-            assertEquals(8, db.version)
+            assertEquals(9, db.version)
             assertTrue(runBlocking { room.pendingCommandDao().observeMessages(null).first() }.isEmpty())
             // v4: the driver daily shift tables (docs/16) exist and start empty; v5: personnel document signatures (docs/17);
-            // v6: road snapshot requests (docs/24); v7: wake-up calls (docs/25).
+            // v6: road snapshot requests (docs/24); v7: wake-up calls (docs/25); v9: cash hand-over signatures (docs/28).
             listOf(
                 "shift_commands", "check_photos", "driver_cache", "hr_signatures", "hr_document_cache", "snapshot_requests", "wake_up_calls",
+                "cash_signatures",
             ).forEach { table ->
                 db.query("SELECT COUNT(*) FROM $table").use {
                     it.moveToFirst()

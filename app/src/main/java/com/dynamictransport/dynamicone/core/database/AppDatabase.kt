@@ -28,8 +28,9 @@ import java.time.Instant
         SnapshotRequestEntity::class,
         WakeUpCallEntity::class,
         TarWarningEntity::class,
+        CashSignatureEntity::class,
     ],
-    version = 8,
+    version = 9,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 1, to = 2, spec = AppDatabase.Version1To2::class),
@@ -45,6 +46,8 @@ import java.time.Instant
         AutoMigration(from = 6, to = 7),
         // v8: TAR warnings set on the device's alarm manager (docs/26 §6).
         AutoMigration(from = 7, to = 8),
+        // v9: cash hand-over signatures waiting on the phone (docs/28).
+        AutoMigration(from = 8, to = 9),
     ],
 )
 @TypeConverters(DatabaseConverters::class)
@@ -64,6 +67,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun snapshotRequestDao(): SnapshotRequestDao
     abstract fun wakeUpCallDao(): WakeUpCallDao
     abstract fun tarWarningDao(): TarWarningDao
+    abstract fun cashPaymentDao(): CashPaymentDao
 
     /**
      * v2: Driver API command store added; the demo earnings cache is dropped (pay data is no longer cached

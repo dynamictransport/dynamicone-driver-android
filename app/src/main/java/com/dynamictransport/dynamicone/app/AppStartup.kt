@@ -4,6 +4,7 @@ import com.dynamictransport.dynamicone.core.alarm.RestAlarmController
 import com.dynamictransport.dynamicone.core.common.ApplicationScope
 import com.dynamictransport.dynamicone.core.push.PushSession
 import com.dynamictransport.dynamicone.core.sync.AttendanceSyncScheduler
+import com.dynamictransport.dynamicone.core.sync.CashPaymentSyncScheduler
 import com.dynamictransport.dynamicone.core.sync.DriverDayWorkScheduler
 import com.dynamictransport.dynamicone.core.sync.HrDocumentSyncScheduler
 import com.dynamictransport.dynamicone.core.sync.ShiftSyncScheduler
@@ -48,6 +49,7 @@ class AppStartup @Inject constructor(
     private val driverDayWork: DriverDayWorkScheduler,
     private val restAlarm: Provider<RestAlarmController>,
     private val hrDocumentSyncScheduler: HrDocumentSyncScheduler,
+    private val cashPaymentSyncScheduler: CashPaymentSyncScheduler,
     private val snapshotSyncScheduler: SnapshotSyncScheduler,
     private val wakeUpSyncScheduler: WakeUpSyncScheduler,
     private val wakeUpCalls: Provider<WakeUpCallController>,
@@ -122,6 +124,7 @@ class AppStartup @Inject constructor(
                 .collectLatest { session ->
                     if (AppModule.OFFICE_ATTENDANCE in session.modules) attendanceSyncScheduler.requestSend()
                     if (AppModule.HR_DOCUMENTS in session.modules) hrDocumentSyncScheduler.requestSend()
+                    if (session.modules.any { it in CASH_MODULES }) cashPaymentSyncScheduler.requestSend()
                     if (AppModule.DRIVER in session.modules) {
                         // Road snapshot photos taken before a restart or without network go out first (docs/24),
                         // as do answers to wake-up calls (docs/25).
@@ -145,6 +148,7 @@ class AppStartup @Inject constructor(
                 val session = authRepository.sessionState.value as? SessionState.LoggedIn ?: return@collect
                 if (AppModule.OFFICE_ATTENDANCE in session.modules) attendanceSyncScheduler.requestSend()
                 if (AppModule.HR_DOCUMENTS in session.modules) hrDocumentSyncScheduler.requestSend()
+                if (session.modules.any { it in CASH_MODULES }) cashPaymentSyncScheduler.requestSend()
                 if (AppModule.DRIVER in session.modules) {
                     snapshotSyncScheduler.requestSend()
                     wakeUpSyncScheduler.requestSend()
@@ -157,5 +161,8 @@ class AppStartup @Inject constructor(
     private companion object {
         /** Modules whose server sends push notifications (docs/13, docs/17 §6). */
         val PUSH_MODULES = setOf(AppModule.DRIVER, AppModule.HR_DOCUMENTS)
+
+        /** Modules with cash hand-over signatures that may wait on the phone (docs/28). */
+        val CASH_MODULES = setOf(AppModule.CASH_DISBURSEMENTS, AppModule.CASH_PAYMENTS)
     }
 }

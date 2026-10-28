@@ -20,6 +20,9 @@ Hangi ekranların görüneceğine uygulama değil, sunucu karar verir (`me.modul
 | --- | --- | --- |
 | `driver` | Driver API erişimi olan şoför (bugünkü `driver_access_required` kuralı) | Bugünkü şoför ekranları (`/api/driver/v1`) |
 | `officeAttendance` | Ofis mesai takibine dahil edilebilen aktif personel | Mesai (NFC giriş/çıkış) ve Mesai kayıtlarım |
+| `hrDocuments` | Ofisin evrak gönderdiği personel (docs/17) | Personel evraklarım, Belgelerim |
+| `cashDisbursements` | `finance.employee-cash.deliver` izni olan hesaplar (docs/28) | Personele yapılan nakit ödemeler |
+| `cashPayments` | Kendisine nakit ödeme onaylanabilen personel (docs/28) | Nakit ödemelerim |
 
 İleride eklenecek modüller aynı listeye yeni bir anahtar olarak eklenir. Uygulama bilmediği anahtarı yok sayar.
 

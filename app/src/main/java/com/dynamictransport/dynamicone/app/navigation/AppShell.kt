@@ -24,6 +24,12 @@ enum class AppSection(val modules: Set<AppModule>, val priority: Int) {
     /** Files of the driver's assigned vehicle. */
     VEHICLE_DOCUMENTS(setOf(AppModule.DRIVER), 8),
 
+    /** Cash approved by finance that this account hands over to personnel (docs/28). */
+    CASH_DISBURSEMENTS(setOf(AppModule.CASH_DISBURSEMENTS), 9),
+
+    /** The account's own cash payments and signed receipts (docs/28). */
+    MY_CASH_PAYMENTS(setOf(AppModule.CASH_PAYMENTS), 10),
+
     /** Every account; always the last item of the bar. */
     PROFILE(emptySet(), Int.MAX_VALUE),
 }

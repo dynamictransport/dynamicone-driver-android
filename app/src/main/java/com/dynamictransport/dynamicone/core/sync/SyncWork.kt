@@ -14,6 +14,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.dynamictransport.dynamicone.domain.model.RefreshResult
 import com.dynamictransport.dynamicone.domain.repository.AttendanceRepository
+import com.dynamictransport.dynamicone.domain.repository.CashPaymentRepository
 import com.dynamictransport.dynamicone.domain.repository.DailyShiftRepository
 import com.dynamictransport.dynamicone.domain.repository.HrDocumentRepository
 import com.dynamictransport.dynamicone.domain.repository.RoadSnapshotRepository
@@ -262,6 +263,44 @@ class HrDocumentSyncWorker @AssistedInject constructor(
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result = if (hrDocumentRepository.sendPending()) Result.success() else Result.retry()
+}
+
+/** Sends cash hand-over signatures stored on the phone once the server can be reached (docs/28, P6/P7). */
+interface CashPaymentSyncScheduler {
+    /** [delaySeconds]: the server's `Retry-After` when it asked to be left alone for a while (429). */
+    fun requestSend(delaySeconds: Long = 0)
+}
+
+@Singleton
+class WorkManagerCashPaymentSyncScheduler @Inject constructor(
+    @param:ApplicationContext private val context: Context,
+) : CashPaymentSyncScheduler {
+
+    override fun requestSend(delaySeconds: Long) {
+        val request = OneTimeWorkRequestBuilder<CashPaymentSyncWorker>()
+            .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, CASH_BACKOFF_SECONDS, TimeUnit.SECONDS)
+            .setInitialDelay(delaySeconds.coerceIn(0, MAX_RETRY_AFTER_SECONDS), TimeUnit.SECONDS)
+            .build()
+        // Every signature carries its own command id and the server is idempotent: restarting a running send is safe.
+        WorkManager.getInstance(context).enqueueUniqueWork(UNIQUE_WORK_NAME, ExistingWorkPolicy.REPLACE, request)
+    }
+
+    companion object {
+        const val UNIQUE_WORK_NAME = "cash-payment-sync"
+        private const val CASH_BACKOFF_SECONDS = 20L
+        private const val MAX_RETRY_AFTER_SECONDS = 15 * 60L
+    }
+}
+
+@HiltWorker
+class CashPaymentSyncWorker @AssistedInject constructor(
+    @Assisted context: Context,
+    @Assisted params: WorkerParameters,
+    private val cashPaymentRepository: CashPaymentRepository,
+) : CoroutineWorker(context, params) {
+
+    override suspend fun doWork(): Result = if (cashPaymentRepository.sendPending()) Result.success() else Result.retry()
 }
 
 /** Sends road snapshot photos and failure reports waiting on the tablet (docs/24 §8, S5). */

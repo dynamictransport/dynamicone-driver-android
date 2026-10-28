@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Cash paid to personnel against the recipient's finger signature (docs/28_EMPLOYEE_CASH_PAYMENTS.md) -->
+    <string name="nav_cash_disbursements">Cash payouts</string>
+    <string name="nav_my_cash_payments">My cash</string>
+    <string name="cash_disbursements_title">Cash paid to personnel</string>
+    <string name="my_cash_payments_title">My cash payments</string>
+    <string name="cash_detail_title">Cash payment</string>
+
+    <string name="cash_filter_approved">To hand over</string>
+    <string name="cash_filter_received">Handed over</string>
+    <string name="cash_filter_cancelled">Cancelled</string>
+    <string name="cash_none_approved">No cash payments waiting to be handed over.</string>
+    <string name="cash_none_received">No cash payments handed over yet.</string>
+    <string name="cash_none_cancelled">No cancelled cash payments.</string>
+    <string name="cash_access_removed">This account may not handle cash payments any more. Please contact finance.</string>
+
+    <string name="cash_registration_number">No. %1$s</string>
+    <string name="cash_kind_advance">Advance</string>
+    <string name="cash_kind_salary">Salary</string>
+    <string name="cash_kind_overtime">Overtime</string>
+    <string name="cash_planned_for">Planned for %1$s</string>
+    <string name="cash_received_at">Handed over: %1$s</string>
+    <string name="cash_approved_by">Approved by %1$s</string>
+    <string name="cash_approved_at">Approved: %1$s</string>
+    <string name="cash_cancelled">Finance cancelled this payment. There is nothing to hand over.</string>
+    <string name="cash_state_waiting">Signed on the phone. Waiting for the server to confirm the hand-over.</string>
+    <string name="cash_missing">This payment is no longer available to you.</string>
+
+    <string name="cash_form_title">Approved form</string>
+    <string name="cash_declaration_title">Hand-over declaration</string>
+    <string name="cash_declaration_accept">I confirm the declaration above</string>
+    <string name="cash_signature_title">The recipient signs with the finger</string>
+    <string name="cash_signature_hint">The person receiving the money signs in the box.</string>
+    <string name="cash_signature_pad">Signature box</string>
+    <string name="cash_signature_clear">Clear</string>
+    <string name="cash_sign_action">I RECEIVED THE MONEY</string>
+    <string name="cash_resend_action">SEND AGAIN</string>
+    <string name="cash_sign_needs">Tick the declaration and sign to continue.</string>
+    <string name="cash_sign_not_ready">This payment cannot be signed right now. Refresh and try again.</string>
+    <string name="cash_waiting_hint">Not completed until the server confirms it. The same request is sent again.</string>
+
+    <string name="cash_signed_success">Hand-over recorded. The signed receipt is opening.</string>
+    <string name="cash_saved_offline">Saved on the phone. The server has not confirmed the hand-over yet; the same request is sent again automatically.</string>
+    <string name="cash_already_received">This payment was already handed over.</string>
+    <string name="cash_failure_form_changed">Finance changed the form. Read the new form and sign again.</string>
+    <string name="cash_failure_signature">The signature was not accepted. Sign again.</string>
+    <string name="cash_failure_employee_inactive">The recipient is not an active employee. Please contact finance.</string>
+    <string name="cash_failure_conflict">The payment changed in the meantime. Check the current state and sign again.</string>
+    <string name="cash_failure_rejected">The server did not accept the signature. Sign again or contact finance.</string>
+
+    <string name="cash_open_receipt">OPEN SIGNED RECEIPT</string>
+    <string name="cash_receipt_pending">The signed receipt is not available yet.</string>
+    <string name="cash_receipt_missing">The signed receipt was not found.</string>
+</resources>

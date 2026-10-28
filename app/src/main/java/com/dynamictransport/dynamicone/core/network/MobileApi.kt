@@ -120,6 +120,52 @@ interface MobileApi {
     @Streaming
     @GET("me/assigned-vehicle/documents/{documentId}/content")
     suspend fun assignedVehicleDocumentContent(@Path("documentId") documentId: String): ResponseBody
+
+    // --- Cash paid to personnel (docs/28_EMPLOYEE_CASH_PAYMENTS.md): the officer's queue and the own account ---
+
+    /** Approvals the account may hand over; [state] `Approved` (default), `Received` or `Cancelled`; module `cashDisbursements`. */
+    @GET("cash-payments")
+    suspend fun cashPayments(
+        @Query("state") state: String,
+        @Query("page") page: Int,
+        @Query("pageSize") pageSize: Int,
+    ): DriverPageDto<CashPaymentDto>
+
+    @GET("cash-payments/{paymentId}")
+    suspend fun cashPayment(@Path("paymentId") paymentId: String): CashPaymentDto
+
+    /** 201 for a new hand-over, 200 with the same detail when the same `commandId` is sent again. */
+    @POST("cash-payments/{paymentId}/signature")
+    suspend fun signCashPayment(
+        @Path("paymentId") paymentId: String,
+        @Body body: CashSignatureRequestDto,
+    ): CashPaymentDto
+
+    /** The signed receipt PDF, with the bearer token; never a public link. */
+    @Streaming
+    @GET("cash-payments/{paymentId}/receipt")
+    suspend fun cashPaymentReceipt(@Path("paymentId") paymentId: String): ResponseBody
+
+    /** The account's own approvals and receipts; module `cashPayments`. */
+    @GET("me/cash-payments")
+    suspend fun myCashPayments(
+        @Query("state") state: String,
+        @Query("page") page: Int,
+        @Query("pageSize") pageSize: Int,
+    ): DriverPageDto<CashPaymentDto>
+
+    @GET("me/cash-payments/{paymentId}")
+    suspend fun myCashPayment(@Path("paymentId") paymentId: String): CashPaymentDto
+
+    @POST("me/cash-payments/{paymentId}/signature")
+    suspend fun signMyCashPayment(
+        @Path("paymentId") paymentId: String,
+        @Body body: CashSignatureRequestDto,
+    ): CashPaymentDto
+
+    @Streaming
+    @GET("me/cash-payments/{paymentId}/receipt")
+    suspend fun myCashPaymentReceipt(@Path("paymentId") paymentId: String): ResponseBody
 }
 
 @Serializable

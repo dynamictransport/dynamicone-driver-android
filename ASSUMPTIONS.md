@@ -372,3 +372,69 @@ Kullanıcı kararı: veri 24 saatten eskiyse mola ve vardiya bitiş saatleri giz
   13:30*. Alt bilgi satırı tarihi tekrar etmez, yalnızca "gösterge amaçlı" notunu yazar.
 - **T4 — Veri kaynağı:** Sunucu tarafı değişmedi; şoförün Webfleet eşlemesi ve snapshot tablosundaki son kaydın
   kontrolü backend işidir.
+
+## Personele nakit ödeme ve imza (28.10.2026)
+
+Kullanıcı isteği (TH-2026-0562 aktarımı, `Employee-Cash-Approval-Claude-Handoff.tr.md` + `Yayin-dogrulamasi.txt`):
+finans webde avans/maaş/mesai formunu hazırlayıp onaylar; parayı teslim eden görevli telefonunda personele
+parmakla imza attırır, personel kendi hesabından da aynı akışla imzalayabilir. Backend 27.10.2026'da canlıda
+(kaynak 89fa94a3, PR #651); uygulama sözleşmesi `docs/28_EMPLOYEE_CASH_PAYMENTS.md`. Harf etiketi **P**.
+Uygulama tarafı yalnızca JVM/Robolectric/MockWebServer testleriyle doğrulandı; cihaz kabulü ayrı listelenir.
+
+- **P1 — Erişim yalnızca modüllerden:** `me.modules` içindeki `cashDisbursements` *Personele yapılan nakit
+  ödemeler* bölümünü (`AppSection.CASH_DISBURSEMENTS`), `cashPayments` *Nakit ödemelerim* bölümünü
+  (`AppSection.MY_CASH_PAYMENTS`) açar. Kullanıcı adı/kimlik listesi yoktur. İki bölüm de bar önceliğinde en
+  sondadır: barda yer kalmazsa profil menüsünden açılır (şoför ve ofis hesaplarında olağan durum budur).
+- **P2 — Çalışma dizini:** HR imza altyapısı (`SignaturePad`, `HrDocumentRules` çizim kuralları, Room kuyruğu,
+  `ProtectedFileDownloader`) ve cihazlardaki Room v8 yapısı yalnızca `C:\Dev\DynamicONE-Driver-combined`
+  (feature/combined) worktree'sindedir; değişiklik orada yapıldı (commit yok). Room **v9**: `cash_signatures`.
+- **P3 — İki kapsam, bir ekran:** `CashPaymentScope.DISBURSEMENTS` (`/cash-payments…`) ve `OWN`
+  (`/me/cash-payments…`) aynı liste/detay/imza/makbuz ekranlarını kullanır; kapsam rotaya yazılır. Sunucu
+  sahipliği denetler; uygulama alıcı filtresi uygulamaz (sözleşme: "Alıcı filtresi sunucu sahipliğinin yerine
+  geçmez").
+- **P4 — Liste ve detay bellekte, kuyruk telefonda:** Listeler (`state` filtresi başına sayfa 1, `pageSize=50`,
+  *Daha fazla*) ve detaylar yalnızca bellekte tutulur ve oturum verisiyle silinir; çevrimdışı liste yoktur
+  (çevrimdışı teslim "tamamlandı" gösterilemez). Yalnızca gönderilmeyi bekleyen imza Room'da saklanır.
+- **P5 — İmza için güncel detay şart:** Satıra dokununca detay sunucudan yeniden okunur; *Parayı aldım* yalnızca
+  bu ekranda başarılı bir sunucu okumasından sonra, `state=Approved` ve `canSign=true` ise etkinleşir. Liste
+  satırındaki eski veri imza için kullanılmaz; `formHash` o okumadan alınır.
+- **P6 — commandId kuralı:** Yeni imza işlemi = yeni UUID (`IdGenerator`); imza gönderilmeden önce Room'a
+  yazılır. Çift dokunma, ekran dönüşü, uygulama yeniden başlaması ve *Tekrar gönder* aynı kaydı aynı
+  `commandId`, `formHash`, `strokes` ve `aspectRatio` ile yeniden gönderir (`getWaitingSignature`). Sunucu 200
+  (tekrar) ile 201 (ilk) aynı şekilde "teslim edildi" sayılır. Reddedilen (FAILED) imzadan sonra atılan yeni imza
+  yeni UUID alır.
+- **P7 — Hata eşlemesi (sözleşme):** `400 invalid_cash_signature` → yeniden imzala; `401` → mevcut token
+  yenileme (OkHttp authenticator), yine olmazsa imza beklemede kalır ve yeniden girişte gönderilir;
+  `403` (`cash_delivery_required`, `cash_access_required`) → imza FAILED/ACCESS_REQUIRED (arka planda yeniden
+  denenmez), `me` yeniden okunur ve detay ekranı kapanır; `404 cash_payment_not_found` → yerel kayıt ve imza
+  silinir, ekran "artık erişilemiyor" der; `409 cash_form_changed` / `cash_payment_conflict` → detay yeniden
+  okunur, yeni form gösterilir, yeniden imzalanır; `409 cash_payment_already_received` / `cash_payment_cancelled`
+  → yerel imza silinir, detay yeniden okunur ve gerçek durum gösterilir; `409 cash_employee_inactive`,
+  `command_conflict` → FAILED; `429` → `Retry-After` kadar bekleyip aynı istek; çevrimdışı/5xx/okunamayan yanıt →
+  beklemede, WorkManager ile tekrar. Kodsuz 404 (uç yok) de "beklemede" sayılır. Hiçbir hata yerelde "ödendi"
+  üretmez.
+- **P8 — Beklemedeki imza oturumla yaşar:** Oturum süresi dolunca (401) imza telefonda kalır ve aynı hesap yeniden
+  girince gönderilir (`clearStoredCommands` çağrılmaz); açık *Çıkış* ve hesap değişimi imzaları siler
+  (sözleşme: "oturum kapanınca hassas geçici verileri temizle"). Teslim edildiği sunucuca onaylanan imzanın
+  çizimi hemen silinir.
+- **P9 — Makbuz:** `receiptUrl` yalnızca "makbuz hazır" bilgisi olarak kullanılır; indirme her zaman sözleşmedeki
+  `…/cash-payments/{id}/receipt` ucundan Bearer ile uygulama içi görüntüleyiciye yapılır (özel cache, dışa
+  paylaşılmaz). URL'ye token eklenmez, halka açık bağlantı üretilmez. İlk başarılı imzadan sonra makbuz
+  kendiliğinden açılır; teslim edilmiş kayıtta *İmzalı makbuzu aç* düğmesi vardır.
+- **P10 — Form metni sunucudan:** `title`, `lines`, `declaration`, `approvedByName` aynen gösterilir; tutar
+  `DriverFormats.money` ile para birimi koduna göre biçimlenir (EUR/PLN ayrı; kur/bakiye hesabı yok). `lines`
+  sözleşmede tipi belirtilmemiş: dize listesi beklenir; nesne gelirse `label`/`value` (veya tüm ilkel alanlar)
+  tek satıra birleştirilir. `kind` bilinmeyen değerse ham metin gösterilir.
+- **P11 — Çizim kuralları HR ile ortak:** `HrDocumentRules` (en çok 100 çizgi, çizgi başına ≥2 nokta, ≤5000
+  nokta, 0–1 normalize, en az genişlik/yükseklik) ve `PAD_ASPECT_RATIO=2.5` (1–6 aralığında) aynen kullanılır;
+  `SignaturePad` bileşeni paylaşılır. Çizim VM durumunda tutulur: döndürme çizimi korur; kutu oranı sabit
+  olduğundan çizim uzamaz.
+- **P12 — Telefon yönelimi:** Kullanıcı kararı W6 (telefon dikey, tablet serbest) değiştirilmedi. Ekranlar
+  yatay düzende de çalışır (tablet; Robolectric `w800dp-h400dp-land` testi); telefonlarda yatayı açmak W6'nın
+  yeniden kararını gerektirir.
+- **P13 — Gizlilik:** İmza ve tutar içeren DTO'ların `toString`'i alan yazmaz; loglara/analitiğe veri yazılmaz;
+  push içeriği yoktur. Sözleşmede push tanımlı değildir.
+- **P14 — Doğrulama:** Yeni JVM testleri: eşleme, MockWebServer repository (çift dokunma, çevrimdışı tekrar,
+  401 token yenileme, 409/404/403/429, makbuz Bearer), Room DAO, ViewModel, Robolectric ekranlar (dikey + yatay),
+  `AppShell`. Fiziksel cihaz kabul senaryoları (1–7) teslim raporunda listelenir; gerçek personel adına test
+  imzası atılmadı.

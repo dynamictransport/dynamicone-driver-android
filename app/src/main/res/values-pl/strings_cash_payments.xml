@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Wypłaty gotówkowe dla personelu z podpisem palcem (docs/28_EMPLOYEE_CASH_PAYMENTS.md) -->
+    <string name="nav_cash_disbursements">Wypłaty</string>
+    <string name="nav_my_cash_payments">Moja gotówka</string>
+    <string name="cash_disbursements_title">Wypłaty gotówkowe dla personelu</string>
+    <string name="my_cash_payments_title">Moje wypłaty gotówkowe</string>
+    <string name="cash_detail_title">Wypłata gotówkowa</string>
+
+    <string name="cash_filter_approved">Do wydania</string>
+    <string name="cash_filter_received">Wydane</string>
+    <string name="cash_filter_cancelled">Anulowane</string>
+    <string name="cash_none_approved">Brak wypłat gotówkowych do wydania.</string>
+    <string name="cash_none_received">Nie wydano jeszcze żadnej wypłaty gotówkowej.</string>
+    <string name="cash_none_cancelled">Brak anulowanych wypłat gotówkowych.</string>
+    <string name="cash_access_removed">To konto nie może już obsługiwać wypłat gotówkowych. Skontaktuj się z działem finansów.</string>
+
+    <string name="cash_registration_number">Nr %1$s</string>
+    <string name="cash_kind_advance">Zaliczka</string>
+    <string name="cash_kind_salary">Wynagrodzenie</string>
+    <string name="cash_kind_overtime">Nadgodziny</string>
+    <string name="cash_planned_for">Planowana data: %1$s</string>
+    <string name="cash_received_at">Wydano: %1$s</string>
+    <string name="cash_approved_by">Zatwierdził(a): %1$s</string>
+    <string name="cash_approved_at">Zatwierdzono: %1$s</string>
+    <string name="cash_cancelled">Dział finansów anulował tę wypłatę. Nie ma nic do wydania.</string>
+    <string name="cash_state_waiting">Podpisano w telefonie. Oczekiwanie na potwierdzenie wydania przez serwer.</string>
+    <string name="cash_missing">Ta wypłata nie jest już dla Ciebie dostępna.</string>
+
+    <string name="cash_form_title">Zatwierdzony formularz</string>
+    <string name="cash_declaration_title">Oświadczenie o odbiorze</string>
+    <string name="cash_declaration_accept">Potwierdzam powyższe oświadczenie</string>
+    <string name="cash_signature_title">Odbiorca podpisuje palcem</string>
+    <string name="cash_signature_hint">Osoba odbierająca pieniądze podpisuje się w ramce.</string>
+    <string name="cash_signature_pad">Pole podpisu</string>
+    <string name="cash_signature_clear">Wyczyść</string>
+    <string name="cash_sign_action">OTRZYMAŁEM PIENIĄDZE</string>
+    <string name="cash_resend_action">WYŚLIJ PONOWNIE</string>
+    <string name="cash_sign_needs">Zaznacz oświadczenie i podpisz, aby kontynuować.</string>
+    <string name="cash_sign_not_ready">Tej wypłaty nie można teraz podpisać. Odśwież i spróbuj ponownie.</string>
+    <string name="cash_waiting_hint">Wydanie nie jest zakończone, dopóki serwer go nie potwierdzi. To samo żądanie zostanie wysłane ponownie.</string>
+
+    <string name="cash_signed_success">Wydanie zapisane. Otwiera się podpisane pokwitowanie.</string>
+    <string name="cash_saved_offline">Zapisano w telefonie. Serwer nie potwierdził jeszcze wydania; to samo żądanie zostanie wysłane ponownie automatycznie.</string>
+    <string name="cash_already_received">Ta wypłata została już wydana.</string>
+    <string name="cash_failure_form_changed">Dział finansów zmienił formularz. Przeczytaj nowy formularz i podpisz ponownie.</string>
+    <string name="cash_failure_signature">Podpis nie został przyjęty. Podpisz ponownie.</string>
+    <string name="cash_failure_employee_inactive">Odbiorca nie jest aktywnym pracownikiem. Skontaktuj się z działem finansów.</string>
+    <string name="cash_failure_conflict">Wypłata zmieniła się w międzyczasie. Sprawdź aktualny stan i podpisz ponownie.</string>
+    <string name="cash_failure_rejected">Serwer nie przyjął podpisu. Podpisz ponownie lub skontaktuj się z działem finansów.</string>
+
+    <string name="cash_open_receipt">OTWÓRZ PODPISANE POKWITOWANIE</string>
+    <string name="cash_receipt_pending">Podpisane pokwitowanie nie jest jeszcze dostępne.</string>
+    <string name="cash_receipt_missing">Nie znaleziono podpisanego pokwitowania.</string>
+</resources>

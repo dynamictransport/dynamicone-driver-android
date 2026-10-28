@@ -54,6 +54,8 @@ import com.dynamictransport.dynamicone.core.pdf.PdfDocumentOpener
 import com.dynamictransport.dynamicone.core.pdf.PdfPageSource
 import com.dynamictransport.dynamicone.domain.model.ActionRejection
 import com.dynamictransport.dynamicone.domain.model.DocumentContentResult
+import com.dynamictransport.dynamicone.domain.model.CashPaymentScope
+import com.dynamictransport.dynamicone.domain.repository.CashPaymentRepository
 import com.dynamictransport.dynamicone.domain.repository.HrDocumentRepository
 import com.dynamictransport.dynamicone.domain.repository.MyDocumentRepository
 import com.dynamictransport.dynamicone.domain.repository.SignedDocumentRepository
@@ -72,9 +74,10 @@ import javax.inject.Inject
 
 /**
  * Whose file the viewer opens; the server checks the account's access on every download. [SIGNED] is a PDF the
- * employee signed in the web (leave, compensation), [HR_RECEIPT] the signed proof of a personnel document.
+ * employee signed in the web (leave, compensation), [HR_RECEIPT] the signed proof of a personnel document,
+ * [CASH_RECEIPT] / [MY_CASH_RECEIPT] the signed receipt of a cash hand-over (officer's queue / own account, docs/28).
  */
-enum class ViewedFileSource { PERSONNEL, VEHICLE, SIGNED, HR_RECEIPT }
+enum class ViewedFileSource { PERSONNEL, VEHICLE, SIGNED, HR_RECEIPT, CASH_RECEIPT, MY_CASH_RECEIPT }
 
 /** Argument names of [com.dynamictransport.dynamicone.app.navigation.DocumentViewerDestination]. */
 const val VIEWER_SOURCE_ARG = "source"
@@ -105,6 +108,7 @@ class DocumentViewerViewModel @Inject constructor(
     private val vehicleDocuments: VehicleDocumentRepository,
     private val signedDocuments: SignedDocumentRepository,
     private val hrDocuments: HrDocumentRepository,
+    private val cashPayments: CashPaymentRepository,
     private val pdfOpener: PdfDocumentOpener,
     private val imageDecoder: DocumentImageDecoder,
     private val cleaner: ViewedFileCleaner,
@@ -136,6 +140,8 @@ class DocumentViewerViewModel @Inject constructor(
                 ViewedFileSource.VEHICLE -> vehicleDocuments.open(documentId, contentTypeHint)
                 ViewedFileSource.SIGNED -> signedDocuments.open(documentId)
                 ViewedFileSource.HR_RECEIPT -> hrDocuments.openReceipt(documentId)
+                ViewedFileSource.CASH_RECEIPT -> cashPayments.openReceipt(CashPaymentScope.DISBURSEMENTS, documentId)
+                ViewedFileSource.MY_CASH_RECEIPT -> cashPayments.openReceipt(CashPaymentScope.OWN, documentId)
             }
             state.value = when (result) {
                 is DocumentContentResult.Unavailable -> DocumentViewerUiState(loading = false, error = errorMessage(result.reason))
@@ -162,9 +168,18 @@ class DocumentViewerViewModel @Inject constructor(
         }
     }
 
-    /** A signed proof answers 404 while the server is still producing it (docs/17 §5.5): that is not a missing file. */
-    private fun errorMessage(reason: ActionRejection): Int =
-        if (source == ViewedFileSource.HR_RECEIPT && reason == ActionRejection.NOT_FOUND) R.string.hr_receipt_pending else reason.fileMessageRes()
+    /**
+     * A signed proof answers 404 while the server is still producing it (docs/17 §5.5): that is not a missing file. A
+     * cash receipt that answers 404 does not exist for this account (docs/28 cash_receipt_not_found).
+     */
+    private fun errorMessage(reason: ActionRejection): Int = when {
+        source == ViewedFileSource.HR_RECEIPT && reason == ActionRejection.NOT_FOUND -> R.string.hr_receipt_pending
+        source.isCashReceipt && reason == ActionRejection.NOT_FOUND -> R.string.cash_receipt_missing
+        else -> reason.fileMessageRes()
+    }
+
+    private val ViewedFileSource.isCashReceipt: Boolean
+        get() = this == ViewedFileSource.CASH_RECEIPT || this == ViewedFileSource.MY_CASH_RECEIPT
 
     private fun discardFile() {
         filePath?.let(cleaner::discard)

@@ -23,6 +23,8 @@ import androidx.compose.material.icons.filled.Draw
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocalShipping
+import androidx.compose.material.icons.filled.Payments
+import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Topic
 import androidx.compose.material3.Badge
@@ -66,11 +68,14 @@ import com.dynamictransport.dynamicone.R
 import com.dynamictransport.dynamicone.app.AppViewModel
 import com.dynamictransport.dynamicone.core.design.layout.isWideScreen
 import com.dynamictransport.dynamicone.domain.model.AppModule
+import com.dynamictransport.dynamicone.domain.model.CashPaymentScope
 import com.dynamictransport.dynamicone.domain.model.SessionState
 import com.dynamictransport.dynamicone.feature.attendance.AttendanceRecordsRoute
 import com.dynamictransport.dynamicone.feature.attendance.AttendanceRoute
 import com.dynamictransport.dynamicone.feature.auth.ChangePasswordRoute
 import com.dynamictransport.dynamicone.feature.auth.LoginRoute
+import com.dynamictransport.dynamicone.feature.cashpayments.CashPaymentDetailRoute
+import com.dynamictransport.dynamicone.feature.cashpayments.CashPaymentsRoute
 import com.dynamictransport.dynamicone.feature.documents.DocumentsRoute
 import com.dynamictransport.dynamicone.feature.documents.scan.DocumentScanRoute
 import com.dynamictransport.dynamicone.feature.documents.scan.SCAN_RESULT_KEY
@@ -163,6 +168,21 @@ data object MyDocumentsDestination
 @Serializable
 data object VehicleDocumentsDestination
 
+/** Cash approved by finance that the account hands over to personnel (docs/28). */
+@Serializable
+data object CashDisbursementsDestination
+
+/** The account's own cash payments and receipts (docs/28). */
+@Serializable
+data object MyCashPaymentsDestination
+
+/**
+ * One cash payment: the approved form, the recipient's signature and the receipt. Argument names match
+ * CASH_SCOPE_ARG ("scope", a [CashPaymentScope] wire name) and CASH_PAYMENT_ID_ARG ("paymentId").
+ */
+@Serializable
+data class CashPaymentDetailDestination(val scope: String, val paymentId: String)
+
 /**
  * One file in the in-app viewer (personnel, vehicle, signed document or signed proof). Argument names match
  * VIEWER_SOURCE_ARG, VIEWER_DOCUMENT_ID_ARG and VIEWER_CONTENT_TYPE_ARG; [source] is a [ViewedFileSource] name, [title]
@@ -219,6 +239,8 @@ private val AppSection.destination: Any
         AppSection.HR_DOCUMENTS -> HrDocumentsDestination
         AppSection.MY_DOCUMENTS -> MyDocumentsDestination
         AppSection.VEHICLE_DOCUMENTS -> VehicleDocumentsDestination
+        AppSection.CASH_DISBURSEMENTS -> CashDisbursementsDestination
+        AppSection.MY_CASH_PAYMENTS -> MyCashPaymentsDestination
         AppSection.PROFILE -> ProfileDestination
     }
 
@@ -234,6 +256,8 @@ private val AppSection.label: Int
         AppSection.HR_DOCUMENTS -> R.string.nav_hr_documents
         AppSection.MY_DOCUMENTS -> R.string.nav_my_documents
         AppSection.VEHICLE_DOCUMENTS -> R.string.vehicle_documents_title
+        AppSection.CASH_DISBURSEMENTS -> R.string.nav_cash_disbursements
+        AppSection.MY_CASH_PAYMENTS -> R.string.nav_my_cash_payments
         AppSection.PROFILE -> R.string.nav_profile
     }
 
@@ -243,6 +267,8 @@ private val AppSection.linkLabel: Int
     get() = when (this) {
         AppSection.HR_DOCUMENTS -> R.string.hr_documents_title
         AppSection.MY_DOCUMENTS -> R.string.my_documents_title
+        AppSection.CASH_DISBURSEMENTS -> R.string.cash_disbursements_title
+        AppSection.MY_CASH_PAYMENTS -> R.string.my_cash_payments_title
         else -> label
     }
 
@@ -257,6 +283,8 @@ private val AppSection.icon: ImageVector
         AppSection.HR_DOCUMENTS -> Icons.Filled.Draw
         AppSection.MY_DOCUMENTS -> Icons.Filled.AssignmentInd
         AppSection.VEHICLE_DOCUMENTS -> Icons.Filled.Topic
+        AppSection.CASH_DISBURSEMENTS -> Icons.Filled.Payments
+        AppSection.MY_CASH_PAYMENTS -> Icons.Filled.AccountBalanceWallet
         AppSection.PROFILE -> Icons.Filled.Person
     }
 
@@ -424,6 +452,31 @@ private fun MainNavigation(modules: Set<AppModule>) {
                 }
                 composable<VehicleDocumentsDestination> {
                     VehicleDocumentsRoute(onBack = backUnlessInBar(AppSection.VEHICLE_DOCUMENTS), onOpenFile = openFile(ViewedFileSource.VEHICLE))
+                }
+                // Cash hand-over: the officer's queue and the own payments share the screens; the scope picks the endpoints.
+                val openCashPayment: (CashPaymentScope) -> (String) -> Unit = { scope ->
+                    { paymentId ->
+                        navController.navigate(CashPaymentDetailDestination(scope.wireName, paymentId)) { launchSingleTop = true }
+                    }
+                }
+                composable<CashDisbursementsDestination> {
+                    CashPaymentsRoute(
+                        scope = CashPaymentScope.DISBURSEMENTS,
+                        onOpenPayment = openCashPayment(CashPaymentScope.DISBURSEMENTS),
+                        onBack = backUnlessInBar(AppSection.CASH_DISBURSEMENTS),
+                    )
+                }
+                composable<MyCashPaymentsDestination> {
+                    CashPaymentsRoute(
+                        scope = CashPaymentScope.OWN,
+                        onOpenPayment = openCashPayment(CashPaymentScope.OWN),
+                        onBack = backUnlessInBar(AppSection.MY_CASH_PAYMENTS),
+                    )
+                }
+                composable<CashPaymentDetailDestination> { entry ->
+                    val scope = CashPaymentScope.fromWire(entry.toRoute<CashPaymentDetailDestination>().scope) ?: CashPaymentScope.OWN
+                    val source = if (scope == CashPaymentScope.DISBURSEMENTS) ViewedFileSource.CASH_RECEIPT else ViewedFileSource.MY_CASH_RECEIPT
+                    CashPaymentDetailRoute(onBack = { navController.popBackStack() }, onOpenReceipt = openFile(source))
                 }
                 composable<DocumentViewerDestination> { entry ->
                     DocumentViewerRoute(title = entry.toRoute<DocumentViewerDestination>().title, onBack = { navController.popBackStack() })
@@ -629,6 +682,8 @@ private fun NavDestination?.section(): AppSection? {
         hierarchy.any { it.hasRoute<HrDocumentsDestination>() } -> AppSection.HR_DOCUMENTS
         hierarchy.any { it.hasRoute<MyDocumentsDestination>() } -> AppSection.MY_DOCUMENTS
         hierarchy.any { it.hasRoute<VehicleDocumentsDestination>() } -> AppSection.VEHICLE_DOCUMENTS
+        hierarchy.any { it.hasRoute<CashDisbursementsDestination>() } -> AppSection.CASH_DISBURSEMENTS
+        hierarchy.any { it.hasRoute<MyCashPaymentsDestination>() } -> AppSection.MY_CASH_PAYMENTS
         hierarchy.any { it.hasRoute<ProfileDestination>() } -> AppSection.PROFILE
         else -> null
     }

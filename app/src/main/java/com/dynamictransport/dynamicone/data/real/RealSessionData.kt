@@ -24,6 +24,7 @@ class RealSessionData @Inject constructor(
     private val driverDay: DriverDaySessionData = DriverDaySessionData.None,
     private val hrDocuments: HrDocumentSessionData = HrDocumentSessionData.None,
     private val tarWarnings: TarWarningController? = null,
+    private val cashPayments: CashPaymentSessionData = CashPaymentSessionData.None,
 ) {
     /** Server data held in memory plus temporary viewing files. */
     suspend fun clearServerData() {
@@ -43,10 +44,17 @@ class RealSessionData @Inject constructor(
         vehicleDocuments.clear()
         driverDay.clear()
         hrDocuments.clear()
+        cashPayments.clear()
     }
 
-    /** Signing out or changing the password removes the driver's unconfirmed commands too. */
-    suspend fun clearStoredCommands() = commands.clear()
+    /**
+     * Signing out or changing the password removes the driver's unconfirmed commands too, and the cash hand-over
+     * signatures waiting on the phone (docs/28, P8: sensitive data leaves with the session).
+     */
+    suspend fun clearStoredCommands() {
+        commands.clear()
+        cashPayments.clearStoredSignatures()
+    }
 
     /**
      * An account signed in on this device: earlier accounts' driver commands and attendance punches must never be sent
@@ -58,6 +66,29 @@ class RealSessionData @Inject constructor(
         attendance.keepOnly(profile.id)
         driverDay.keepOnly(driverId)
         hrDocuments.keepOnly(profile.id)
+        cashPayments.keepOnly(profile.id)
+    }
+}
+
+/**
+ * Cash hand-over signatures of the signed-in account (docs/28). They survive an expired session (the same account
+ * sends them after signing in again) but not an explicit sign-out or another account signing in.
+ */
+interface CashPaymentSessionData {
+    /** Server data held in memory. */
+    suspend fun clear()
+
+    /** Signatures waiting on the phone (sign-out). */
+    suspend fun clearStoredSignatures()
+
+    suspend fun keepOnly(userId: String)
+
+    object None : CashPaymentSessionData {
+        override suspend fun clear() = Unit
+
+        override suspend fun clearStoredSignatures() = Unit
+
+        override suspend fun keepOnly(userId: String) = Unit
     }
 }
 

@@ -6,6 +6,12 @@ import com.dynamictransport.dynamicone.domain.model.ActionResult
 import com.dynamictransport.dynamicone.domain.model.AttendanceDirection
 import com.dynamictransport.dynamicone.domain.model.AttendanceMonth
 import com.dynamictransport.dynamicone.domain.model.AttendanceStatus
+import com.dynamictransport.dynamicone.domain.model.CashPaymentList
+import com.dynamictransport.dynamicone.domain.model.CashPaymentLookup
+import com.dynamictransport.dynamicone.domain.model.CashPaymentScope
+import com.dynamictransport.dynamicone.domain.model.CashPaymentState
+import com.dynamictransport.dynamicone.domain.model.CashSignResult
+import com.dynamictransport.dynamicone.domain.model.LocalCashSignature
 import com.dynamictransport.dynamicone.domain.model.CheckTemplate
 import com.dynamictransport.dynamicone.domain.model.Conversation
 import com.dynamictransport.dynamicone.domain.model.ConversationList
@@ -44,6 +50,7 @@ import com.dynamictransport.dynamicone.domain.model.WakeUpCall
 import com.dynamictransport.dynamicone.domain.model.WakeUpDecision
 import com.dynamictransport.dynamicone.domain.model.WakeUpOutcome
 import com.dynamictransport.dynamicone.domain.repository.AttendanceRepository
+import com.dynamictransport.dynamicone.domain.repository.CashPaymentRepository
 import com.dynamictransport.dynamicone.domain.repository.DailyShiftRepository
 import com.dynamictransport.dynamicone.domain.repository.DriverTimesRepository
 import com.dynamictransport.dynamicone.domain.repository.HrDocumentRepository
@@ -160,6 +167,21 @@ object UnavailableHrDocumentRepository : HrDocumentRepository {
         HrSignResult.NotLoggedIn
     override suspend fun sendPending(): Boolean = true
     override suspend fun openReceipt(documentId: String): DocumentContentResult = DocumentContentResult.Unavailable(ActionRejection.NOT_SUPPORTED)
+}
+
+/** Cash payments come only from the Mobile API (docs/28); the demo invents none. */
+object UnavailableCashPaymentRepository : CashPaymentRepository {
+    override fun observeList(scope: CashPaymentScope, state: CashPaymentState): Flow<CashPaymentList?> = flowOf(null)
+    override fun observePayment(scope: CashPaymentScope, paymentId: String): Flow<CashPaymentLookup> = flowOf(CashPaymentLookup.Missing)
+    override fun observeLocalSignatures(scope: CashPaymentScope): Flow<List<LocalCashSignature>> = flowOf(emptyList())
+    override suspend fun refresh(scope: CashPaymentScope, state: CashPaymentState): RefreshResult = RefreshResult.NOT_SUPPORTED
+    override suspend fun loadMore(scope: CashPaymentScope, state: CashPaymentState): RefreshResult = RefreshResult.NOT_SUPPORTED
+    override suspend fun refreshPayment(scope: CashPaymentScope, paymentId: String): RefreshResult = RefreshResult.NOT_SUPPORTED
+    override suspend fun sign(scope: CashPaymentScope, paymentId: String, formHash: String, signature: DrawnSignature): CashSignResult =
+        CashSignResult.NotLoggedIn
+    override suspend fun sendPending(): Boolean = true
+    override suspend fun openReceipt(scope: CashPaymentScope, paymentId: String): DocumentContentResult =
+        DocumentContentResult.Unavailable(ActionRejection.NOT_SUPPORTED)
 }
 
 /** The demo fleet has no tracking: no vehicle position is invented (docs/19). */

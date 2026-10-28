@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Выдача наличных персоналу под подпись пальцем (docs/28_EMPLOYEE_CASH_PAYMENTS.md) -->
+    <string name="nav_cash_disbursements">Выдача наличных</string>
+    <string name="nav_my_cash_payments">Мои наличные</string>
+    <string name="cash_disbursements_title">Наличные, выданные персоналу</string>
+    <string name="my_cash_payments_title">Мои наличные выплаты</string>
+    <string name="cash_detail_title">Наличная выплата</string>
+
+    <string name="cash_filter_approved">К выдаче</string>
+    <string name="cash_filter_received">Выдано</string>
+    <string name="cash_filter_cancelled">Отменено</string>
+    <string name="cash_none_approved">Нет наличных выплат, ожидающих выдачи.</string>
+    <string name="cash_none_received">Выданных наличных выплат пока нет.</string>
+    <string name="cash_none_cancelled">Отменённых наличных выплат нет.</string>
+    <string name="cash_access_removed">Этот аккаунт больше не может работать с наличными выплатами. Обратитесь в финансовый отдел.</string>
+
+    <string name="cash_registration_number">№ %1$s</string>
+    <string name="cash_kind_advance">Аванс</string>
+    <string name="cash_kind_salary">Зарплата</string>
+    <string name="cash_kind_overtime">Сверхурочные</string>
+    <string name="cash_planned_for">Плановая дата: %1$s</string>
+    <string name="cash_received_at">Выдано: %1$s</string>
+    <string name="cash_approved_by">Утвердил(а): %1$s</string>
+    <string name="cash_approved_at">Утверждено: %1$s</string>
+    <string name="cash_cancelled">Финансовый отдел отменил эту выплату. Выдавать нечего.</string>
+    <string name="cash_state_waiting">Подписано на телефоне. Ожидается подтверждение выдачи сервером.</string>
+    <string name="cash_missing">Эта выплата вам больше недоступна.</string>
+
+    <string name="cash_form_title">Утверждённая форма</string>
+    <string name="cash_declaration_title">Заявление о получении</string>
+    <string name="cash_declaration_accept">Подтверждаю заявление выше</string>
+    <string name="cash_signature_title">Получатель расписывается пальцем</string>
+    <string name="cash_signature_hint">Человек, получающий деньги, расписывается в рамке.</string>
+    <string name="cash_signature_pad">Поле подписи</string>
+    <string name="cash_signature_clear">Очистить</string>
+    <string name="cash_sign_action">ДЕНЬГИ ПОЛУЧИЛ</string>
+    <string name="cash_resend_action">ОТПРАВИТЬ СНОВА</string>
+    <string name="cash_sign_needs">Отметьте заявление и распишитесь, чтобы продолжить.</string>
+    <string name="cash_sign_not_ready">Эту выплату сейчас нельзя подписать. Обновите и попробуйте снова.</string>
+    <string name="cash_waiting_hint">Выдача не завершена, пока сервер её не подтвердит. Тот же запрос будет отправлен снова.</string>
+
+    <string name="cash_signed_success">Выдача записана. Открывается подписанная квитанция.</string>
+    <string name="cash_saved_offline">Сохранено на телефоне. Сервер ещё не подтвердил выдачу; тот же запрос будет отправлен снова автоматически.</string>
+    <string name="cash_already_received">Эта выплата уже выдана.</string>
+    <string name="cash_failure_form_changed">Финансовый отдел изменил форму. Прочитайте новую форму и распишитесь снова.</string>
+    <string name="cash_failure_signature">Подпись не принята. Распишитесь снова.</string>
+    <string name="cash_failure_employee_inactive">Получатель не является действующим сотрудником. Обратитесь в финансовый отдел.</string>
+    <string name="cash_failure_conflict">Выплата тем временем изменилась. Проверьте текущее состояние и распишитесь снова.</string>
+    <string name="cash_failure_rejected">Сервер не принял подпись. Распишитесь снова или обратитесь в финансовый отдел.</string>
+
+    <string name="cash_open_receipt">ОТКРЫТЬ ПОДПИСАННУЮ КВИТАНЦИЮ</string>
+    <string name="cash_receipt_pending">Подписанная квитанция пока недоступна.</string>
+    <string name="cash_receipt_missing">Подписанная квитанция не найдена.</string>
+</resources>

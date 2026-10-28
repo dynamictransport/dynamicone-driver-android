@@ -21,6 +21,7 @@ import com.dynamictransport.dynamicone.data.real.ProtectedFileDownloader
 import com.dynamictransport.dynamicone.data.real.RealAttendanceRepository
 import com.dynamictransport.dynamicone.data.real.RealAuthRepository
 import com.dynamictransport.dynamicone.data.real.RealDocumentRepository
+import com.dynamictransport.dynamicone.data.real.RealCashPaymentRepository
 import com.dynamictransport.dynamicone.data.real.RealHrDocumentRepository
 import com.dynamictransport.dynamicone.data.real.RealMyDocumentRepository
 import com.dynamictransport.dynamicone.data.real.RealVehicleDocumentRepository
@@ -65,6 +66,8 @@ class RealApiHarness(folder: TemporaryFolder, mobileAccount: Boolean = false) {
     val attendanceScheduler = RecordingAttendanceSyncScheduler()
     val hrDao = InMemoryHrDocumentDao()
     val hrScheduler = RecordingHrDocumentSyncScheduler()
+    val cashDao = InMemoryCashPaymentDao()
+    val cashScheduler = RecordingCashPaymentSyncScheduler()
     val freeSpace = FakeFreeSpace()
     val photoImages = FakeProfilePhotoImages()
     val snapshotDao = InMemorySnapshotRequestDao()
@@ -95,6 +98,7 @@ class RealApiHarness(folder: TemporaryFolder, mobileAccount: Boolean = false) {
     val attendance: RealAttendanceRepository
     val hrFiles: HrDocumentFileStore
     val hrDocuments: RealHrDocumentRepository
+    val cashPayments: RealCashPaymentRepository
     val vehiclePosition: ApiVehiclePositionRepository
     val snapshots: RealRoadSnapshotRepository
     val wakeUps: RealWakeUpCallRepository
@@ -128,6 +132,9 @@ class RealApiHarness(folder: TemporaryFolder, mobileAccount: Boolean = false) {
         hrDocuments = RealHrDocumentRepository(
             mobileApi, tracker, hrDao, hrFiles, downloader, sessionPreferences, hrScheduler, SequenceIdGenerator("sig"), clock, uptime, TEST_JSON,
         )
+        cashPayments = RealCashPaymentRepository(
+            mobileApi, tracker, cashDao, downloader, sessionPreferences, cashScheduler, SequenceIdGenerator("cash"), clock, TEST_JSON,
+        )
         vehiclePosition = ApiVehiclePositionRepository(api, tracker, sessionPreferences)
         snapshots = RealRoadSnapshotRepository(api, tracker, snapshotDao, sessionPreferences, snapshotScheduler, snapshotPreparer, directories, clock, Dispatchers.IO)
         wakeUps = RealWakeUpCallRepository(api, tracker, wakeUpDao, sessionPreferences, wakeUpScheduler, clock)
@@ -137,6 +144,7 @@ class RealApiHarness(folder: TemporaryFolder, mobileAccount: Boolean = false) {
             trips, executions, documents, payroll, signedDocuments, messages, sync, downloader, store, attendance, vehiclePosition,
             myDocuments, vehicleDocuments,
             hrDocuments = hrDocuments,
+            cashPayments = cashPayments,
         )
         pushRegistrar = RealPushRegistrar(api, tokenManager, sessionPreferences, tracker, FakeAppInfo(), mobileApi, deviceProfile)
         account = if (mobileAccount) MobileAccountRemote(mobileApi) else DriverAccountRemote(api)

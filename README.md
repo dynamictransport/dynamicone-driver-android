@@ -55,6 +55,15 @@ Backend sözleşmesi: [docs/20_DRIVER_TRAILER_CONFIRMATION.md](docs/20_DRIVER_TR
 
 Backend sözleşmesi ve Codex görevi: [docs/17_HR_DOCUMENT_SIGNING.md](docs/17_HR_DOCUMENT_SIGNING.md). Ekranlar sunucu `me.modules` içinde `hrDocuments` gönderince açılır (Mobile API, `app.mobileApi=true` gerekir); ayrı bir ayar yoktur.
 
+**Nakit ödeme modülleri (`cashDisbursements`, `cashPayments`)** — finansın webde onayladığı avans/maaş/mesai formları:
+
+- *Personele yapılan nakit ödemeler* (teslim yetkisi olan görevli): teslim bekleyen onaylar, alıcı adı, sicil, tür, tutar + para birimi, planlanan tarih; *Teslim edilen* ve *İptal edilen* filtreleri
+- Satıra dokununca detay sunucudan yeniden okunur; parayı alan personel görevlinin telefonunda beyanı işaretler, parmağıyla imzalar → *PARAYI ALDIM*; görevlinin oturumu açık kalır
+- *Nakit ödemelerim* (personel): yalnızca kendi onayları ve imzalı makbuzları; bekleyen kendi formu aynı akışla tamamlanır
+- İmza önce telefona yazılır, aynı `commandId` ile tekrar gönderilir; sunucu teyidi olmadan "teslim edildi" gösterilmez; başarıda imzalı makbuz uygulama içi görüntüleyicide Bearer ile açılır. Uygulama tutar belirlemez, kasa/bakiye hesaplamaz
+
+Backend sözleşmesi: [docs/28_EMPLOYEE_CASH_PAYMENTS.md](docs/28_EMPLOYEE_CASH_PAYMENTS.md) (canlı, 27.10.2026). Yetki kullanıcı adına göre kodlanmaz; ekranlar `me.modules` ile açılır.
+
 ## İlk platform
 
 - Android

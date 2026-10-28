@@ -2,10 +2,12 @@ package com.dynamictransport.dynamicone.app.navigation
 
 import com.dynamictransport.dynamicone.app.navigation.AppSection.ATTENDANCE
 import com.dynamictransport.dynamicone.app.navigation.AppSection.ATTENDANCE_RECORDS
+import com.dynamictransport.dynamicone.app.navigation.AppSection.CASH_DISBURSEMENTS
 import com.dynamictransport.dynamicone.app.navigation.AppSection.DOCUMENTS
 import com.dynamictransport.dynamicone.app.navigation.AppSection.HOME
 import com.dynamictransport.dynamicone.app.navigation.AppSection.HR_DOCUMENTS
 import com.dynamictransport.dynamicone.app.navigation.AppSection.MESSAGES
+import com.dynamictransport.dynamicone.app.navigation.AppSection.MY_CASH_PAYMENTS
 import com.dynamictransport.dynamicone.app.navigation.AppSection.MY_DOCUMENTS
 import com.dynamictransport.dynamicone.app.navigation.AppSection.PROFILE
 import com.dynamictransport.dynamicone.app.navigation.AppSection.TRIPS
@@ -71,6 +73,25 @@ class AppShellTest {
 
         val hrOnly = AppShell.layout(setOf(AppModule.HR_DOCUMENTS))
         assertEquals(listOf(HR_DOCUMENTS, MY_DOCUMENTS, PROFILE), hrOnly.bottomBar)
+    }
+
+    @Test
+    fun `cash hand-over and own cash payments come only from their server modules`() {
+        assertEquals(setOf(AppModule.CASH_DISBURSEMENTS, AppModule.CASH_PAYMENTS), AppModule.fromWire(listOf("cashDisbursements", "cashPayments")))
+
+        // An office cashier: the queue fits in the bar; a driver reaches it from the profile.
+        val cashier = AppShell.layout(setOf(AppModule.OFFICE_ATTENDANCE, AppModule.CASH_DISBURSEMENTS))
+        assertEquals(listOf(ATTENDANCE, ATTENDANCE_RECORDS, CASH_DISBURSEMENTS, PROFILE), cashier.bottomBar)
+        val driverCashier = AppShell.layout(setOf(AppModule.DRIVER, AppModule.CASH_DISBURSEMENTS))
+        assertEquals(listOf(HOME, TRIPS, DOCUMENTS, MESSAGES, PROFILE), driverCashier.bottomBar)
+        assertEquals(listOf(MY_DOCUMENTS, VEHICLE_DOCUMENTS, CASH_DISBURSEMENTS), driverCashier.overflow)
+
+        // A recipient sees only the own payments; without the modules neither area exists.
+        val recipient = AppShell.layout(setOf(AppModule.HR_DOCUMENTS, AppModule.CASH_PAYMENTS))
+        assertEquals(listOf(HR_DOCUMENTS, MY_DOCUMENTS, MY_CASH_PAYMENTS, PROFILE), recipient.bottomBar)
+        assertFalse(CASH_DISBURSEMENTS in recipient.bottomBar + recipient.overflow)
+        val plain = AppShell.layout(setOf(AppModule.OFFICE_ATTENDANCE))
+        assertFalse(MY_CASH_PAYMENTS in plain.bottomBar + plain.overflow)
     }
 
     @Test

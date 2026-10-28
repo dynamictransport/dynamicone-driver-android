@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Personele nakit ödeme ve parmakla imza (docs/28_EMPLOYEE_CASH_PAYMENTS.md) -->
+    <string name="nav_cash_disbursements">Nakit ödemeler</string>
+    <string name="nav_my_cash_payments">Nakitlerim</string>
+    <string name="cash_disbursements_title">Personele yapılan nakit ödemeler</string>
+    <string name="my_cash_payments_title">Nakit ödemelerim</string>
+    <string name="cash_detail_title">Nakit ödeme</string>
+
+    <string name="cash_filter_approved">Teslim bekleyen</string>
+    <string name="cash_filter_received">Teslim edilen</string>
+    <string name="cash_filter_cancelled">İptal edilen</string>
+    <string name="cash_none_approved">Teslim bekleyen nakit ödeme yok.</string>
+    <string name="cash_none_received">Henüz teslim edilen nakit ödeme yok.</string>
+    <string name="cash_none_cancelled">İptal edilen nakit ödeme yok.</string>
+    <string name="cash_access_removed">Bu hesap artık nakit ödeme işlemi yapamıyor. Lütfen finansa başvurun.</string>
+
+    <string name="cash_registration_number">Sicil %1$s</string>
+    <string name="cash_kind_advance">Avans</string>
+    <string name="cash_kind_salary">Maaş</string>
+    <string name="cash_kind_overtime">Mesai</string>
+    <string name="cash_planned_for">Planlanan tarih: %1$s</string>
+    <string name="cash_received_at">Teslim edildi: %1$s</string>
+    <string name="cash_approved_by">Onaylayan: %1$s</string>
+    <string name="cash_approved_at">Onay: %1$s</string>
+    <string name="cash_cancelled">Finans bu ödemeyi iptal etti. Teslim edilecek bir şey yok.</string>
+    <string name="cash_state_waiting">Telefonda imzalandı. Sunucunun teslimi onaylaması bekleniyor.</string>
+    <string name="cash_missing">Bu kayda artık erişilemiyor.</string>
+
+    <string name="cash_form_title">Onaylanan form</string>
+    <string name="cash_declaration_title">Teslim beyanı</string>
+    <string name="cash_declaration_accept">Yukarıdaki beyanı onaylıyorum</string>
+    <string name="cash_signature_title">Parayı alan kişi parmağıyla imzalar</string>
+    <string name="cash_signature_hint">Parayı alan kişi imzasını kutunun içine atar.</string>
+    <string name="cash_signature_pad">İmza alanı</string>
+    <string name="cash_signature_clear">Temizle</string>
+    <string name="cash_sign_action">PARAYI ALDIM</string>
+    <string name="cash_resend_action">TEKRAR GÖNDER</string>
+    <string name="cash_sign_needs">Devam etmek için beyanı işaretleyin ve imzalayın.</string>
+    <string name="cash_sign_not_ready">Bu ödeme şu anda imzalanamıyor. Yenileyip tekrar deneyin.</string>
+    <string name="cash_waiting_hint">Sunucu onaylamadan teslim tamamlanmış sayılmaz. Aynı istek yeniden gönderilir.</string>
+
+    <string name="cash_signed_success">Teslim kaydedildi. İmzalı makbuz açılıyor.</string>
+    <string name="cash_saved_offline">Telefona kaydedildi. Sunucu teslimi henüz onaylamadı; aynı istek otomatik olarak yeniden gönderilecek.</string>
+    <string name="cash_already_received">Bu ödeme zaten teslim edilmiş.</string>
+    <string name="cash_failure_form_changed">Finans formu değiştirdi. Yeni formu okuyup yeniden imzalayın.</string>
+    <string name="cash_failure_signature">İmza kabul edilmedi. Yeniden imzalayın.</string>
+    <string name="cash_failure_employee_inactive">Alıcı aktif bir personel değil. Lütfen finansa başvurun.</string>
+    <string name="cash_failure_conflict">Ödeme bu arada değişti. Güncel durumu kontrol edip yeniden imzalayın.</string>
+    <string name="cash_failure_rejected">Sunucu imzayı kabul etmedi. Yeniden imzalayın veya finansa başvurun.</string>
+
+    <string name="cash_open_receipt">İMZALI MAKBUZU AÇ</string>
+    <string name="cash_receipt_pending">İmzalı makbuz henüz hazır değil.</string>
+    <string name="cash_receipt_missing">İmzalı makbuz bulunamadı.</string>
+</resources>

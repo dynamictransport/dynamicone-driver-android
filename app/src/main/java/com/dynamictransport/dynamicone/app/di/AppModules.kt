@@ -36,6 +36,7 @@ import com.dynamictransport.dynamicone.core.database.DocumentDao
 import com.dynamictransport.dynamicone.core.database.DriverCacheDao
 import com.dynamictransport.dynamicone.core.database.DriverProfileDao
 import com.dynamictransport.dynamicone.core.database.HrDocumentDao
+import com.dynamictransport.dynamicone.core.database.CashPaymentDao
 import com.dynamictransport.dynamicone.core.database.PendingActionDao
 import com.dynamictransport.dynamicone.core.database.PendingCommandDao
 import com.dynamictransport.dynamicone.core.database.ShiftCommandDao
@@ -84,6 +85,7 @@ import com.dynamictransport.dynamicone.core.sync.AttendanceSyncScheduler
 import com.dynamictransport.dynamicone.core.sync.DriverDaySync
 import com.dynamictransport.dynamicone.core.sync.DriverDayWorkScheduler
 import com.dynamictransport.dynamicone.core.sync.HrDocumentSyncScheduler
+import com.dynamictransport.dynamicone.core.sync.CashPaymentSyncScheduler
 import com.dynamictransport.dynamicone.core.sync.NoOpDriverDaySync
 import com.dynamictransport.dynamicone.core.sync.ShiftSyncScheduler
 import com.dynamictransport.dynamicone.core.sync.SnapshotSyncScheduler
@@ -92,6 +94,7 @@ import com.dynamictransport.dynamicone.core.sync.SyncScheduler
 import com.dynamictransport.dynamicone.core.sync.WorkManagerAttendanceSyncScheduler
 import com.dynamictransport.dynamicone.core.sync.WorkManagerDriverDayWorkScheduler
 import com.dynamictransport.dynamicone.core.sync.WorkManagerHrDocumentSyncScheduler
+import com.dynamictransport.dynamicone.core.sync.WorkManagerCashPaymentSyncScheduler
 import com.dynamictransport.dynamicone.core.sync.WorkManagerShiftSyncScheduler
 import com.dynamictransport.dynamicone.core.sync.WorkManagerSnapshotSyncScheduler
 import com.dynamictransport.dynamicone.core.sync.WorkManagerSyncScheduler
@@ -108,6 +111,7 @@ import com.dynamictransport.dynamicone.data.demo.UnavailableDailyShiftRepository
 import com.dynamictransport.dynamicone.data.demo.UnavailableDemoBackendControls
 import com.dynamictransport.dynamicone.data.demo.UnavailableDriverTimesRepository
 import com.dynamictransport.dynamicone.data.demo.UnavailableHrDocumentRepository
+import com.dynamictransport.dynamicone.data.demo.UnavailableCashPaymentRepository
 import com.dynamictransport.dynamicone.data.demo.UnavailableMessageRepository
 import com.dynamictransport.dynamicone.data.demo.UnavailableMyDocumentRepository
 import com.dynamictransport.dynamicone.data.demo.UnavailablePayrollRepository
@@ -137,12 +141,14 @@ import com.dynamictransport.dynamicone.data.real.DriverAccountRemote
 import com.dynamictransport.dynamicone.data.real.DriverDaySessionData
 import com.dynamictransport.dynamicone.data.real.FreeSpace
 import com.dynamictransport.dynamicone.data.real.HrDocumentSessionData
+import com.dynamictransport.dynamicone.data.real.CashPaymentSessionData
 import com.dynamictransport.dynamicone.data.real.MobileAccountRemote
 import com.dynamictransport.dynamicone.data.real.NoOpSyncRunner
 import com.dynamictransport.dynamicone.data.real.RealAttendanceRepository
 import com.dynamictransport.dynamicone.data.real.RealAuthRepository
 import com.dynamictransport.dynamicone.data.real.RealDocumentRepository
 import com.dynamictransport.dynamicone.data.real.RealHrDocumentRepository
+import com.dynamictransport.dynamicone.data.real.RealCashPaymentRepository
 import com.dynamictransport.dynamicone.data.real.RealIncidentRepository
 import com.dynamictransport.dynamicone.data.real.RealMessageRepository
 import com.dynamictransport.dynamicone.data.real.RealMyDocumentRepository
@@ -179,6 +185,7 @@ import com.dynamictransport.dynamicone.domain.repository.DocumentRepository
 import com.dynamictransport.dynamicone.domain.repository.DocumentScanner
 import com.dynamictransport.dynamicone.domain.repository.DriverTimesRepository
 import com.dynamictransport.dynamicone.domain.repository.HrDocumentRepository
+import com.dynamictransport.dynamicone.domain.repository.CashPaymentRepository
 import com.dynamictransport.dynamicone.domain.repository.IncidentRepository
 import com.dynamictransport.dynamicone.domain.repository.MessageRepository
 import com.dynamictransport.dynamicone.domain.repository.MyDocumentRepository
@@ -311,6 +318,9 @@ object DatabaseModule {
 
     @Provides
     fun provideHrDocumentDao(database: AppDatabase): HrDocumentDao = database.hrDocumentDao()
+
+    @Provides
+    fun provideCashPaymentDao(database: AppDatabase): CashPaymentDao = database.cashPaymentDao()
 
     @Provides
     fun provideSnapshotRequestDao(database: AppDatabase): SnapshotRequestDao = database.snapshotRequestDao()
@@ -548,6 +558,15 @@ object RepositoryModule {
     fun provideHrDocumentSessionData(real: Provider<RealHrDocumentRepository>): HrDocumentSessionData =
         if (isDemoMode()) HrDocumentSessionData.None else real.get()
 
+    /** Cash payments come from the Mobile API only (docs/28); screens appear with the `cashDisbursements` / `cashPayments` modules. */
+    @Provides
+    fun provideCashPaymentRepository(real: Provider<RealCashPaymentRepository>): CashPaymentRepository =
+        if (isDemoMode()) UnavailableCashPaymentRepository else real.get()
+
+    @Provides
+    fun provideCashPaymentSessionData(real: Provider<RealCashPaymentRepository>): CashPaymentSessionData =
+        if (isDemoMode()) CashPaymentSessionData.None else real.get()
+
     /** Personnel and vehicle files come from the Mobile API only; the demo invents none. */
     @Provides
     fun provideMyDocumentRepository(real: Provider<RealMyDocumentRepository>): MyDocumentRepository =
@@ -657,6 +676,9 @@ abstract class BindingsModule {
 
     @Binds
     abstract fun bindHrDocumentSyncScheduler(impl: WorkManagerHrDocumentSyncScheduler): HrDocumentSyncScheduler
+
+    @Binds
+    abstract fun bindCashPaymentSyncScheduler(impl: WorkManagerCashPaymentSyncScheduler): CashPaymentSyncScheduler
 
     @Binds
     abstract fun bindFreeSpace(impl: AndroidFreeSpace): FreeSpace
