@@ -3,6 +3,7 @@ package com.dynamictransport.dynamicone.feature.auth
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
@@ -188,11 +189,14 @@ fun ChangePasswordScreen(
             }
         },
     ) { padding ->
+        // The action bar already rises above the keyboard, and the Scaffold padding includes its height: the content
+        // must not add the keyboard's height a second time, or the fields vanish above the screen when typing starts.
         Column(
             verticalArrangement = Arrangement.spacedBy(14.dp),
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .consumeWindowInsets(padding)
                 .readableWidth()
                 .imePadding()
                 .verticalScroll(rememberScrollState())
