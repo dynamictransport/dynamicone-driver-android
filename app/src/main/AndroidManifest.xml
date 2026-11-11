@@ -21,11 +21,28 @@
         android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"
         tools:ignore="BatteryLife" />
 
+    <!-- Remote screen session (docs/29 §4): the stream runs in a foreground service the driver sees and can stop. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+    <!--
+      Device management (docs/29 §4.2): granted over adb on managed phones only, so the app can switch its own remote
+      help service on. No store install ever holds it.
+    -->
+    <uses-permission
+        android:name="android.permission.WRITE_SECURE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
+    <!-- Device management (docs/29 §3.1): the device owner reads the serial number for the office's device list. -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+
     <uses-feature
         android:name="android.hardware.camera"
         android:required="false" />
     <uses-feature
         android:name="android.hardware.nfc"
+        android:required="false" />
+    <!-- READ_PHONE_STATE (serial number of a managed device) must not make telephony a requirement: tablets have none. -->
+    <uses-feature
+        android:name="android.hardware.telephony"
         android:required="false" />
 
     <queries>
@@ -96,6 +113,62 @@
             android:name=".core.push.WakeUpCallReceiver"
             android:exported="false" />
 
+        <!--
+          Device management (docs/29): device admin and device owner. The name is part of the adb command
+          `dpm set-device-owner com.dynamictransport.dynamicone/.core.mdm.DeviceOwnerReceiver`.
+        -->
+        <receiver
+            android:name=".core.mdm.DeviceOwnerReceiver"
+            android:description="@string/mdm_admin_description"
+            android:exported="true"
+            android:permission="android.permission.BIND_DEVICE_ADMIN">
+            <meta-data
+                android:name="android.app.device_admin"
+                android:resource="@xml/device_admin" />
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- "Stop" on the office's ring notification (docs/29 §3.4). -->
+        <receiver
+            android:name=".core.mdm.DeviceAlertReceiver"
+            android:exported="false" />
+
+        <!-- The office asks to see the screen (docs/29 §4); opened only by the request's full-screen notification. -->
+        <activity
+            android:name=".core.remote.RemoteSessionActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:taskAffinity=""
+            android:theme="@style/Theme.DynamicOne" />
+
+        <!-- "Decline" on the remote session request notification. -->
+        <receiver
+            android:name=".core.remote.RemoteSessionReceiver"
+            android:exported="false" />
+
+        <!-- The screen stream of an accepted remote session, with its permanent notification (docs/29 §4). -->
+        <service
+            android:name=".core.remote.ScreenStreamService"
+            android:exported="false"
+            android:foregroundServiceType="mediaProjection" />
+
+        <!-- Touch and keys for the office during an accepted remote session (docs/29 §4.2); off until switched on. -->
+        <service
+            android:name=".core.remote.RemoteControlService"
+            android:exported="true"
+            android:label="@string/remote_control_service_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
+
         <!-- TAR warnings before a terminal window ends (docs/26 §6): the device alarm and its re-arming after a restart. -->
         <receiver
             android:name=".core.tar.TarWarningReceiver"
@@ -144,7 +217,10 @@
             </intent-filter>
         </service>
 
-        <!-- FCM registration starts only after a driver signs in to the real backend (core/push). -->
+        <!--
+          FCM's automatic registration starts only after a driver signs in to the real backend (core/push). A managed
+          phone asks for its token itself at check-in (docs/29 §3.6).
+        -->
         <meta-data
             android:name="firebase_messaging_auto_init_enabled"
             android:value="false" />

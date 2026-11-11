@@ -13,6 +13,7 @@ tags:
   - name: Documents
   - name: Earnings
   - name: Incidents
+  - name: DeviceManagement
 
 paths:
   /auth/login:
@@ -231,6 +232,125 @@ paths:
         '201':
           description: Incident created
 
+  # --- Device management (docs/29_DEVICE_MANAGEMENT.md). The device authenticates with its own credential,
+  # --- never with the driver's access token: `Authorization: Device {deviceId as 32 hex digits}.{deviceSecret}`.
+  /mdm/enroll:
+    post:
+      tags: [DeviceManagement]
+      operationId: enrollDevice
+      description: Exchanges a one-time enrolment code for the device credential. No authorization.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MdmEnrollRequest'
+      responses:
+        '200':
+          description: Enrolled. Enrolling an installationId again replaces its secret.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MdmEnrollResponse'
+        '400':
+          description: validation_failed
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/MdmProblem'
+        '404':
+          description: enrollment_code_invalid (unknown, used or expired code)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/MdmProblem'
+
+  /mdm/check-in:
+    post:
+      tags: [DeviceManagement]
+      operationId: deviceCheckIn
+      description: >-
+        Sent on enrolment, every checkInSeconds (minimum 900), on app start, on a `device.command` push and after
+        finishing a command. A command is returned until its result is posted or it expires.
+      security: [{ deviceAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MdmCheckInRequest'
+      responses:
+        '200':
+          description: Policy and pending commands
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MdmCheckInResponse'
+        '401':
+          description: device_not_enrolled (the device was retired; it deletes its credential)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/MdmProblem'
+
+  /mdm/commands/{id}/result:
+    post:
+      tags: [DeviceManagement]
+      operationId: postDeviceCommandResult
+      description: Posting twice is harmless.
+      security: [{ deviceAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MdmCommandResult'
+      responses:
+        '204':
+          description: Recorded
+        '404':
+          description: command_not_found (not a command of this device)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/MdmProblem'
+
+  /mdm/remote-sessions/{sessionId}/decline:
+    post:
+      tags: [DeviceManagement]
+      operationId: declineRemoteSession
+      description: The driver declined the remote session request, or it expired on the device.
+      security: [{ deviceAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/RemoteSessionId'
+      responses:
+        '204':
+          description: Declined
+
+  /mdm/remote-sessions/{sessionId}/stream:
+    get:
+      tags: [DeviceManagement]
+      operationId: streamRemoteSession
+      description: >-
+        WebSocket upgrade. Device to server: text `hello` {t,w,h,control} first, binary messages with one complete
+        JPEG each (a frame is skipped while the previous send has not finished), text `rotate` {t,w,h} when the frame
+        size changes, text `bye` {t,reason: driver_stopped | projection_lost | error} before closing. Server to device
+        (text, coordinates are fractions 0..1 of the frame): `tap` {x,y}, `long` {x,y}, `swipe` {x1,y1,x2,y2,ms},
+        `key` {k: back | home | recents | notifications}, `text` {v}, `quality` {fps,maxSide,q}, `end`. Close codes:
+        4401 bad credential, 4404 session not this device's or over.
+      security: [{ deviceAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/RemoteSessionId'
+      responses:
+        '101':
+          description: Switching protocols
+
 components:
   parameters:
     TripId:
@@ -239,11 +359,23 @@ components:
       required: true
       schema: { type: string }
 
+    RemoteSessionId:
+      in: path
+      name: sessionId
+      required: true
+      schema: { type: string, format: uuid }
+
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
+    deviceAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: '`Device {deviceId as 32 hex digits}.{deviceSecret}` (docs/29 §2)'
 
   schemas:
     LoginRequest:
@@ -434,3 +566,105 @@ components:
             - OTHER
         note: { type: string, nullable: true }
         clientTimestamp: { type: string, format: date-time }
+
+    MdmProblem:
+      type: object
+      description: application/problem+json with a `code` extension, like the rest of the Driver API.
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        code: { type: string }
+        traceId: { type: string }
+
+    MdmEnrollRequest:
+      type: object
+      required: [enrollmentCode, installationId, manufacturer, model, osVersion, sdkInt, appVersion, appVersionCode, isDeviceOwner]
+      properties:
+        enrollmentCode:
+          type: string
+          description: 8 characters from 23456789ABCDEFGHJKLMNPQRSTUVWXYZ; dash and letter case are ignored.
+        installationId: { type: string, format: uuid }
+        manufacturer: { type: string }
+        model: { type: string }
+        serialNumber: { type: string, nullable: true, description: Device owner only. }
+        osVersion: { type: string }
+        sdkInt: { type: integer }
+        appVersion: { type: string }
+        appVersionCode: { type: integer }
+        isDeviceOwner: { type: boolean }
+
+    MdmEnrollResponse:
+      type: object
+      required: [deviceId, deviceSecret, checkInSeconds]
+      properties:
+        deviceId: { type: string, format: uuid }
+        deviceSecret: { type: string, description: 43 url-safe characters. }
+        checkInSeconds: { type: integer }
+
+    MdmCheckInRequest:
+      type: object
+      required: [appVersion, appVersionCode, osVersion, sdkInt, isDeviceOwner, accessibilityEnabled, isCharging, networkType, storageFreeMb, storageTotalMb, locale]
+      properties:
+        appVersion: { type: string }
+        appVersionCode: { type: integer }
+        osVersion: { type: string }
+        sdkInt: { type: integer }
+        securityPatch: { type: string, nullable: true, description: 'yyyy-MM-dd' }
+        isDeviceOwner: { type: boolean }
+        accessibilityEnabled: { type: boolean }
+        batteryPercent: { type: integer, nullable: true }
+        isCharging: { type: boolean }
+        networkType: { type: string, enum: [wifi, cellular, none] }
+        storageFreeMb: { type: integer, format: int64 }
+        storageTotalMb: { type: integer, format: int64 }
+        pushToken: { type: string, nullable: true }
+        locale: { type: string }
+        policyVersionApplied: { type: integer, nullable: true }
+
+    MdmCheckInResponse:
+      type: object
+      properties:
+        checkInSeconds: { type: integer }
+        policy:
+          $ref: '#/components/schemas/MdmPolicy'
+        commands:
+          type: array
+          items:
+            $ref: '#/components/schemas/MdmCommand'
+
+    MdmPolicy:
+      type: object
+      description: Applied by a device owner through user restrictions; the applied version is reported back.
+      required: [version]
+      properties:
+        version: { type: integer }
+        blockFactoryReset: { type: boolean }
+        blockUnknownSources: { type: boolean }
+        blockUsbFileTransfer: { type: boolean }
+        blockSafeBoot: { type: boolean }
+        blockAddUser: { type: boolean }
+
+    MdmCommand:
+      type: object
+      required: [id, type]
+      properties:
+        id: { type: string, format: uuid }
+        type:
+          type: string
+          description: Unknown types are answered `unsupported`.
+          enum: [sync, ring, message, lock, reboot, wipe, remoteSession.request, remoteSession.end]
+        payload:
+          type: object
+          description: >-
+            ring {seconds}; message {title, body}; remoteSession.request {sessionId, requestedBy, expiresAt};
+            remoteSession.end {sessionId}.
+          additionalProperties: true
+        expiresAt: { type: string, format: date-time, nullable: true }
+
+    MdmCommandResult:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [succeeded, failed, unsupported] }
+        detail: { type: string, maxLength: 500, nullable: true }

@@ -13,6 +13,10 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.dynamictransport.dynamicone.R
 import com.dynamictransport.dynamicone.core.common.ApplicationScope
+import com.dynamictransport.dynamicone.core.mdm.DeviceCheckInScheduler
+import com.dynamictransport.dynamicone.core.mdm.DeviceManagementStateStore
+import com.dynamictransport.dynamicone.domain.model.CheckInResult
+import com.dynamictransport.dynamicone.domain.repository.DeviceManagementRepository
 import com.dynamictransport.dynamicone.core.sync.DriverDaySync
 import com.dynamictransport.dynamicone.domain.repository.AppInfo
 import com.google.firebase.messaging.FirebaseMessaging
@@ -23,7 +27,9 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.coroutines.resume
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -110,12 +116,53 @@ class AndroidMessageNotifier @Inject constructor(
     }
 }
 
+/** The office reaches a managed phone with a `device.command` push (docs/29 §3.6). */
+const val TYPE_DEVICE_COMMAND = "device.command"
+
+/** This phone's push token for the device check-in (docs/29 §3.2); null without Firebase or without network. */
+fun interface DevicePushTokenSource {
+    suspend fun current(): String?
+}
+
+/**
+ * Asks FCM for the token directly: a managed phone is reachable with nobody signed in, although FCM's automatic
+ * registration stays tied to the account session. The token is neither stored nor logged.
+ */
+@Singleton
+class FirebaseDevicePushTokenSource @Inject constructor(
+    private val appInfo: AppInfo,
+) : DevicePushTokenSource {
+
+    override suspend fun current(): String? {
+        if (!appInfo.isPushConfigured || appInfo.isDemoMode) return null
+        return withTimeoutOrNull(TOKEN_TIMEOUT_MILLIS) {
+            suspendCancellableCoroutine { continuation ->
+                try {
+                    FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                        if (continuation.isActive) continuation.resume(if (task.isSuccessful) task.result else null)
+                    }
+                } catch (_: IllegalStateException) {
+                    // Firebase is not initialised in this process.
+                    continuation.resume(null)
+                }
+            }
+        }?.takeIf { it.isNotBlank() }
+    }
+
+    private companion object {
+        const val TOKEN_TIMEOUT_MILLIS = 10_000L
+    }
+}
+
 @Singleton
 class FirebasePushSession @Inject constructor(
     private val appInfo: AppInfo,
     private val notifier: MessageNotifier,
     private val registrar: PushRegistrar,
     @param:ApplicationScope private val scope: CoroutineScope,
+    private val deviceManagement: DeviceManagementRepository,
+    private val deviceState: DeviceManagementStateStore,
+    private val deviceCheckIns: DeviceCheckInScheduler,
 ) : PushSession {
 
     private val enabled: Boolean get() = appInfo.isPushConfigured && !appInfo.isDemoMode
@@ -125,7 +172,12 @@ class FirebasePushSession @Inject constructor(
         val messaging = FirebaseMessaging.getInstance()
         // Auto-init is off in the manifest: the device registers with FCM only for a signed-in driver.
         messaging.isAutoInitEnabled = true
-        messaging.token.addOnSuccessListener { token -> scope.launch { registrar.register(token) } }
+        messaging.token.addOnSuccessListener { token ->
+            scope.launch {
+                deviceState.setAccountPushActive(true)
+                registrar.register(token)
+            }
+        }
     }
 
     override fun onSignedOut() {
@@ -134,12 +186,27 @@ class FirebasePushSession @Inject constructor(
         if (!enabled) return
         val messaging = FirebaseMessaging.getInstance()
         messaging.isAutoInitEnabled = false
-        // A signed-out device must not receive the previous driver's notifications.
-        messaging.deleteToken()
+        scope.launch {
+            val managed = deviceManagement.isEnrolled()
+            // A managed phone nobody signed in to since its token was last replaced keeps it: the office reaches the
+            // phone through it (docs/29 §3.6).
+            if (managed && !deviceState.accountPushActive()) return@launch
+            // A signed-out device must not receive the previous driver's notifications.
+            messaging.deleteToken().addOnCompleteListener {
+                scope.launch {
+                    deviceState.setAccountPushActive(false)
+                    // The managed phone tells the office its new token.
+                    if (managed) deviceCheckIns.requestCheckIn()
+                }
+            }
+        }
     }
 }
 
-/** Receives push signals: new messages, personnel documents and tachograph rest changes. Other push types are ignored. */
+/**
+ * Receives push signals: new messages, personnel documents, tachograph rest changes and device commands. Other push
+ * types are ignored.
+ */
 @AndroidEntryPoint
 class DriverMessagingService : FirebaseMessagingService() {
 
@@ -164,9 +231,21 @@ class DriverMessagingService : FirebaseMessagingService() {
     @Inject
     lateinit var wakeUpSignals: WakeUpCallSignalHandler
 
+    @Inject
+    lateinit var deviceManagement: DeviceManagementRepository
+
+    @Inject
+    lateinit var deviceCheckIns: DeviceCheckInScheduler
+
     override fun onMessageReceived(message: RemoteMessage) {
         if (appInfo.isDemoMode) return
         when (message.data[EXTRA_TYPE]) {
+            // The office has a command for this phone (docs/29 §3.6): the answer is a check-in, with or without a
+            // signed-in account. When it cannot finish here, the worker sends it as soon as the system allows.
+            TYPE_DEVICE_COMMAND -> if (appInfo.isDeviceManagementEnabled) {
+                val result = runBlocking { withTimeoutOrNull(SIGNAL_TIMEOUT_MILLIS) { deviceManagement.checkIn() } }
+                if (result == null || result == CheckInResult.OFFLINE || result == CheckInResult.FAILED) deviceCheckIns.requestCheckIn()
+            }
             // The planner rings this device, or silences it because another device answered (docs/25 §4).
             TYPE_DRIVER_WAKEUP -> runBlocking {
                 withTimeoutOrNull(SIGNAL_TIMEOUT_MILLIS) { wakeUpSignals.onSignal(WakeUpSignal.from(message.data)) }
@@ -194,6 +273,8 @@ class DriverMessagingService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
         if (appInfo.isDemoMode) return
         runBlocking { registrar.register(token) }
+        // A managed phone reports its new token with the next check-in.
+        if (appInfo.isDeviceManagementEnabled) deviceCheckIns.requestCheckIn()
     }
 
     private companion object {

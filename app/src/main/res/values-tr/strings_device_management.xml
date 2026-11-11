@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Device management and remote screen sessions (docs/29): the company phone is managed from DynamicONE. -->
+<resources>
+    <string name="mdm_title">Cihaz yönetimi</string>
+    <string name="mdm_intro">Bu telefon şirkete ait. Ofis telefonun durumunu görebilir, kilitleyebilir ve mesaj gönderebilir. Ofis ekranını ancak sen kabul edersen görür.</string>
+    <string name="mdm_status_title">Bu telefon</string>
+    <string name="mdm_status_enrolled">Ofise bağlı</string>
+    <string name="mdm_status_enrolled_yes">Evet, bu telefonu ofis yönetiyor.</string>
+    <string name="mdm_status_enrolled_no">Henüz değil. Ofisin verdiği kodu aşağıya yaz.</string>
+    <string name="mdm_status_owner">Tam yönetim</string>
+    <string name="mdm_status_owner_yes">Açık. Ofis telefonu kilitleyebilir ve sıfırlayabilir.</string>
+    <string name="mdm_status_owner_no">Kapalı. Bunu ofis telefonda ayarlar.</string>
+    <string name="mdm_status_accessibility">Dokunarak uzaktan yardım</string>
+    <string name="mdm_status_on">Açık</string>
+    <string name="mdm_status_off">Kapalı</string>
+    <string name="mdm_last_check_in">Ofisle son bağlantı: %1$s</string>
+    <string name="mdm_last_check_in_never">Ofisle henüz bağlantı kurulmadı.</string>
+    <string name="mdm_enrol_title">Bu telefonu bağla</string>
+    <string name="mdm_enrol_hint">Ofis sana 8 karakterlik bir kod verir.</string>
+    <string name="mdm_enrol_code">Ofisin verdiği kod</string>
+    <string name="mdm_enrol_submit">BAĞLA</string>
+    <string name="mdm_check_in_now">Ofisle şimdi bağlan</string>
+    <string name="mdm_accessibility_title">Ofis dokunarak yardım edebilsin</string>
+    <string name="mdm_accessibility_hint">Bu açıkken ofis, senin kabul ettiğin bir oturumda telefona senin yerine dokunabilir ve yazabilir. Başka zaman hiçbir şey yapmaz.</string>
+    <string name="mdm_accessibility_open">Aç</string>
+    <string name="mdm_error_code">Bu kod geçerli değil. Kodu kontrol et ya da ofisten yeni kod iste.</string>
+    <string name="mdm_error_offline">Bağlantı yok. Telefon internete bağlanınca tekrar dene.</string>
+    <string name="mdm_error_failed">Olmadı. Biraz sonra tekrar dene.</string>
+    <string name="mdm_channel_ring">Telefonu bul</string>
+    <string name="mdm_channel_ring_description">Ofis telefonu aradığında alarm sesiyle çalar.</string>
+    <string name="mdm_channel_message">Bu telefona mesajlar</string>
+    <string name="mdm_channel_sync">Ofisle bağlantı</string>
+    <string name="mdm_ring_title">Ofis bu telefonu arıyor</string>
+    <string name="mdm_ring_body">Sesi durdurmak için dokun.</string>
+    <string name="mdm_ring_stop">DURDUR</string>
+    <string name="mdm_message_default_title">Ofisten mesaj</string>
+    <string name="mdm_sync_notification">Ofisle bağlantı kuruluyor…</string>
+    <string name="mdm_admin_description">Ofisin bu şirket telefonunu kilitlemesine ve sıfırlamasına izin verir.</string>
+    <string name="remote_session_channel_request">Ekran paylaşma istekleri</string>
+    <string name="remote_session_channel_session">Ekran paylaşımı</string>
+    <string name="remote_session_channel_session_description">Ofis ekranını gördüğü sürece görünür kalır.</string>
+    <string name="remote_session_request_title_named">%1$s ekranını görmek istiyor</string>
+    <string name="remote_session_request_title_office">Ofis ekranını görmek istiyor</string>
+    <string name="remote_session_request_notification">Cevaplamak için dokun.</string>
+    <string name="remote_session_request_body">Kabul edersen ofis, sen durdurana kadar bu ekrandaki her şeyi görür. İstediğin an bildirimden durdurabilirsin.</string>
+    <string name="remote_session_accept">KABUL ET</string>
+    <string name="remote_session_decline">Reddet</string>
+    <string name="remote_session_active_title">Ofis ekranınızı görüyor</string>
+    <string name="remote_session_active_body">Bitirmek için Durdur\'a dokun.</string>
+    <string name="remote_session_stop">DURDUR</string>
+    <string name="remote_control_service_label">DynamicONE uzaktan yardım</string>
+    <string name="remote_control_service_description">Ofis sana yardım ederken bu şirket telefonuna dokunabilmesini, kaydırabilmesini ve yazabilmesini sağlar. Yalnızca senin kabul ettiğin ekran paylaşımı sırasında çalışır, başka zaman hiçbir şey okumaz.</string>
+</resources>

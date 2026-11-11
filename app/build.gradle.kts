@@ -46,6 +46,10 @@ val mobileApiEnabled = providers.gradleProperty("app.mobileApi").getOrElse("true
 // daily check. Until the backend serves the endpoints, `app.driverShift=false` keeps the shift "not connected".
 val driverShiftEnabled = providers.gradleProperty("app.driverShift").getOrElse("false").toBoolean()
 
+// Device management and remote screen sessions (docs/29_DEVICE_MANAGEMENT.md). `app.deviceManagement=false` removes
+// the feature from the running app: nothing is scheduled or shown.
+val deviceManagementEnabled = providers.gradleProperty("app.deviceManagement").getOrElse("true").toBoolean()
+
 // Release signing (Intune line-of-business APK for the managed vehicle phones). The keystore and its passwords stay
 // outside Git: `keystore.properties` in the project root (Git-ignored) holds storeFile, storePassword, keyAlias and
 // keyPassword. Without it, release builds stay unsigned and cannot be installed.
@@ -64,13 +68,14 @@ android {
         applicationId = dynamicOneApplicationId
         minSdk = 26
         targetSdk = 37
-        versionCode = 3
-        versionName = "0.2.1"
+        versionCode = 4
+        versionName = "0.3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("boolean", "PUSH_CONFIGURED", pushConfigured.toString())
         buildConfigField("boolean", "MOBILE_API_ENABLED", mobileApiEnabled.toString())
         buildConfigField("boolean", "DRIVER_SHIFT_ENABLED", driverShiftEnabled.toString())
+        buildConfigField("boolean", "DEVICE_MANAGEMENT_ENABLED", deviceManagementEnabled.toString())
     }
 
     signingConfigs {

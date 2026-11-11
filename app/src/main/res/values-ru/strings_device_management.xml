@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Device management and remote screen sessions (docs/29): the company phone is managed from DynamicONE. -->
+<resources>
+    <string name="mdm_title">Управление устройством</string>
+    <string name="mdm_intro">Этот телефон принадлежит компании. Офис видит его состояние, может заблокировать его и отправить сообщение. Экран офис увидит только после вашего согласия.</string>
+    <string name="mdm_status_title">Этот телефон</string>
+    <string name="mdm_status_enrolled">Подключён к офису</string>
+    <string name="mdm_status_enrolled_yes">Да, этим телефоном управляет офис.</string>
+    <string name="mdm_status_enrolled_no">Пока нет. Введите ниже код из офиса.</string>
+    <string name="mdm_status_owner">Полное управление</string>
+    <string name="mdm_status_owner_yes">Включено. Офис может заблокировать и сбросить телефон.</string>
+    <string name="mdm_status_owner_no">Выключено. Это настраивает офис на телефоне.</string>
+    <string name="mdm_status_accessibility">Удалённая помощь касанием</string>
+    <string name="mdm_status_on">Включено</string>
+    <string name="mdm_status_off">Выключено</string>
+    <string name="mdm_last_check_in">Последняя связь с офисом: %1$s</string>
+    <string name="mdm_last_check_in_never">Связи с офисом ещё не было.</string>
+    <string name="mdm_enrol_title">Подключить этот телефон</string>
+    <string name="mdm_enrol_hint">Офис даст вам код из 8 символов.</string>
+    <string name="mdm_enrol_code">Код из офиса</string>
+    <string name="mdm_enrol_submit">ПОДКЛЮЧИТЬ</string>
+    <string name="mdm_check_in_now">Связаться с офисом сейчас</string>
+    <string name="mdm_accessibility_title">Разрешить офису помогать касанием</string>
+    <string name="mdm_accessibility_hint">Когда это включено, офис может нажимать и печатать на телефоне за вас во время сеанса, на который вы согласились. В остальное время ничего не делает.</string>
+    <string name="mdm_accessibility_open">Включить</string>
+    <string name="mdm_error_code">Этот код недействителен. Проверьте его или попросите в офисе новый.</string>
+    <string name="mdm_error_offline">Нет связи. Повторите, когда телефон будет в сети.</string>
+    <string name="mdm_error_failed">Не получилось. Повторите чуть позже.</string>
+    <string name="mdm_channel_ring">Найти телефон</string>
+    <string name="mdm_channel_ring_description">Звонит сигналом будильника, когда офис ищет телефон.</string>
+    <string name="mdm_channel_message">Сообщения для этого телефона</string>
+    <string name="mdm_channel_sync">Связь с офисом</string>
+    <string name="mdm_ring_title">Офис ищет этот телефон</string>
+    <string name="mdm_ring_body">Нажмите, чтобы выключить звук.</string>
+    <string name="mdm_ring_stop">СТОП</string>
+    <string name="mdm_message_default_title">Сообщение из офиса</string>
+    <string name="mdm_sync_notification">Связь с офисом…</string>
+    <string name="mdm_admin_description">Позволяет офису блокировать и сбрасывать этот телефон компании.</string>
+    <string name="remote_session_channel_request">Запросы показа экрана</string>
+    <string name="remote_session_channel_session">Показ экрана</string>
+    <string name="remote_session_channel_session_description">Видно всё время, пока офис видит ваш экран.</string>
+    <string name="remote_session_request_title_named">%1$s хочет увидеть ваш экран</string>
+    <string name="remote_session_request_title_office">Офис хочет увидеть ваш экран</string>
+    <string name="remote_session_request_notification">Нажмите, чтобы ответить.</string>
+    <string name="remote_session_request_body">Если вы согласитесь, офис будет видеть всё на этом экране, пока вы не остановите показ. Остановить можно в любой момент из уведомления.</string>
+    <string name="remote_session_accept">ПРИНЯТЬ</string>
+    <string name="remote_session_decline">Отклонить</string>
+    <string name="remote_session_active_title">Офис видит ваш экран</string>
+    <string name="remote_session_active_body">Нажмите «Стоп», чтобы закончить.</string>
+    <string name="remote_session_stop">СТОП</string>
+    <string name="remote_control_service_label">DynamicONE удалённая помощь</string>
+    <string name="remote_control_service_description">Позволяет офису нажимать, проводить по экрану и печатать на этом телефоне компании, когда вам помогают. Работает только во время показа экрана, на который вы согласились, и в остальное время ничего не читает.</string>
+</resources>

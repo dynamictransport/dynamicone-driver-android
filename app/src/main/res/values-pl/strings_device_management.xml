@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Device management and remote screen sessions (docs/29): the company phone is managed from DynamicONE. -->
+<resources>
+    <string name="mdm_title">Zarządzanie urządzeniem</string>
+    <string name="mdm_intro">Ten telefon należy do firmy. Biuro widzi jego stan, może go zablokować i wysłać wiadomość. Ekran biuro zobaczy dopiero wtedy, gdy się zgodzisz.</string>
+    <string name="mdm_status_title">Ten telefon</string>
+    <string name="mdm_status_enrolled">Połączony z biurem</string>
+    <string name="mdm_status_enrolled_yes">Tak, tym telefonem zarządza biuro.</string>
+    <string name="mdm_status_enrolled_no">Jeszcze nie. Wpisz poniżej kod z biura.</string>
+    <string name="mdm_status_owner">Pełne zarządzanie</string>
+    <string name="mdm_status_owner_yes">Włączone. Biuro może zablokować i wyczyścić telefon.</string>
+    <string name="mdm_status_owner_no">Wyłączone. Ustawia to biuro na telefonie.</string>
+    <string name="mdm_status_accessibility">Zdalna pomoc dotykiem</string>
+    <string name="mdm_status_on">Włączone</string>
+    <string name="mdm_status_off">Wyłączone</string>
+    <string name="mdm_last_check_in">Ostatni kontakt z biurem: %1$s</string>
+    <string name="mdm_last_check_in_never">Nie było jeszcze kontaktu z biurem.</string>
+    <string name="mdm_enrol_title">Połącz ten telefon</string>
+    <string name="mdm_enrol_hint">Biuro poda Ci kod z 8 znaków.</string>
+    <string name="mdm_enrol_code">Kod z biura</string>
+    <string name="mdm_enrol_submit">POŁĄCZ</string>
+    <string name="mdm_check_in_now">Połącz się z biurem teraz</string>
+    <string name="mdm_accessibility_title">Pozwól biuru pomagać dotykiem</string>
+    <string name="mdm_accessibility_hint">Gdy to jest włączone, biuro może za Ciebie dotykać ekranu i pisać podczas sesji, na którą się zgodzisz. Poza nią nic nie robi.</string>
+    <string name="mdm_accessibility_open">Włącz</string>
+    <string name="mdm_error_code">Ten kod jest nieprawidłowy. Sprawdź go albo poproś biuro o nowy.</string>
+    <string name="mdm_error_offline">Brak połączenia. Spróbuj ponownie, gdy telefon będzie online.</string>
+    <string name="mdm_error_failed">Nie udało się. Spróbuj ponownie za chwilę.</string>
+    <string name="mdm_channel_ring">Znajdź telefon</string>
+    <string name="mdm_channel_ring_description">Dzwoni dźwiękiem alarmu, gdy biuro szuka telefonu.</string>
+    <string name="mdm_channel_message">Wiadomości dla tego telefonu</string>
+    <string name="mdm_channel_sync">Kontakt z biurem</string>
+    <string name="mdm_ring_title">Biuro szuka tego telefonu</string>
+    <string name="mdm_ring_body">Dotknij, aby wyłączyć dźwięk.</string>
+    <string name="mdm_ring_stop">STOP</string>
+    <string name="mdm_message_default_title">Wiadomość z biura</string>
+    <string name="mdm_sync_notification">Łączenie z biurem…</string>
+    <string name="mdm_admin_description">Pozwala biuru zablokować i wyczyścić ten firmowy telefon.</string>
+    <string name="remote_session_channel_request">Prośby o podgląd ekranu</string>
+    <string name="remote_session_channel_session">Podgląd ekranu</string>
+    <string name="remote_session_channel_session_description">Jest widoczne tak długo, jak biuro widzi Twój ekran.</string>
+    <string name="remote_session_request_title_named">%1$s chce zobaczyć Twój ekran</string>
+    <string name="remote_session_request_title_office">Biuro chce zobaczyć Twój ekran</string>
+    <string name="remote_session_request_notification">Dotknij, aby odpowiedzieć.</string>
+    <string name="remote_session_request_body">Jeśli się zgodzisz, biuro będzie widzieć wszystko na tym ekranie, dopóki tego nie zatrzymasz. Możesz to zatrzymać w każdej chwili z powiadomienia.</string>
+    <string name="remote_session_accept">ZGADZAM SIĘ</string>
+    <string name="remote_session_decline">Odmów</string>
+    <string name="remote_session_active_title">Biuro widzi Twój ekran</string>
+    <string name="remote_session_active_body">Dotknij Stop, aby zakończyć.</string>
+    <string name="remote_session_stop">STOP</string>
+    <string name="remote_control_service_label">DynamicONE zdalna pomoc</string>
+    <string name="remote_control_service_description">Pozwala biuru dotykać, przesuwać i pisać na tym firmowym telefonie, gdy Ci pomaga. Działa tylko podczas podglądu ekranu, na który się zgodzisz, i poza nim niczego nie odczytuje.</string>
+</resources>
