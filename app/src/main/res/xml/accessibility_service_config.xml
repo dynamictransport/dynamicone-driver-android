@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  RemoteControlService (docs/29 §4.2): gestures, global keys and text for the office during an accepted remote
+  session. It listens to no events; window content is needed only to set text on the focused field.
+-->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes=""
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:accessibilityFlags="flagDefault"
+    android:canPerformGestures="true"
+    android:canRetrieveWindowContent="true"
+    android:description="@string/remote_control_service_description"
+    android:notificationTimeout="0" />

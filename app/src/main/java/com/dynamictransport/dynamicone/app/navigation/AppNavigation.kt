@@ -1,6 +1,7 @@
 package com.dynamictransport.dynamicone.app.navigation
 
 import android.Manifest
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
@@ -42,7 +43,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
@@ -63,6 +67,7 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.dynamictransport.dynamicone.feature.mdm.DeviceManagementRoute
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
@@ -202,6 +207,10 @@ data class DocumentViewerDestination(
 @Serializable
 data object ChangePasswordDestination
 
+/** Device management (docs/29): enrolment and the state of this phone; reached from the profile. */
+@Serializable
+data object DeviceManagementDestination
+
 @Serializable
 data class TripDetailDestination(val tripId: String)
 
@@ -301,7 +310,18 @@ fun DynamicOneApp(appViewModel: AppViewModel) {
                 .background(MaterialTheme.colorScheme.background),
         )
 
-        SessionState.LoggedOut -> LoginRoute()
+        SessionState.LoggedOut -> {
+            // Device management needs no account: it opens over the sign-in screen and closes back to it.
+            var showDeviceManagement by rememberSaveable { mutableStateOf(false) }
+            if (showDeviceManagement && appViewModel.deviceManagementAvailable) {
+                BackHandler { showDeviceManagement = false }
+                DeviceManagementRoute(onBack = { showDeviceManagement = false })
+            } else {
+                LoginRoute(
+                    onOpenDeviceManagement = if (appViewModel.deviceManagementAvailable) ({ showDeviceManagement = true }) else null,
+                )
+            }
+        }
 
         // The backend blocks every call until the password is changed.
         SessionState.PasswordChangeRequired -> ChangePasswordRoute()
@@ -491,7 +511,11 @@ private fun MainNavigation(modules: Set<AppModule>) {
                         onOpenSignedDocuments = { navController.navigate(SignedDocumentsDestination) },
                         onOpenChangePassword = { navController.navigate(ChangePasswordDestination) },
                         onOpenRestAlarm = { navController.navigate(RestAlarmSettingsDestination) },
+                        onOpenDeviceManagement = { navController.navigate(DeviceManagementDestination) { launchSingleTop = true } },
                     )
+                }
+                composable<DeviceManagementDestination> {
+                    DeviceManagementRoute(onBack = { navController.popBackStack() })
                 }
                 composable<ShiftDestination> {
                     ShiftRoute(

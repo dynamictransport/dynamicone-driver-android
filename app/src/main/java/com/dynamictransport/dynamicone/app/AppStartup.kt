@@ -2,6 +2,7 @@ package com.dynamictransport.dynamicone.app
 
 import com.dynamictransport.dynamicone.core.alarm.RestAlarmController
 import com.dynamictransport.dynamicone.core.common.ApplicationScope
+import com.dynamictransport.dynamicone.core.mdm.DeviceManagementStartup
 import com.dynamictransport.dynamicone.core.push.PushSession
 import com.dynamictransport.dynamicone.core.sync.AttendanceSyncScheduler
 import com.dynamictransport.dynamicone.core.sync.CashPaymentSyncScheduler
@@ -54,6 +55,7 @@ class AppStartup @Inject constructor(
     private val wakeUpSyncScheduler: WakeUpSyncScheduler,
     private val wakeUpCalls: Provider<WakeUpCallController>,
     private val tarWarnings: Provider<TarWarningController>,
+    private val deviceManagement: Provider<DeviceManagementStartup>,
 ) {
     /** Driver API daily shift with tachograph rest and wake-up alarm (docs/16). */
     private val dailyShift: Boolean get() = appInfo.isDriverShiftEnabled && !appInfo.isDemoMode
@@ -66,6 +68,8 @@ class AppStartup @Inject constructor(
         if (!appInfo.isDemoMode) wakeUpCalls.get().start()
         // TAR warnings follow the trips in memory and the alarms stored on the device (docs/26 §6).
         tarWarnings.get().start()
+        // A managed phone checks in with the office with or without a signed-in account (docs/29 §3.2).
+        if (appInfo.isDeviceManagementEnabled) deviceManagement.get().start()
     }
 
     /**

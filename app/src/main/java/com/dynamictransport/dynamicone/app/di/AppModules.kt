@@ -204,6 +204,36 @@ import com.dynamictransport.dynamicone.domain.repository.VehicleDocumentReposito
 import com.dynamictransport.dynamicone.domain.repository.VehiclePositionRepository
 import com.dynamictransport.dynamicone.domain.repository.ViewedFileCleaner
 import com.dynamictransport.dynamicone.domain.repository.WakeUpCallRepository
+import com.dynamictransport.dynamicone.core.mdm.AndroidDeviceAlerts
+import com.dynamictransport.dynamicone.core.mdm.AndroidDevicePolicyController
+import com.dynamictransport.dynamicone.core.mdm.AndroidDeviceStatusCollector
+import com.dynamictransport.dynamicone.core.mdm.DeviceAlerts
+import com.dynamictransport.dynamicone.core.mdm.DeviceCheckInScheduler
+import com.dynamictransport.dynamicone.core.mdm.DeviceCredentialStore
+import com.dynamictransport.dynamicone.core.mdm.DeviceManagementDataStore
+import com.dynamictransport.dynamicone.core.mdm.DevicePolicyController
+import com.dynamictransport.dynamicone.core.mdm.DeviceStatusCollector
+import com.dynamictransport.dynamicone.core.mdm.RemoteSessionCommands
+import com.dynamictransport.dynamicone.core.mdm.WorkManagerDeviceCheckInScheduler
+import com.dynamictransport.dynamicone.core.network.MDM_PATH
+import com.dynamictransport.dynamicone.core.network.MdmApi
+import com.dynamictransport.dynamicone.core.network.MdmHttpClients
+import com.dynamictransport.dynamicone.core.push.DevicePushTokenSource
+import com.dynamictransport.dynamicone.core.push.FirebaseDevicePushTokenSource
+import com.dynamictransport.dynamicone.core.remote.AndroidRemoteControlAccess
+import com.dynamictransport.dynamicone.core.remote.AndroidRemoteSessionNotifier
+import com.dynamictransport.dynamicone.core.remote.AndroidScreenStreamLauncher
+import com.dynamictransport.dynamicone.core.remote.OkHttpRemoteStreamConnector
+import com.dynamictransport.dynamicone.core.remote.RemoteControlAccess
+import com.dynamictransport.dynamicone.core.remote.RemoteSessionController
+import com.dynamictransport.dynamicone.core.remote.RemoteSessionNotifier
+import com.dynamictransport.dynamicone.core.remote.RemoteStreamConnector
+import com.dynamictransport.dynamicone.core.remote.ScreenStreamLauncher
+import com.dynamictransport.dynamicone.data.real.ApiDeviceManagementGateway
+import com.dynamictransport.dynamicone.data.real.RealDeviceManagementRepository
+import com.dynamictransport.dynamicone.data.real.UnavailableDeviceManagementRepository
+import com.dynamictransport.dynamicone.domain.repository.DeviceManagementGateway
+import com.dynamictransport.dynamicone.domain.repository.DeviceManagementRepository
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -230,6 +260,9 @@ private fun isDemoMode(): Boolean = BackendModeResolver.current == BackendMode.D
 
 /** Driver API daily shift (docs/16): real backend and `app.driverShift=true` only; the demo keeps its simple shift. */
 private fun isDriverShift(): Boolean = BuildConfig.DRIVER_SHIFT_ENABLED && !isDemoMode()
+
+/** Device management (docs/29): real backend and `app.deviceManagement=true` only. */
+private fun isDeviceManagement(): Boolean = BuildConfig.DEVICE_MANAGEMENT_ENABLED && !isDemoMode()
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -271,6 +304,7 @@ object AppModule {
         override val versionName: String = BuildConfig.VERSION_NAME
         override val isPushConfigured: Boolean = BuildConfig.PUSH_CONFIGURED
         override val isDriverShiftEnabled: Boolean = isDriverShift()
+        override val isDeviceManagementEnabled: Boolean = isDeviceManagement()
     }
 }
 
@@ -357,6 +391,13 @@ object SecurityModule {
     fun provideTokenStore(@TokenDataStore dataStore: DataStore<Preferences>, cryptoBox: CryptoBox): TokenStore =
         EncryptedTokenStore(dataStore, cryptoBox)
 
+    /** The device credential (encrypted) and the check-in state (docs/29); a file of its own, kept at sign-out. */
+    @Provides
+    @Singleton
+    @DeviceManagementDataStore
+    fun provideDeviceManagementDataStore(@ApplicationContext context: Context): DataStore<Preferences> =
+        PreferenceDataStoreFactory.create(produceFile = { context.preferencesDataStoreFile("device_management") })
+
     /** The wake-up alarm's settings; no secrets (docs/16). */
     @Provides
     @Singleton
@@ -368,6 +409,11 @@ object SecurityModule {
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class BaseHttpClient
+
+/** The HTTP client of the MDM endpoints: device credential, no account session. */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class MdmHttpClient
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -417,6 +463,26 @@ object NetworkModule {
     fun provideMobileApi(client: OkHttpClient, json: Json): MobileApi =
         retrofit(client, json, BuildConfig.MOBILE_API_BASE_URL).create(MobileApi::class.java)
 
+    /**
+     * Device management (docs/29 §2): built on the base client, so the driver's bearer token and its refresh never
+     * take part; the device credential is the only authorization.
+     */
+    @Provides
+    @Singleton
+    @MdmHttpClient
+    fun provideMdmHttpClient(@BaseHttpClient baseClient: OkHttpClient, credentials: DeviceCredentialStore): OkHttpClient =
+        MdmHttpClients.device(baseClient, credentials)
+
+    @Provides
+    @Singleton
+    fun provideMdmApi(@MdmHttpClient client: OkHttpClient, json: Json): MdmApi =
+        retrofit(client, json, BuildConfig.API_BASE_URL + MDM_PATH).create(MdmApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideRemoteStreamConnector(@MdmHttpClient client: OkHttpClient): RemoteStreamConnector =
+        OkHttpRemoteStreamConnector(MdmHttpClients.stream(client), BuildConfig.API_BASE_URL + MDM_PATH)
+
     /** docs/15_MOBILE_APP_API.md: `app.mobileApi` switches sign-in to the Mobile API once the backend serves it. */
     @Provides
     @Singleton
@@ -463,6 +529,10 @@ object RemoteModule {
 @Module
 @InstallIn(SingletonComponent::class)
 object RepositoryModule {
+
+    @Provides
+    fun provideDeviceManagementRepository(real: Provider<RealDeviceManagementRepository>): DeviceManagementRepository =
+        if (isDeviceManagement()) real.get() else UnavailableDeviceManagementRepository
 
     @Provides
     fun provideAuthRepository(demo: Provider<AuthRepositoryImpl>, real: Provider<RealAuthRepository>): AuthRepository =
@@ -616,6 +686,36 @@ abstract class BindingsModule {
 
     @Binds
     abstract fun bindPushRegistrar(impl: RealPushRegistrar): PushRegistrar
+
+    @Binds
+    abstract fun bindDevicePushTokenSource(impl: FirebaseDevicePushTokenSource): DevicePushTokenSource
+
+    @Binds
+    abstract fun bindDeviceManagementGateway(impl: ApiDeviceManagementGateway): DeviceManagementGateway
+
+    @Binds
+    abstract fun bindDevicePolicyController(impl: AndroidDevicePolicyController): DevicePolicyController
+
+    @Binds
+    abstract fun bindDeviceStatusCollector(impl: AndroidDeviceStatusCollector): DeviceStatusCollector
+
+    @Binds
+    abstract fun bindDeviceAlerts(impl: AndroidDeviceAlerts): DeviceAlerts
+
+    @Binds
+    abstract fun bindDeviceCheckInScheduler(impl: WorkManagerDeviceCheckInScheduler): DeviceCheckInScheduler
+
+    @Binds
+    abstract fun bindRemoteSessionCommands(impl: RemoteSessionController): RemoteSessionCommands
+
+    @Binds
+    abstract fun bindRemoteSessionNotifier(impl: AndroidRemoteSessionNotifier): RemoteSessionNotifier
+
+    @Binds
+    abstract fun bindScreenStreamLauncher(impl: AndroidScreenStreamLauncher): ScreenStreamLauncher
+
+    @Binds
+    abstract fun bindRemoteControlAccess(impl: AndroidRemoteControlAccess): RemoteControlAccess
 
     @Binds
     abstract fun bindPushSession(impl: FirebasePushSession): PushSession

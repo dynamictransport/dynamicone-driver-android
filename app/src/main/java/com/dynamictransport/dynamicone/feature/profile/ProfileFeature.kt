@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.LockReset
+import androidx.compose.material.icons.filled.PhonelinkSetup
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PictureAsPdf
@@ -114,6 +115,8 @@ data class ProfileUiState(
     val isDemoMode: Boolean = false,
     /** Driver daily shift: the wake-up alarm settings (docs/16). */
     val restAlarmAvailable: Boolean = false,
+    /** Device management (docs/29) is part of this build. */
+    val deviceManagementAvailable: Boolean = false,
 ) {
     val unsentCount: Int get() = overview.pendingCount + overview.failedCount
 }
@@ -160,6 +163,7 @@ class ProfileViewModel @Inject constructor(
             showLogoutConfirmation = confirmLogout,
             isDemoMode = appInfo.isDemoMode,
             restAlarmAvailable = appInfo.isDriverShiftEnabled && AppModule.DRIVER in (session as? SessionState.LoggedIn)?.modules.orEmpty(),
+            deviceManagementAvailable = appInfo.isDeviceManagementEnabled,
         )
     }.stateIn(
         viewModelScope,
@@ -235,6 +239,7 @@ fun ProfileRoute(
     onOpenSignedDocuments: () -> Unit,
     onOpenChangePassword: () -> Unit,
     onOpenRestAlarm: () -> Unit = {},
+    onOpenDeviceManagement: () -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -250,6 +255,7 @@ fun ProfileRoute(
         onOpenSignedDocuments = onOpenSignedDocuments,
         onOpenChangePassword = onOpenChangePassword,
         onOpenRestAlarm = onOpenRestAlarm,
+        onOpenDeviceManagement = onOpenDeviceManagement,
         onRetryAll = viewModel::onRetryAll,
         onAcknowledgeFailure = viewModel::onAcknowledgeFailure,
         onLogoutRequested = viewModel::onLogoutRequested,
@@ -278,6 +284,7 @@ fun ProfileScreen(
     links: List<ProfileLink> = emptyList(),
     onOpenLink: (String) -> Unit = {},
     onOpenRestAlarm: () -> Unit = {},
+    onOpenDeviceManagement: () -> Unit = {},
     onRetryAssignedVehicle: () -> Unit = {},
 ) {
     var language by remember { mutableStateOf(AppLanguage.current()) }
@@ -391,6 +398,14 @@ fun ProfileScreen(
                         icon = Icons.Filled.LockReset,
                         modifier = Modifier.testTag("profile_change_password"),
                     )
+                    if (state.deviceManagementAvailable) {
+                        SecondaryActionButton(
+                            text = stringResource(R.string.mdm_title),
+                            onClick = onOpenDeviceManagement,
+                            icon = Icons.Filled.PhonelinkSetup,
+                            modifier = Modifier.testTag("profile_device_management"),
+                        )
+                    }
                 }
             }
 

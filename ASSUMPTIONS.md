@@ -438,3 +438,80 @@ Uygulama tarafı yalnızca JVM/Robolectric/MockWebServer testleriyle doğruland�
   401 token yenileme, 409/404/403/429, makbuz Bearer), Room DAO, ViewModel, Robolectric ekranlar (dikey + yatay),
   `AppShell`. Fiziksel cihaz kabul senaryoları (1–7) teslim raporunda listelenir; gerçek personel adına test
   imzası atılmadı.
+
+## Cihaz yönetimi (MDM) ve uzaktan ekran oturumu: uygulama tarafı (11.11.2026)
+
+Kullanıcı kararı: şirket telefonları Intune yerine DynamicONE'dan yönetilir; uygulama telefonun **device owner**'ıdır,
+uzaktan oturum yalnızca şoför telefonda kabul edince başlar, cihaz kimse giriş yapmamışken de yönetilir. Sözleşme
+`docs/29_DEVICE_MANAGEMENT.md`; backend aynı gün paralel yazılıyor, uygulama tarafı yalnızca JVM testleriyle
+(MockWebServer, Robolectric) doğrulandı, gerçek cihaz testi ayrıca yapılacak. Harf etiketi **C** (cihaz).
+
+- **C1 — Bayrak ve demo:** `app.deviceManagement` (varsayılan `true`) → `BuildConfig.DEVICE_MANAGEMENT_ENABLED` →
+  `AppInfo.isDeviceManagementEnabled` (demo modunda her zaman kapalı). Kapalıyken hiçbir iş planlanmaz, profil ve
+  giriş ekranında giriş görünmez, `device.command` push'u yok sayılır, repository `Unavailable…` olur.
+- **C2 — Cihaz kimliği:** `deviceId` + `deviceSecret` tek JSON olarak `KeystoreCryptoBox` ile şifrelenir ve ayrı bir
+  DataStore dosyasında (`device_management`) tutulur; çıkış bu dosyaya dokunmaz. MDM çağrıları `@BaseHttpClient`
+  üzerine kurulan ayrı bir OkHttp istemcisinden gider: Bearer interceptor'ı ve token yenileme yoktur, tek yetki
+  `Authorization: Device {32 hex}.{secret}` başlığıdır (`mdm/enroll` hariç). MDM'deki bir `401` hesap oturumunu
+  etkilemez. Keystore'un okuyamadığı kayıt "kayıtlı değil" sayılır.
+- **C3 — Kayıt:** Kod yerelde doğrulanır (8 karakter, `23456789ABCDEFGHJKLMNPQRSTUVWXYZ`; tire/boşluk/harf boyu
+  önemsiz) ve `XXXX-XXXX` olarak gönderilir; geçersiz kod sunucuya gitmez. `404`/`400` → "kod geçerli değil",
+  çevrimdışı/5xx → "bağlantı yok". Başarılı kayıt eski kayıttan kalan komut defterini ve politika sürümünü siler,
+  periyodik işi kurar ve hemen bir check-in gönderir (olmazsa işçiye bırakır). Kayıt giriş yapmadan da yapılabilir:
+  giriş ekranında *Cihaz yönetimi* bağlantısı, girişten sonra Profil → Hesap altında aynı ekran.
+- **C4 — Check-in zamanları:** WorkManager periyodik işi (`checkInSeconds`, en az 900 sn; ilk çalışma bir aralık
+  sonra) + "şimdi" için expedited tek seferlik iş (`APPEND_OR_REPLACE`: çalışan check-in kesilmez). Uygulama
+  açılışında son check-in 1 dakikadan eskiyse istenir (periyodik işin kendi başlattığı süreç ikinci check-in
+  üretmesin diye). `device.command` push'unda check-in önce push iş parçacığında denenir (15 sn), bitmezse
+  expedited işe bırakılır: 90 saniyelik oturum isteği işçi kuyruğunda beklemesin. Bir komut bitince en çok iki
+  ek tur check-in yapılır. Çevrimdışı işçi 5 denemeden sonra periyodik işe bırakır.
+- **C5 — Komut bir kez çalışır:** Komut kimliği komut başlamadan önce deftere yazılır (aynı DataStore dosyası,
+  süresi dolduktan 7 gün sonra silinir, en çok 200 kayıt). Sonucu olan komut geri gelirse yalnızca sonucu yeniden
+  gönderilir. `reboot`: `succeeded` önce deftere yazılır, sonra yeniden başlatılır; sonuç ya hemen ya açılıştaki ilk
+  check-in ile gider. `wipe`: `succeeded` önce gönderilir, sonra silinir; cihaz reddederse `failed` gönderilir.
+  Süreç komutun ortasında öldüyse komut tekrar çalıştırılmaz: `failed`/`interrupted` (oturum isteğinde: decline +
+  `succeeded`). `detail` alanı kısa makine kodlarıdır (`not_device_owner`, `notifications_off`, `busy`, `timeout`,
+  `declined`, `accepted`, …), kişisel veri taşımaz.
+- **C6 — `unsupported`:** Bilinmeyen komut türü; device owner değilken `reboot`/`wipe`; device admin de değilken
+  `lock`; komut anında rol kaybı (`SecurityException`). `ring`/`message` bildirim gösterilemiyorsa `failed`
+  (`notifications_off`) döner: "çaldı" denmez.
+- **C7 — Android 14+ fabrika ayarı:** `targetSdk` 34+ uygulamalarda `wipeData(0)` ana kullanıcıda
+  `IllegalStateException` atar; API 34+ cihazlarda `wipeDevice(0)`, altında `wipeData(0)` çağrılır (sözleşmeden
+  sapma, rapor edildi). Bayrak 0 olduğu için FRP korunur.
+- **C8 — Politika:** Yalnızca device owner iken, her check-in'de beş kısıt eklenir/kaldırılır (kendi kendini
+  onarır); hepsi uygulanınca `version` saklanır ve `policyVersionApplied` olarak bildirilir, device owner değilse
+  hiç bildirilmez. Kayıtlıyken `setUninstallBlocked(true)`; cihaz emekliye ayrılınca (`401 device_not_enrolled`)
+  kimlik silinir, işler iptal edilir, beş kısıt ve kaldırma engeli kalkar.
+- **C9 — Device owner'ın kendine verdiği izinler:** Kayıtlı device owner `POST_NOTIFICATIONS` (mesaj, zil,
+  oturum bildirimi kimse "İzin ver"e basmadan görünsün) ve `READ_PHONE_STATE` (seri numarası; Android 10+ bunu
+  device owner + bu izinle verir) izinlerini `setPermissionGrantState` ile kendine verir. Başka izin verilmez.
+- **C10 — Push ve giriş yapılmamış cihaz:** FCM otomatik kaydı oturuma bağlı kalır; check-in token'ı doğrudan
+  `FirebaseMessaging.token` ile ister, token saklanmaz/loglanmaz. Çıkışta token yine silinir (önceki şoförün
+  bildirimleri gelmesin) ve yönetilen cihaz yeni token'ı hemen check-in ile bildirir. Kimse giriş yapmamışken
+  süreç her açıldığında token silinmez (`account_push_active` bayrağı): aksi halde her 15 dakikada token değişirdi.
+- **C11 — Durum alanları:** `networkType` yalnızca `wifi | cellular | none` olduğundan kablo/VPN gibi diğer
+  bağlantılar `wifi` sayılır; `batteryPercent` okunamazsa gönderilmez; depolama uygulamanın veri bölümünden MB;
+  `locale` uygulama dilinin BCP-47 etiketi. Konum, hesap ve kişisel veri gönderilmez.
+- **C12 — Zil ve mesaj:** `ring` ayrı kanalda (`device_ring`, alarm sesi, `FLAG_INSISTENT`) çalar, alarm sesi en
+  yükseğe çıkarılır ve durunca eski düzeyine döner; süre 5–600 sn (varsayılan 60). Bildirime dokunmak, kaydırmak
+  veya *DURDUR* susturur. `message` komut başına ayrı bildirimdir (`device_message`).
+- **C13 — Oturum onayı:** İstek tam ekran bildirim + `RemoteSessionActivity` (kilit ekranı üstünde) ile sorulur;
+  aynı anda tek istek/oturum, ikincisi decline + `succeeded` (`busy`). Süre `expiresAt`'te dolar (sunucu saati
+  farkı `ServerClock` ile düzeltilir): decline, sonra komut sonucu. *KABUL ET* önce kilidi açtırır, sonra sistemin
+  ekran yakalama penceresini açar; o pencere reddedilirse decline sayılır. Kabulde komut sonucu `succeeded`
+  (`accepted`) gönderilir (sözleşme kabul için sonucu belirtmiyor).
+- **C14 — Akış:** `mediaProjection` türünde ön plan servisi, kalıcı bildirim "Ofis ekranınızı görüyor" + *DURDUR*.
+  Görüntü hedef boyutta bir sanal ekrana yansıtılır (küçültme orada olur), `ImageReader` → JPEG → WebSocket ikili
+  mesaj. Kural: soketin kuyruğunda bayt varken kare atlanır; 20 sn boşalmazsa `bye error`. Ekran değişmediyse kare
+  gönderilmez. Dönme ve `quality` boyut değişimi sanal ekranı yeniden boyutlar (Android 14+ tek sanal ekran) ve
+  `rotate` gönderir. `quality` sınırları: 1–15 fps, 240–1920 px, q 10–90. Kapanış 4401 → check-in istenir.
+- **C15 — Dokunma servisi:** `RemoteControlService` hiçbir olayı dinlemez; girdi yalnızca `RemoteInputDispatcher`
+  üzerinden, kabul edilmiş bir oturum akarken ve servis bağlıyken geçer. `hello.control` servisin o an bağlı
+  olmasına bakar. Koordinatlar gerçek ekran pikseline çevrilir; `text` odaktaki düzenlenebilir alana
+  `ACTION_SET_TEXT` ile yazılır. `WRITE_SECURE_SETTINGS` varsa uygulama servisi kendisi açar, yoksa Erişilebilirlik
+  ayarlarını açar.
+- **C16 — Doğrulama:** `MdmApiContractTest` (enrol, check-in, sonuç, decline, başlık biçimi, 401/404),
+  `DeviceCommandExecutorTest`, `DevicePolicyAndCredentialTest`, `DeviceManagementRepositoryTest`,
+  `RemoteStreamSessionTest`, `RemoteSessionControllerTest`, `DeviceManagementViewModelTest`,
+  `DeviceManagementScreensTest`. MediaProjection, WebSocket ve erişilebilirlik servisinin Android tarafı arayüzlerin
+  arkasında incedir ve yalnızca gerçek cihazda doğrulanabilir.

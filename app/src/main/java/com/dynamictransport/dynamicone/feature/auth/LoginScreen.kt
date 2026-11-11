@@ -23,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.PhonelinkSetup
 import androidx.compose.material.icons.filled.LockClock
 import androidx.compose.material.icons.filled.SupportAgent
 import androidx.compose.material.icons.filled.Visibility
@@ -63,7 +64,7 @@ import com.dynamictransport.dynamicone.feature.common.LanguagePickerDialog
 import com.dynamictransport.dynamicone.feature.common.PRIMARY_ACTION_TAG
 
 @Composable
-fun LoginRoute(viewModel: LoginViewModel = hiltViewModel()) {
+fun LoginRoute(onOpenDeviceManagement: (() -> Unit)? = null, viewModel: LoginViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     LoginScreen(
         state = state,
@@ -72,6 +73,7 @@ fun LoginRoute(viewModel: LoginViewModel = hiltViewModel()) {
         onTogglePasswordVisibility = viewModel::onTogglePasswordVisibility,
         onLogin = viewModel::onLogin,
         onTwoFactorCodeChanged = viewModel::onTwoFactorCodeChanged,
+        onOpenDeviceManagement = onOpenDeviceManagement,
     )
 }
 
@@ -83,6 +85,8 @@ fun LoginScreen(
     onTogglePasswordVisibility: () -> Unit,
     onLogin: () -> Unit,
     onTwoFactorCodeChanged: (String) -> Unit = {},
+    /** Device management (docs/29): a company phone is enrolled before anyone signs in. Null hides the link. */
+    onOpenDeviceManagement: (() -> Unit)? = null,
 ) {
     var showLanguagePicker by rememberSaveable { mutableStateOf(false) }
     var showSupport by rememberSaveable { mutableStateOf(false) }
@@ -124,6 +128,7 @@ fun LoginScreen(
                         onTwoFactorCodeChanged = onTwoFactorCodeChanged,
                         onShowLanguagePicker = { showLanguagePicker = true },
                         onShowSupport = { showSupport = true },
+                        onOpenDeviceManagement = onOpenDeviceManagement,
                     )
                 }
             }
@@ -147,6 +152,7 @@ fun LoginScreen(
                     onTwoFactorCodeChanged = onTwoFactorCodeChanged,
                     onShowLanguagePicker = { showLanguagePicker = true },
                     onShowSupport = { showSupport = true },
+                    onOpenDeviceManagement = onOpenDeviceManagement,
                 )
             }
         }
@@ -199,6 +205,7 @@ private fun LoginForm(
     onTwoFactorCodeChanged: (String) -> Unit,
     onShowLanguagePicker: () -> Unit,
     onShowSupport: () -> Unit,
+    onOpenDeviceManagement: (() -> Unit)?,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.testTag("login_form")) {
         if (state.sessionExpired) {
@@ -301,6 +308,18 @@ private fun LoginForm(
                 Icon(Icons.Filled.SupportAgent, contentDescription = null)
                 Spacer(Modifier.width(6.dp))
                 Text(stringResource(R.string.login_support), maxLines = 1)
+            }
+            if (onOpenDeviceManagement != null) {
+                TextButton(
+                    onClick = onOpenDeviceManagement,
+                    modifier = Modifier
+                        .heightIn(min = 48.dp)
+                        .testTag("login_device_management"),
+                ) {
+                    Icon(Icons.Filled.PhonelinkSetup, contentDescription = null)
+                    Spacer(Modifier.width(6.dp))
+                    Text(stringResource(R.string.mdm_title), maxLines = 1)
+                }
             }
         }
     }

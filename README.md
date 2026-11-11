@@ -203,6 +203,28 @@ Uygulamada SQL bağlantısı, storage anahtarı, JWT imza anahtarı veya başka 
 - Planlamacının şoförü tablet ve telefondan sesli uyandırması (docs/25): `driver.wakeup` push'u alarm sesiyle tam ekran çalar, *UYANDIM* cevabı `wake-up-call-sync` kuyruğuyla gider. Sözleşme önerisi ve Codex görevi [docs/25_DRIVER_WAKE_UP_CALL.md](docs/25_DRIVER_WAKE_UP_CALL.md); backend'de henüz yok, uygulama tarafı JVM testleriyle doğrulandı (ASSUMPTIONS U1–U9).
 - Export yüklemesinde mühür numarası ve mühür fotoğrafı (docs/27): sunucu `ConfirmLoading`/`RecordSealNumber` sununca sefer detayı yükleme onayı ve konteyner başına mühür kartı gösterir; bu durakta *Durağı tamamla* yoktur, kapatma planlamacıdadır (ASSUMPTIONS S1–S12). Sözleşme: [docs/27_EXPORT_LOADING_SEAL.md](docs/27_EXPORT_LOADING_SEAL.md).
 
+### Cihaz yönetimi (MDM) ve test telefonunu device owner yapma
+
+Şirket telefonları DynamicONE'dan yönetilir ([docs/29_DEVICE_MANAGEMENT.md](docs/29_DEVICE_MANAGEMENT.md), ASSUMPTIONS C1–C16).
+`app.deviceManagement=false` özelliği derlemeden çıkarır; demo modunda her zaman kapalıdır.
+
+Test telefonunu device owner yapmak (bir kez, USB hata ayıklama açıkken):
+
+1. Telefonda **hiç hesap olmamalı** (Ayarlar → Hesaplar: Google dahil hepsini kaldırın) ve başka device owner / iş profili
+   bulunmamalı; Intune kaldırılmış olmalı. Aksi halde `dpm` "already several accounts on the device" hatası verir.
+2. Uygulamayı kurun: `gradlew.bat installDebug` (veya imzalı release APK'sı `adb install`).
+3. `adb shell dpm set-device-owner com.dynamictransport.dynamicone/.core.mdm.DeviceOwnerReceiver`
+   → `Success: Device owner set to package …` görmelisiniz.
+4. İsteğe bağlı, uzaktan dokunma servisini uygulama kendisi açabilsin diye:
+   `adb shell pm grant com.dynamictransport.dynamicone android.permission.WRITE_SECURE_SETTINGS`
+5. Uygulamada giriş ekranı → **Cihaz yönetimi** (veya Profil → Hesap → Cihaz yönetimi): ofisin verdiği 8 karakterlik kodu
+   girin, **BAĞLA**. Ekranda "Ofise bağlı", "Tam yönetim: Açık" ve son bağlantı saati görünür.
+
+Geri almak: önce ofis cihazı DynamicONE'da emekliye ayırır (uygulama kısıtları ve kaldırma engelini kendisi kaldırır).
+Device owner rolünün kendisi `adb shell dpm remove-active-admin …` ile yalnızca `android:testOnly` build'lerde kaldırılabilir;
+normal build'de rolü kaldırmanın yolu fabrika ayarıdır. Device owner iken ofisin *fabrika ayarına dön* komutu telefonu gerçekten
+siler: yalnızca test cihazında deneyin.
+
 ### Demo modu (backend olmadan)
 
 `gradlew.bat installDebug -Pdriver.demoMode=true` ile uygulama içi **fake backend** kullanılır; ekranlarda **DEMO** rozeti görünür. Demo, gerçek API hatalarında asla devreye girmez ve release build'de kullanılamaz.

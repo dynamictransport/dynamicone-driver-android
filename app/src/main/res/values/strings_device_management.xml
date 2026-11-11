@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Device management and remote screen sessions (docs/29): the company phone is managed from DynamicONE. -->
+<resources>
+    <string name="mdm_title">Device management</string>
+    <string name="mdm_intro">This phone belongs to the company. The office can see its state, lock it and send it messages. The office sees the screen only after you accept.</string>
+    <string name="mdm_status_title">This phone</string>
+    <string name="mdm_status_enrolled">Connected to the office</string>
+    <string name="mdm_status_enrolled_yes">Yes, the office manages this phone.</string>
+    <string name="mdm_status_enrolled_no">Not yet. Enter the code from the office below.</string>
+    <string name="mdm_status_owner">Full management</string>
+    <string name="mdm_status_owner_yes">On. The office can lock and reset the phone.</string>
+    <string name="mdm_status_owner_no">Off. The office sets this up on the phone.</string>
+    <string name="mdm_status_accessibility">Remote help with touch</string>
+    <string name="mdm_status_on">On</string>
+    <string name="mdm_status_off">Off</string>
+    <string name="mdm_last_check_in">Last contact with the office: %1$s</string>
+    <string name="mdm_last_check_in_never">No contact with the office yet.</string>
+    <string name="mdm_enrol_title">Connect this phone</string>
+    <string name="mdm_enrol_hint">The office gives you a code of 8 characters.</string>
+    <string name="mdm_enrol_code">Code from the office</string>
+    <string name="mdm_enrol_submit">CONNECT</string>
+    <string name="mdm_check_in_now">Contact the office now</string>
+    <string name="mdm_accessibility_title">Let the office help with touch</string>
+    <string name="mdm_accessibility_hint">When this is on, the office can tap and type on the phone for you during a session you accepted. At any other time it does nothing.</string>
+    <string name="mdm_accessibility_open">Turn on</string>
+    <string name="mdm_error_code">This code is not valid. Check it or ask the office for a new one.</string>
+    <string name="mdm_error_offline">No connection. Try again when the phone is online.</string>
+    <string name="mdm_error_failed">It did not work. Try again in a moment.</string>
+    <string name="mdm_channel_ring">Find this phone</string>
+    <string name="mdm_channel_ring_description">Rings with the alarm sound when the office looks for the phone.</string>
+    <string name="mdm_channel_message">Messages for this phone</string>
+    <string name="mdm_channel_sync">Contact with the office</string>
+    <string name="mdm_ring_title">The office is looking for this phone</string>
+    <string name="mdm_ring_body">Tap to stop the sound.</string>
+    <string name="mdm_ring_stop">STOP</string>
+    <string name="mdm_message_default_title">Message from the office</string>
+    <string name="mdm_sync_notification">Contacting the office…</string>
+    <string name="mdm_admin_description">Lets the office lock and reset this company phone.</string>
+    <string name="remote_session_channel_request">Screen sharing requests</string>
+    <string name="remote_session_channel_session">Screen sharing</string>
+    <string name="remote_session_channel_session_description">Stays visible for as long as the office sees your screen.</string>
+    <string name="remote_session_request_title_named">%1$s wants to see your screen</string>
+    <string name="remote_session_request_title_office">The office wants to see your screen</string>
+    <string name="remote_session_request_notification">Tap to answer.</string>
+    <string name="remote_session_request_body">If you accept, the office sees everything on this screen until you stop it. You can stop at any time from the notification.</string>
+    <string name="remote_session_accept">ACCEPT</string>
+    <string name="remote_session_decline">Decline</string>
+    <string name="remote_session_active_title">The office sees your screen</string>
+    <string name="remote_session_active_body">Tap Stop to end it.</string>
+    <string name="remote_session_stop">STOP</string>
+    <string name="remote_control_service_label">DynamicONE remote help</string>
+    <string name="remote_control_service_description">Lets the office tap, swipe and type on this company phone while it helps you. It works only during a screen sharing session you accepted and reads nothing at any other time.</string>
+</resources>

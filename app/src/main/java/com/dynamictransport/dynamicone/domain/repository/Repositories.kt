@@ -513,6 +513,9 @@ interface AppInfo {
 
     /** Driver daily shift with tachograph rest, wake-up alarm and vehicle check (`app.driverShift`, docs/16). */
     val isDriverShiftEnabled: Boolean get() = false
+
+    /** Device management and remote screen sessions (`app.deviceManagement`, docs/29); never in the demo. */
+    val isDeviceManagementEnabled: Boolean get() = false
 }
 
 /** Controls for the in-app fake backend. `isAvailable` is false against a real backend. */
